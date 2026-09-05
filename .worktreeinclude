@@ -1,0 +1,3 @@
+# 本地环境
+.env
+.claude/settings.local.json
