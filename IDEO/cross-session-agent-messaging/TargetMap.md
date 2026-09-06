@@ -1,6 +1,6 @@
 # 双向会话通信 Target Map
 
-<small><em>T1，来源于 <a href="../DesignMap.md">DesignMap</a> 的圈定。Target 与基础通信目标已由 PO 确认；前两节已结合 Designer 审阅修订，三条 HMW 保留。第三节记录 PO 已确认的初始原型方案，尚未制作原型或执行通信测试。背景见 <a href="../deep-research/Synthesis.md">综合结论</a> 与 <a href="../deep-research/Research.md">修订版研究报告</a>；研究基线为 design-sprint 的 6ff3397，综合结论含 f016111 的补记。</em></small>
+<small><em>T1，来源于 <a href="../DesignMap.md">DesignMap</a> 的圈定。Target 与基础通信目标已由 PO 确认；前两节已结合 Designer 审阅修订，三条 HMW 保留。第三节记录 PO 已确认的初始原型方案；P01 已验证本机 Codex 的空闲 queue 收信，P02 已确认 queue 单独使用未满足工具后的接收边界，P03 已验证同步 Hook 正文注入。外部来信与 Hook、queue 的组合及完整双向通信尚未验证。背景见 <a href="../deep-research/Synthesis.md">综合结论</a> 与 <a href="../deep-research/Research.md">修订版研究报告</a>；研究基线为 design-sprint 的 6ff3397，综合结论含 f016111 的补记及原型实验更新。</em></small>
 
 ## 1. Target Goal 与 Questions
 
@@ -132,4 +132,14 @@ Codex 使用同步 Hook 补足正文交付：
 - 接收时机以实际调用与工具事件证明；最终回复或源码分析不能单独证明通过。
 - 原型只是验证这套组合的载具。全部要求获得充分证据后，再作为 Scrum 实现骨架的依据。
 
-<small><em>技术依据：<a href="https://learn.chatgpt.com/docs/hooks">Codex Hooks 官方文档</a>、<a href="https://code.claude.com/docs/en/cross-session-messaging">Claude 跨会话消息官方文档</a>，以及 Designer 的 Ideation 交付。当前已完成只读核查，尚未制作原型或执行通信测试；本节描述待验证的方案。</em></small>
+<small><em>技术依据：<a href="https://learn.chatgpt.com/docs/hooks">Codex Hooks 官方文档</a>、<a href="https://code.claude.com/docs/en/cross-session-messaging">Claude 跨会话消息官方文档</a>，以及 Designer 的 Ideation 交付。本节描述待验证的方案；实际实验状态见下方制作记录。</em></small>
+
+### 3.5 制作记录
+
+PO 确认原型可以简化中间环节，逐步制作、逐步解释。首步 P01 手动指定当前 Codex 原会话，由普通脚本暂代 Claude，通过 queue 投递完整短消息，单独验证空闲唤起；暂不制作自动配对、收件箱和 Hook。此简化只用于通道实验，最终仍按既有接收规则验证两个真实会话的双向往返。
+
+2026-09-06，PO 执行 <a href="prototype/README.md">P01 操作及探针</a> 后，当前 Codex 原会话由空闲状态启动新回合，获得完整消息并回复正确标记；投递记录与会话事件已核对，P01 通过。此结果只覆盖当前环境的 Codex 空闲接收，忙碌接收与 Claude 方向仍待验证；实际时序及证据集中记录于 <a href="test/TestResults.md">TestResults</a>。
+
+2026-09-06，P02 已执行：queue 在工具运行期间成功接受消息，但工具后的首次续接未收到正文；原工作回合结束后，同一会话才开启新回合接收。queue 单独使用未满足忙碌接收要求。下一步验证同步 `PostToolUse` Hook 的正文注入及其与 queue 的配合；P02 当次未安装 Hook，组合方案仍待实测。详见 TestResults 的 P02 记录。
+
+P03 由 Hook 在工具结束时生成一条随机消息，单独检查 `additionalContext` 能否进入首次续接。早期两次现场测试及一次诊断复测缺少 Hook 执行证据，保留为无法判定；重新加载配置后，正文在工具后的首次续接前进入上下文，检查点出现正确标记，原工作回合继续完成，P03 通过。恢复只是实验准备，标记在恢复后的工具执行结束时才生成。下一步将合成正文换成外部脚本发来的正文，再检验与 queue 的配合；单项通过不等于整个组合已验证。操作及证据见 prototype/README 与 TestResults。

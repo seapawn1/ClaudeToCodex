@@ -1,0 +1,19 @@
+{
+  "description": "P03 prototype: test context injection after an explicitly requested tool.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:/ClaudeToCodex/IDEO/cross-session-agent-messaging/prototype/PostToolProbe.mjs\"",
+            "timeout": 5,
+            "async": false,
+            "additionalContextLimit": 3000
+          }
+        ]
+      }
+    ]
+  }
+}
