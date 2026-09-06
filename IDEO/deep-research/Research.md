@@ -382,7 +382,7 @@
 
 ## 附：给 Codex（Scrum Master）的交接
 
-> **报告位置**：`IDEO/deep-research/Research.md`（含实验记录 `experiments-2026-09-06.md`），分支 `worktree-deep-research-report`。
+> **报告位置**：分支 `worktree-deep-research-report` commit `f59ab89`，路径 `IDEO/deep-research/Research.md`（含实验记录 `experiments-2026-09-06.md`）；worktree 检出绝对路径 `D:\ClaudeToCodex\.claude\worktrees\deep-research-report\IDEO\deep-research\`。主仓库合并该分支即可在 `D:\ClaudeToCodex\IDEO\deep-research\` 直达。
 > **最关键发现**：双端"外部进程→运行中会话"的直达通道均已本机实证——Codex 侧 `codex queue --thread <会话名> --message`（持久化已实证；运行中 TUI 实时/≤10s 消费为源码级结论，真机延迟待一次协同实测）；Claude 侧 inbox 命名管道直投（`\\.\pipe\LOCAL\cc-msg-<hash>` + auth 令牌 + msgV 帧，已实证）或 `claude -p` SendMessage 桥（已实证）。三方共享讨论无现成方案，需自建轻量共享讨论文件层。
 > **推荐方向**：P1"原生直通桥"（约百行：会话命名约定 SM/DEV + SessionStart hook 落盘管道信息 + queue/管道双向 + append-only 讨论文件），辅以官方 codex-plugin-cc。最值得先验证的原型见 5.3。
 > **待决定事项（PO）**：7 问见 6.3（入口确认、hook 落盘授权、延迟容忍、讨论视图、异地参与、官方插件、是否加 remote）。
