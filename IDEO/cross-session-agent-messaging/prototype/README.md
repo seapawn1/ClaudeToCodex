@@ -158,4 +158,10 @@ powershell.exe -NoProfile -File "D:\ClaudeToCodex\IDEO\cross-session-agent-messa
 
 发送、回信记录分别为 `%TEMP%/cross-session-agent-messaging/probes/P05-<标记>-send.json` 和 `P05-<标记>-reply.json`。结合双方原会话的输入、工具执行与回应事件，确认是谁收到、谁回复；仅管道写入或 queue 成功均不足以通过。
 
-本地检查：`node --test IDEO/cross-session-agent-messaging/test/ClaudePipeProbe.test.mjs`。当前只完成隔离检查，尚未登记真实端点或向 Designer 发信。此准备沿用 [Claude 官方跨会话文档](https://code.claude.com/docs/en/cross-session-messaging) 的环境变量与认证说明；原始消息帧仍是需要现场验证的版本适配部分。
+本地检查：`node --test IDEO/cross-session-agent-messaging/test/ClaudePipeProbe.test.mjs`。此准备沿用 [Claude 官方跨会话文档](https://code.claude.com/docs/en/cross-session-messaging) 的环境变量与认证说明；原始消息帧仍是需要现场验证的版本适配部分。
+
+本次已通过 `claude agents --json` 定位 PO 选定的 Designer，并核对其本机登记、PID 与进程启动时间，直接准备了加密端点文件，省去一次手动导出。上述自行登记脚本仍可用于后续目标会话。
+
+P05 已完成首次真实往返，但包含一次 PO 接收批准：Claude 先因发送方未声明权限模式而暂存消息，PO 批准后才向模型放行；随后 Designer 执行回信，Codex 收到并确认。消息到 ACK 约 4 分 8 秒，含约 2 分 23 秒的暂存等待，不能视为传输延迟或无人审批接收通过。证据见 TestResults。
+
+PO 已决定本轮暂时保留现有审批，是否调整原生接收设置以后再决定；不制作自动批准机制。后续测试按现有规则由 PO 放行需要批准的消息，分别记录到达、放行与获知，不用转贴正文。继续制作组合收信入口与连续对话原型，不以修改 Claude 设置为前置条件。

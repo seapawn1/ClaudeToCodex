@@ -1,6 +1,6 @@
 # 双向会话通信实验记录
 
-当前状态：P01 空闲 queue 收信、P03 同步 Hook 注入、P04 外部文件经 Hook 注入均已通过各自单项实验；P02 确认 queue 单独使用未满足工具后的接收边界。P04 首轮混测记录保留。P05 已选定 Designer 会话并准备真实往返脚本，尚未向 Claude 发信；queue 与 Hook 的组合及完整通信测试仍待验证。
+当前状态：P01 空闲 queue 收信、P03 同步 Hook 注入、P04 外部文件经 Hook 注入均已通过各自单项实验；P02 确认 queue 单独使用未满足工具后的接收边界。P04 首轮混测记录保留。P05 已完成一次经 PO 批准放行后的真实 Claude 往返；无需逐条批准的自动接收、queue 与 Hook 的组合及完整通信测试仍待验证。
 
 ## P01：Codex 空闲 queue 收信
 
@@ -203,10 +203,49 @@ PO 完成重载准备后发起“开始 Hook 测试”。同一线程中的新�
 
 ## P05：选定 Claude 会话的首次往返
 
-- 状态：**未执行**。PO 要求在下一次 Claude 实验之前先提交当前 Git 进度；尚未向选定会话发送测试消息。
+- 状态：**首次往返通过（含一次 PO 接收批准）**。消息先被 Claude 暂存，PO 批准后，原 Designer 会话收到正文、执行回信，原 Codex 会话收到并确认；不能据此判定无需逐条批准的自动收信已通过。
 - 接收会话：PO 指定的 `ClaudeToCodex # [designer]-[design-sprint]-[开始target工作]`。
 - 已核对 ID：`de6f62ab-7c48-4787-8d2a-73944478e05e`；Claude Code 2.1.263，PID 11460，查询时 `idle`，目录为 `D:/ClaudeToCodex/.claude/worktrees/ideate-t1`。
 - 已准备：由所选 Claude 会话执行的登记脚本、Codex 向该会话管道投递的脚本、Claude 通过 queue 回到指定 Codex 线程的脚本；操作见 [原型实验](../prototype/README.md)。
 - 本地检查：3 项隔离测试通过，覆盖登记所需的会话环境、Windows 用户范围的令牌加密、命名管道 auth 与消息帧、回信的原会话与标记；没有向真实 Claude 或 Codex 发送这些本地测试消息。
-- 证据边界：原始消息帧沿用研究 E-H，当前版本的实际接收仍待测试。管道写入完成不等于 Claude 获知；queue 回信也不自动证明忙碌接收时机。
-- 后续记录：选定会话自己的端点登记、原会话收信、Claude 实际执行回信、Codex 收到并确认的事件及实际接收状态。
+- 证据边界：原始消息帧沿用研究 E-H，本次实际管道投递及放行后往返已验证。Claude 的接收批准是实际前提；queue 回信也不自动证明忙碌接收时机。
+
+### 本次端点准备
+
+使用 `claude agents --json` 按 PO 给出的名称精确匹配运行中会话。本次所选 Designer 的本机登记还提供了管道地址与当前 Windows 用户可读取的 peer key；核对了 session ID、PID 11460、实际 `claude.exe` 进程启动时间、登记中的 `procStart` 和 key 的 `procStartFt`、`pidDomain`，均对应同一实例。
+
+据此在用户临时目录准备 `claude-de6f62ab-7c48-4787-8d2a-73944478e05e.json`，认证信息使用当前用户 DPAPI 加密，原始令牌没有输出或写入 Git。本次采用选定会话的本机登记，省去手动环境导出；`Register-ClaudeEndpoint.ps1` 保留为由目标会话自行登记的方式。该登记格式属于当前版本的原型适配依据，消息实际接收仍以现场事件为准。
+
+### 实际往返（2026-09-07）
+
+以下均为北京时间（UTC+8）。Codex 原线程为 `01a074a1-bf49-72f2-9337-194555aa49f6`，Claude 原会话为 `de6f62ab-7c48-4787-8d2a-73944478e05e`。
+
+| 时间 | 事实 | 依据 |
+|---|---|---|
+| 00:51:07.961 至 00:51:08.526 | Codex 脚本完成向选定管道的写入 | P05 发送记录 |
+| 00:51:08.521 | Claude 将消息暂存，明确尚未交给模型 | system 事件 `c542af7c-c8cc-485d-8702-8a09c34fc651` |
+| 00:53:31.387 | PO 批准后，消息进入 Claude 输入队列 | `queue-operation: enqueue`；PO 明确确认手动批准 |
+| 00:53:31.465 | 正文进入 Designer 原会话，标记为 peer 请求 | user 事件 `df536481-5177-4296-886a-c72e8529e485` |
+| 00:54:33.430 | Designer 在原会话调用 PowerShell 执行回信脚本 | assistant 工具调用 `d1473dda-6531-4ee4-bfad-00ab18e12604` |
+| 00:54:34.460 至 00:54:36.670 | 回信脚本成功调用 queue，目标为原 Codex 线程 | P05 回信记录 |
+| 00:54:41.109 | 回信成为原 Codex 会话的新输入 | `UserMessage`，ordinal 3071 |
+| 00:55:16.049 | Codex 输出正确 ACK | `AgentMessage`，ordinal 3072 |
+
+- 消息标记：`P05-f54824f27b334827845309e88836f203`。
+- 实际回信：`P05-REPLY P05-f54824f27b334827845309e88836f203 from Claude session de6f62ab-7c48-4787-8d2a-73944478e05e`，随后附有一次性 ACK 请求。
+- Codex 本地确认：`P05-ACK P05-f54824f27b334827845309e88836f203`；该确认没有再次发送给 Claude，测试在此结束。
+- 回信队列条目：`01a077a4-af1c-7111-8046-b4a2fe19f4f7`。
+- Codex 收信回合：`01a077a4-c0b9-7201-a5ae-a10d2183f078`。
+- 发送与回信记录：`%TEMP%/cross-session-agent-messaging/probes/P05-f54824f27b334827845309e88836f203-send.json`、同目录 `P05-f54824f27b334827845309e88836f203-reply.json`。
+- Claude 原始记录：`C:/Users/DELL/.claude/projects/D--ClaudeToCodex--claude-worktrees-ideate-t1/de6f62ab-7c48-4787-8d2a-73944478e05e.jsonl`，以本节时间与事件 UUID 定位。
+- Codex 原始记录：与 P01 相同的 rollout JSONL，以本节 ordinal 定位。
+
+### 接收条件与结论
+
+Claude 暂存提示为：`The sender did not attest its permission mode and this session bypasses prompts.` 即该消息未声明发送方权限模式，而接收会话跳过权限提示，因此按接收规则暂存。PO 随后明确确认批准了该消息。认证通过并写入管道，不代表消息已经向模型放行；本次使用登记中的 peer key，也不能把结果等同于目标会话自有子进程的消息接收行为。
+
+从发送开始至 Codex ACK 约 4 分 8 秒，其中消息在 Claude 侧暂存约 2 分 23 秒，超出了初始 60 秒观察窗口。该时长含人工批准等待和双方处理，不能作为传输延迟指标；初始窗口内也没有完成无人操作的往返。
+
+本次确认了选定的两个原会话能完成请求与回复，PO 没有搬运测试正文，但批准了一次接收。当前没有修改全局入站设置，也没有把 PO 对这一条消息的批准视为对后续消息或权限变更的批准。
+
+PO 随后确认暂时保留现有 Claude 接收审批，是否修改原生接收设置以后再决定，不制作自动批准机制。后续按现有规则开展组合原型和连续对话验证，分别记录消息到达、审批放行、进入上下文的时间；审批等待不计为传输延迟，不把含审批的实验宣称为无需审批接收通过。设置调整不是继续原型的前置条件。
