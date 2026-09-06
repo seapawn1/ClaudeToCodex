@@ -71,4 +71,4 @@ flowchart TD
 
 | 编号 | 目标文档 | 圈定范围 | 状态 |
 |---|---|---|---|
-| T1 | [双向会话通信](TargetMap.md) | 从发送问题到反馈回到原会话，包含必要的追问往返 | Target 已确认；HMW 待讨论 |
+| T1 | [双向会话通信](cross-session-agent-messaging/TargetMap.md) | 从发送问题到反馈回到原会话，包含必要的追问往返 | Target 已确认；HMW 待讨论 |

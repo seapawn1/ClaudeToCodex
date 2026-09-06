@@ -5,7 +5,7 @@
 - 依据：Developer 的[研究报告](Research.md)与[实验记录](experiments-2026-09-06.md)，以及 PO 与 Codex 在本轮专家讨论中确认的需求。
 - 研究基线：报告分支已合并至 `design-sprint`；初版合并提交 `2c598b5`，2026-09-06 经 agmsg 检索盲区修订（`a425c35`）后合并提交为 `6ff3397`。
 
-本文件集中保存设计依据与证据边界。[DesignMap](../DesignMap.md)保留当前挑战、目标、问题、协作地图和目标索引，[TargetMap](../TargetMap.md)记录本轮目标的 HMW、方案探索与验证。研究报告与实验记录保存 Developer 的发现及依据；下述 PO 结论用于校正其中关于当前范围的建议。
+本文件集中保存设计依据与证据边界。[DesignMap](../DesignMap.md)保留当前挑战、目标、问题、协作地图和目标索引，[TargetMap](../cross-session-agent-messaging/TargetMap.md)记录本轮目标的 HMW、方案探索与验证。研究报告与实验记录保存 Developer 的发现及依据；下述 PO 结论用于校正其中关于当前范围的建议。
 
 ## 1. PO 已确认的方向
 
@@ -23,7 +23,7 @@
 
 PO 已确认圈定“发送问题到反馈回到原会话”，包含必要的追问往返。本轮以两个现有会话能够双向互传消息、连续对话为成功标准，通过一系列通信测试判断，先验证基础能力，再由 Scrum 实现骨架；后续功能按需要通过新的工作项与 PR 迭代。
 
-主要选择 DesignMap Q1 与 Q3 的多轮通信部分。反馈质量、完整开发任务交付及长期减负效果保留为观察项，不增加本轮验收门槛。目标详情与 HMW 集中在 [TargetMap](../TargetMap.md)，方案、原型与测试的具体内容待讨论后补充。
+主要选择 DesignMap Q1 与 Q3 的多轮通信部分。反馈质量、完整开发任务交付及长期减负效果保留为观察项，不增加本轮验收门槛。目标详情与 HMW 集中在 [TargetMap](../cross-session-agent-messaging/TargetMap.md)，方案、原型与测试的具体内容待讨论后补充。
 
 ### 消息接收与处理
 
@@ -81,7 +81,7 @@ PO 已确认圈定“发送问题到反馈回到原会话”，包含必要的�
 - `Research.md` 与实验记录保存原始研究发现及其来源。
 - 本文件集中保存研究与专家讨论的综合判断；后续证据或 PO 决定改变结论时，在这里更新并注明依据。
 - `../DesignMap.md` 保存当前工作中的挑战、目标、问题、整体 Map 与 Target 索引，通过链接追溯背景。
-- `../TargetMap.md` 保存本轮目标的 Goal、选定 Questions、目标 Map、HMW，以及方案、原型和验证记录；未来目标通过 DesignMap 继续索引。
+- `../cross-session-agent-messaging/TargetMap.md` 保存本轮目标的 Goal、选定 Questions、目标 Map、HMW；本目标的 Ideate 文档、原型和测试材料集中在同一目标目录，未来目标通过 DesignMap 继续索引。
 - `../../.claude/CLAUDE.md` 保存稳定的项目说明与阅读入口，具体设计结论以相应文档为准。
 - `.claude/memory/` 留给 Claude Code 的自动记忆机制维护；本轮项目文档维护不手工改写其索引或记忆条目。
 
