@@ -6,7 +6,7 @@ The following files hold the shared project context and memory. Read them in ful
 - `.claude/memory/MEMORY.md`
 
 If output is truncated, read the remaining sections. Report missing files.
-Follow relevant project conventions and read referenced memory files as needed. Maintain shared context and memory in `.claude/` without duplicating it here.
+Follow relevant project conventions and read referenced memory files as needed. You can only maintain CLAUDE.md.
 
 # Workstation
 

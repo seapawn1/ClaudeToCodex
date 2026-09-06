@@ -4,3 +4,6 @@ SeaPawn.md
 # 本地环境
 .env
 .claude/settings.local.json
+
+# Claude Code 本地 worktree
+/.claude/worktrees/
