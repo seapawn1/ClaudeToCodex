@@ -4,7 +4,7 @@
 - **研究者**：Claude Code（Developer 角色，后台研究会话）
 - **对应阶段**：Design Sprint · Ask the Experts 之深度研究（"技术机制 How Things Work" + "既有尝试 Previous Efforts" 两个视角）
 - **基线**：DesignMap 初稿 commit `04632d1`，五个 Questions 编号 Q1–Q5（见第 3 节）
-- **方法**：本地环境核查 + 官方文档核查（双端）+ openai/codex 源码级核查 + GitHub 三路发现（编排器/协议/桥接）+ 候选仓库深读 + 本机可复现实验 6 组（E-B…E-H，其中 E-D 含六个子步骤）
+- **方法**：本地环境核查 + 官方文档核查（双端）+ openai/codex 源码级核查 + GitHub 三路发现（编排器/协议/桥接）+ 一轮词族补漏（PO 指出 agmsg 后触发，见 6.4 检索方法教训）+ 候选仓库深读（4 仓）+ 本机可复现实验 6 组（E-B…E-H，其中 E-D 含六个子步骤）
 - **路径说明**：任务书（`.claude/SeaPawn.md`）原定交付于 `IDEO/Research.md` 与 `IDEO/experiments/`；按 PO 2026-09-06 指示调整为 `IDEO/deep-research/` 子目录集中存放
 - **执行者声明**：本研究由 7+3 个并行研究 agent 与主会话实验完成；全部关键结论可溯源（来源索引见 6.4）
 
@@ -41,7 +41,7 @@
 
 ### 1.4 推荐方向（一句话）
 
-**用双端官方原语自建一个约百行的"直通桥"**：Claude→Codex 走 `codex queue --thread`；Codex→Claude 走管道直投（或更简单的 `claude -p` SendMessage 桥）；三方共享讨论落在一个 repo 内 markdown 文件；PO 在自己两个终端（或一个极简网页）参与。辅以 OpenAI 官方 `codex-plugin-cc` 处理"委派评审/会话搬运"类场景。不引入重框架。
+**用双端官方原语自建一个约百行的"直通桥"**：Claude→Codex 走 `codex queue --thread`；Codex→Claude 走管道直投（或更简单的 `claude -p` SendMessage 桥）；三方共享讨论落在一个 repo 内 markdown 文件；PO 在自己两个终端（或一个极简网页）参与。辅以 OpenAI 官方 `codex-plugin-cc` 处理"委派评审/会话搬运"类场景。不引入重框架。现成品中 agmsg（1.5k★）最接近，但其 Windows+Codex 收信弱于官方 queue 路径（详见 4.3-D），不改变自建优先的结论。
 
 ---
 
@@ -149,6 +149,7 @@
 - 官方无跨工具共享讨论形态；Claude 的跨会话消息只在 Claude 会话间；Codex queue 只进 Codex 线程。
 - 开源界做到"双工具既有会话互发"的 chillacks/ultracode 都是自建 hub + 共享文件（chillacks 有频道/DM/ack/claim 锁；ultracode 传共享目录路径而非内容）。
 - 可借用原语：Claude `notify_when_idle`（订阅对端空闲一次性通知）；双端 Stop/回合边界钩子；共享 markdown 讨论文件（append-only）。
+- 现成品参照（补漏扫描后新增）：agmsg 的共享消息库 + `api.sh` 只读 API + 回放型 viewer 生态 = "共享讨论流"的一种成熟形态（但其 viewer 均为回放、非实时，且 Windows+Codex 收信弱）；let-them-talk 的 Messages 页（线程化、可置顶、PO 直接回复）是三方讨论视图的最完整现成实现（BSL 1.1）。
 - PO 侧"统一视图"：最简=共享文件+两个终端；进阶=chillacks 式本地网页（可后置）。
 
 ### Q4 沟通能否形成明确后续行动并由相应角色接续？
@@ -210,11 +211,13 @@
 
 ### 4.2 GitHub 候选对比（发现层：三路扫描，27+ 仓库入表，5 个重点）
 
-**全景结论**：没有任何主流（>1k★）项目能"接管用户已开的 Claude+Codex 会话互发消息"。做到的只有两个新生个人项目（chillacks 0★、ultracode 4★），且其核心推送同样依赖 `codex queue` 与官方消息机制。社区对 Codex 的外部推送全部走 `codex queue --thread` 或 PTY 打字；**无人用 app-server daemon 做 agent 间通信（空白）**。（三路扫描共 27+ 仓库入考察清单，见 6.4；下表列 16 个代表性仓库；深读 3 个，见 4.3。）
+**全景结论**（经 2026-09-06 补漏扫描修订）：跨工具互发消息的现成品**存在且已成气候**——agmsg（1.5k★）以 skill+hooks 实现 8 种 CLI 互发；let-them-talk（53★）以 MCP broker+控制台实现；加上 chillacks/ultracode 两个小项目共四条独立路线。但**没有一条在 Windows+双工具+PO 三方的完整组合上无硬伤**：Codex 侧推送分化为两派——queue 直投派（chillacks/ultracode/helios，与我们 E-C 实验互证）与 hooks 注入派（agmsg，Windows 下 turn-only、空闲不达、#1015 已读未展示）；PO 实时参与面普遍薄弱（agmsg 生态 viewer 均为回放型；let-them-talk 控制台最全但 BSL 1.1）。**无人用 app-server daemon 做 agent 间通信（空白）**。（初扫 27+ 仓入清单（6.4），补漏扫描新增 9 仓"agents talk to each other"词族——检索盲区教训见 6.4 末尾。）
 
 | 仓库 | ★/License | 双工具 | 挂接既有会话 | Windows | 与本项目关系 |
 |---|---|---|---|---|---|
 | **cpuchip/chillacks** | 0 / MIT（当天仍在更新） | ✅（Codex 经 bridge） | ✅ 双方 | ✅ 原生 PowerShell | 机制最贴近：hub+频道+DM+PO 网页+foreman 审批；地基 Channels 本机不可用→**借鉴设计** |
+| **fujibee/agmsg** | 1.5k / MIT（深读确认；极活跃，单维护者） | ✅（+Gemini/Copilot/OpenCode 等 8 种） | ✅（skill+hooks，不改入口） | 部分（Git Bash+自装 sqlite3.exe；见 4.3-D 硬伤） | 同赛道最热现成品；**Windows+Codex 收信 turn-only 且空闲不达**——弱于我们已验证的官方 queue 路径 |
+| **Dekelelz/let-them-talk** | 53 / **BSL 1.1**（非开源许可） | ✅（Claude/Gemini/Codex 一等） | ✅（MCP broker 注册） | Node 18+，未明示 | 65 个 MCP 工具+12 页签控制台（PO 直接回复 agent）+证据化完成判定；许可与体量是负担 |
 | **diepquynh/ultracode** | 4 / MIT（深读确认） | ✅（+Grok/Antigravity） | ✅（会话注册/adopt） | 部分（install.sh） | MCP hub 模式参照；Codex 推送=codex queue |
 | **openai/codex-plugin-cc** | 32.8k / Apache-2.0（官方） | ✅（单向 Claude→Codex） | 部分（rescue 线程/transfer） | ✅（npm） | 官方互操作件：review/rescue/transfer/review-gate；自定义 provider 兼容 |
 | **MrLesk/Backlog.md** | 6.6k / MIT | ✅ | ✅（不动会话形态） | ✅ | 共享任务台账层（行动层范本） |
@@ -226,6 +229,7 @@
 | slopus/happy | 23.7k / MIT | ✅ | 半（须 happy 启动） | 未声明 | 双工具移动客户端+Happy Agent CLI |
 | alexei-led/ccgram | 263 / MIT | ✅ | ✅（tmux 注入+转录旁读） | ❌ WSL2 | "附着真实会话"的机制范本 |
 | awslabs/cli-agent-orchestrator | 1.2k / Apache-2.0 | ✅ | ❌ | ❌ WSL | supervisor/specialist 结构同构 PO-SM-Dev |
+| 同族小项 | 2–99★ | 多为 ✅ | 各异 | 多数未验 | howardpen9/tmux-bridge-mcp（99，WSL）、zoolok17/agenttalk（13）、1gr14/agents-party（10，跨机）、firstintent/a2a-bridge（9）、zqkra/plano（5）、luisestebanveragomez/agents-mesh（2）、modulastack/modula-relay（3，Unix socket） |
 | 协议类：A2A（25.6k）/ ACP（4.2k）/ AHP（303）/ agent-inbox（1.1k） | — | 需包装 | ❌ | 各异 | A2A 过重；ACP 适配器可作无头统一层；AHP 观察 |
 
 负面澄清：opcode（22.4k★）为 getAsterisk/claudia 改名（现 winfunc/opcode），**仅 Claude 单工具**（任务线索中"BloopAI/opcode"归属有误）。
@@ -264,12 +268,24 @@
 - **Stop hook 评审门**：ALLOW:/BLOCK: 首行契约 + `decision:block` 阻断停止形成 Claude↔Codex 修正循环——**无循环上限**，README 明确警告限额消耗，需主动监视才启用。
 - **边界**：`--resume` 只能续插件自建线程（job 台账+sourceKinds:[appServer] 过滤），**不能接管用户 TUI 已开线程**；无"推送到运行中 Claude 会话"通道（回收全靠拉取/打印 resume 命令）；自定义 provider 兼容=架构结果（全部委托本地 codex 配置），非显式实现。
 
+#### D. fujibee/agmsg @ `948b100`（MIT 确认；v1.2.3+，main 领先 release；1.5k★/148 fork，极活跃但单维护者；2026-04 创建）
+
+- **形态**：装于 `~/.agents/skills/agmsg/` 的 skill（SKILL.md 指令驱动 agent 自己调 bash 脚本）+ 按工具写入 hooks；共享 SQLite（`db/messages.db`，WAL，append-only `events` + `read_cursors` 游标 + legacy 双写表）。支持 8 种 CLI（Claude/Codex/Gemini/Copilot/Antigravity/OpenCode/Cursor/Grok）。
+- **投递三模式**（源码+README 双证）：①**monitor**（仅 Claude Code）：SessionStart hook 引导 agent 用 **Monitor 工具**常驻 `watch.sh`（5s 轮询）——近实时推进运行中会话，需先"priming"一轮；②**turn**（双端）：Stop hook 在轮末取件——Claude 用 `decision:block` 续轮、Codex 用 `{"continue":true,"systemMessage":...}`，60s 冷却；③**posttooluse**（Codex ≥0.149.1 版本门控）：轮中 additionalContext 注入。
+- **运行中会话可达性（对我们问题的直接回答）**：Claude+Windows ✅ ~5s 近实时；**Codex+Windows ⚠️ 仅轮末/轮中，空闲会话零投递**（README 原话 "until your next interaction"；monitor 桥仅 POSIX 且改启动方式）。**agmsg 未使用 `codex queue`**——对比我们 E-C+源码级结论（queue 自带跨进程 10s 轮询、空闲也达、官方维护），在我们最关键的这条腿上，官方原语严格占优。
+- **Windows 工程细节**（可摘抄）：`cygpath -m` 库路径、CRLF 清洗、`windows_wrap()` 给 Codex hooks 自动加 `commandWindows` Git Bash 包装、argv 上限走 stdin、CI 有 windows-latest leg；依赖 Git Bash + 手工放置 sqlite3.exe（Git for Windows 不自带）。
+- **已知硬伤（open issues，均影响"消息必达"）**：#1015 Windows Codex hook 登录 shell 输出污染 JSON → **已读未展示**（先标读后输出的 consume-then-display 设计）；#677（Windows 实报同症）；#1045 积压超 ARG_MAX 后游标**静默卡死**；#67 PID 回收使 actas 锁永生。无端到端回执；无 claim/lease 协议（README 自嘲 "the floor is intentionally dumb; the protocol lives in your prompts"）。
+- **寻址**：`(team, agent名)` 按 `(project, 工具类型)` 注册表推导——**Codex 收信身份不随会话**（上游 docs/actas.md 明示；lucianlamp fork 补 per-session 身份但 2026-06 停更）。Claude 侧有 actas 排他锁。
+- **PO 参与**：无第一方实时 viewer（生态均为回放型）；提供 `api.sh` 只读 JSONL（官方指定外部程序读它而非直开库）；人可作为普通 agent 身份收发。
+- **可直接摘抄件**：读游标语义（高水位+幂等读事件+frontier 封顶未读——自建桥"错过/重复"问题的现成答案）、`windows_wrap`、Stop/PostToolUse 双事件载荷形状与冷却/防死循环、`api.sh` 契约、actas 文件锁、INSERT-first+stdin 传 body+busy_timeout 并发模式。
+
 #### 深读层综合判断
 
-1. **给 Codex 的推送，两个独立项目都收敛到 `codex queue --thread`**（chillacks 的 bridge 与 ultracode 的 push 适配器互不知晓却同构）——与本机 E-C 实验形成三方互证，该通道的社区置信度可视为已收敛。
-2. **"唤醒通知不带正文 + 正文走拉取"**（ultracode）与 **"回复走会话自己的嘴、不旁读转录"**（chillacks）是两条可直接采纳的健壮性设计。
-3. **PO 参与面**两案给出不同答案：chillacks=对等座位+全量 firehose 网页；ultracode=PO 注册为普通会话。我们的 v0 用"两终端+共享讨论文件"即可，v1 可抄 chillacks portal。
+1. **给 Codex 的推送，社区分化为两派**：queue 直投派（chillacks、ultracode、helios——三者互不知晓却同构，与本机 E-C 实验四方互证）与 hooks 注入派（agmsg——Windows 下 turn-only、空闲不达、#1015）。**两派对照反证 queue 路径在 Windows 上的相对优势**。
+2. **"唤醒通知不带正文 + 正文走拉取"**（ultracode）与 **"回复走会话自己的嘴、不旁读转录"**（chillacks）与 **"高水位游标+幂等读"**（agmsg）是三条可直接采纳的健壮性设计。
+3. **PO 参与面**三案不同答案：chillacks=对等座位+全量 firehose 网页；ultracode=PO 注册为普通会话；agmsg=只读 API+回放 viewer（最弱）；let-them-talk=控制台直接回复（最全但 BSL）。我们的 v0 用"两终端+共享讨论文件"即可，v1 可抄 chillacks portal。
 4. **codex-plugin-cc 提供的不是对话而是委派**：它解决了"Claude 会话身份注入 env""Windows 命名管道 broker""会话转录搬运"三块工程难题，即便不整装也值得当参考实现读。
+5. **agmsg 的 Claude 侧 monitor 模式揭示了一个我们未列入的官方机制变体**：Monitor 工具 + 常驻脚本 = 不依赖 Channels 的事件推送通道（5s 粒度），可作 inbox 管道/SendMessage 之外的第三条 Claude 侧入站备选。
 
 ---
 
@@ -296,7 +312,8 @@
 
 | 路径 | 组成 | 可直接复用 | 需适配/自建 | 维护成本 | 主要不确定性 |
 |---|---|---|---|---|---|
-| **P1 原生直通桥（推荐）** | queue（C→X）+ 管道直投或 p 桥（X→C）+ 共享讨论文件 | 全部官方机制（已实验证实） | 会话名约定、SessionStart hook 落盘、讨论文件规范、（可选）PO 汇总网页 | ~百行脚本，随双端版本升级偶发维护 | 管道帧格式属未文档化接口（已验证但可能变）；queue→TUI 实时性待真机确认 |
+| **P1 原生直通桥（推荐）** | queue（C→X）+ 管道直投或 p 桥（X→C）+ 共享讨论文件 | 全部官方机制（已实验证实） | 会话名约定、SessionStart hook 落盘、讨论文件规范、（可选）PO 汇总网页；游标/防重语义可摘抄 agmsg | ~百行脚本，随双端版本升级偶发维护 | 管道帧格式属未文档化接口（已验证但可能变）；queue→TUI 实时性待真机确认 |
+| P1' agmsg 整装 | 现成品：skill+hooks+SQLite，8 种 CLI | 零代码接通、身份注册表、hooks 自动装/卸、历史回放/spawn 编队 | Git Bash+自装 sqlite3.exe；接受 Windows+Codex turn-only/空闲不达（#1015） | 跟随高频演进的主干（API 快变） | **Codex 空闲不达正打核心场景**；收信身份不随会话；单维护者 |
 | P2 官方插件辅助 | codex-plugin-cc（review/rescue/transfer） | 官方维护 | 只覆盖 Claude→Codex 委派，非对话 | 低 | 插件两个月未 push；transfer 单向 |
 | P3 共享台账（Backlog.md） | 任务=repo 内 .md，双工具 MCP/CLI 接入 | 成品 | 消息层仍缺（需叠 P1） | 低 | 非实时讨论 |
 | P4 重框架（cc-connect/CCB/munder-difflin） | IM 群/工作台 | 成品体验 | 会话迁入其框架；部分 WSL/beta | 中-高 | Windows 成熟度；改变日常入口 |
@@ -371,7 +388,9 @@
 
 **社区**：github.com/PeterSR/claude-code-socket-transport（帧格式逆向，基于 v2.1.233）；anthropics/claude-code#2929（programmatically drive instances 的 feature request）。
 
-**候选仓库**：cpuchip/chillacks（**深读 @`26c701c`**：hub.mjs/channel.mjs/codex-bridge.mjs/launch-codex.ps1/portal.mjs/tokens.mjs 等 14 文件）、diepquynh/ultracode（**深读 @`1b3fc51`**：mcp/lib/{hub,push}/、hooks/、commands/、docs/hub.md 等 29 处）、openai/codex-plugin-cc（**深读 @`db52e28`**：scripts/、lib/、plugins/codex/、tests/ 等 24 处）、MrLesk/Backlog.md、chenhg5/cc-connect、SeemSeam/claude_codex_bridge、chaitanyagiri/munder-difflin、openclaw/acpx、BloopAI/vibe-kanban（含 vibekanban.com/blog/shutdown、issue #3293）、slopus/happy、alexei-led/ccgram、smtg-ai/claude-squad、awslabs/cli-agent-orchestrator、kingbootoshi/codex-orchestrator、kamrul1157024/helios、simion/termic、21st-dev/1code（archived）、winfunc/opcode（前 getAsterisk/claudia）、RichardAtCT/claude-code-telegram、JessyTsui/Claude-Code-Remote、chenhg5/agencycli、openabdev/openab、a2aproject/A2A、agentclientprotocol/agent-client-protocol、microsoft/agent-host-protocol、langchain-ai/agent-inbox。星数/许可/活跃度均为当日 GitHub API/页面实测。
+**候选仓库**：cpuchip/chillacks（**深读 @`26c701c`**：hub.mjs/channel.mjs/codex-bridge.mjs/launch-codex.ps1/portal.mjs/tokens.mjs 等 14 文件）、diepquynh/ultracode（**深读 @`1b3fc51`**：mcp/lib/{hub,push}/、hooks/、commands/、docs/hub.md 等 29 处）、openai/codex-plugin-cc（**深读 @`db52e28`**：scripts/、lib/、plugins/codex/、tests/ 等 24 处）、**fujibee/agmsg（深读 @`948b100`：scripts/{send,watch,check-inbox,whoami,api}.sh、lib/{storage,hooks-json}.sh、windows/dispatch.sh、docs/{actas,teams,agent-types}.md 等 24 处源码+issue #67/#149/#677/#683/#1003/#1015/#1045；官网 agmsg.cc；日文社区 Qiita 教程为其主要传播渠道）**、Dekelelz/let-them-talk（README @`38fa6df` 全读；**BSL 1.1**）、MrLesk/Backlog.md、chenhg5/cc-connect、SeemSeam/claude_codex_bridge、chaitanyagiri/munder-difflin、openclaw/acpx、BloopAI/vibe-kanban（含 vibekanban.com/blog/shutdown、issue #3293）、slopus/happy、alexei-led/ccgram、smtg-ai/claude-squad、awslabs/cli-agent-orchestrator、kingbootoshi/codex-orchestrator、kamrul1157024/helios、simion/termic、21st-dev/1code（archived）、winfunc/opcode（前 getAsterisk/claudia）、RichardAtCT/claude-code-telegram、JessyTsui/Claude-Code-Remote、chenhg5/agencycli、openabdev/openab、a2aproject/A2A、agentclientprotocol/agent-client-protocol、microsoft/agent-host-protocol、langchain-ai/agent-inbox；补漏词族：howardpen9/tmux-bridge-mcp、zoolok17/agenttalk、1gr14/agents-party、firstintent/a2a-bridge、zqkra/plano、luisestebanveragomez/agents-mesh、modulastack/modula-relay、lucianlamp/agmsg（fork，已停更）及其 agkanban/agmsg-office 等生态仓。星数/许可/活跃度均为当日 GitHub API/页面实测。
+
+**检索方法教训（诚实记录）**：首轮三路扫描的词汇锚定在 orchestrator/mailbox/inbox/bridge/telegram 等词，漏掉了自称 "cross-vendor messaging / agents talk to each other" 的整个词族（agmsg、let-them-talk、agents-party、agenttalk 等 9 仓），其中 agmsg 主要经日文社区传播。该盲区由 PO 指出 agmsg 后经补漏扫描确认并全部补入（本节与 4.2/4.3-D）。教训：候选发现应以**多轮词汇迭代**收尾（本项目初扫为单轮），且非英文传播渠道（日文/中文社区）需专门覆盖。
 
 **资料冲突记录**：
 1. ccsock（基于 v2.1.233）称"Native Windows 无跨会话消息"↔ 官方文档/changelog（v2.1.234+ named pipe、2.1.240 宣布 Windows 可用）——采用官方口径，且 E-H 本机实证支持官方口径。
@@ -384,6 +403,6 @@
 
 > **报告位置**：分支 `worktree-deep-research-report` commit `f59ab89`，路径 `IDEO/deep-research/Research.md`（含实验记录 `experiments-2026-09-06.md`）；worktree 检出绝对路径 `D:\ClaudeToCodex\.claude\worktrees\deep-research-report\IDEO\deep-research\`。主仓库合并该分支即可在 `D:\ClaudeToCodex\IDEO\deep-research\` 直达。
 > **最关键发现**：双端"外部进程→运行中会话"的直达通道均已本机实证——Codex 侧 `codex queue --thread <会话名> --message`（持久化已实证；运行中 TUI 实时/≤10s 消费为源码级结论，真机延迟待一次协同实测）；Claude 侧 inbox 命名管道直投（`\\.\pipe\LOCAL\cc-msg-<hash>` + auth 令牌 + msgV 帧，已实证）或 `claude -p` SendMessage 桥（已实证）。三方共享讨论无现成方案，需自建轻量共享讨论文件层。
-> **推荐方向**：P1"原生直通桥"（约百行：会话命名约定 SM/DEV + SessionStart hook 落盘管道信息 + queue/管道双向 + append-only 讨论文件），辅以官方 codex-plugin-cc。最值得先验证的原型见 5.3。
+> **推荐方向**：P1"原生直通桥"（约百行：会话命名约定 SM/DEV + SessionStart hook 落盘管道信息 + queue/管道双向 + append-only 讨论文件），辅以官方 codex-plugin-cc。现成品评估：agmsg（1.5k★，MIT）是同赛道最热项目，值得在其 Claude 侧机制与游标语义上借鉴，但其 Windows+Codex 收信（turn-only、空闲不达、#1015）弱于我们已验证的官方 queue 路径，故不改变"自建优先"的推荐；若未来扩展到 N-agent 团队（含 Gemini/Copilot）可重估 agmsg 整装。最值得先验证的原型见 5.3。
 > **待决定事项（PO）**：7 问见 6.3（入口确认、hook 落盘授权、延迟容忍、讨论视图、异地参与、官方插件、是否加 remote）。
 > **下一次专家讨论最需要回答**：①queue→运行中 TUI 的真机延迟（需 SM 协同实测一次）；②共享讨论文件的形态是否足以支撑三方 Review（Q3）；③PO 的 Q5 体验如何度量。
