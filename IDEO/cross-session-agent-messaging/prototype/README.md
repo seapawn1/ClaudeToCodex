@@ -1,6 +1,6 @@
 # 原型实验
 
-先用小实验验证接收入口，随后接成双向往返。P01 空闲 queue 收信已通过，P02 确认 queue 单独使用未满足工具后的接收边界，P03 重载后已通过同步 Hook 正文注入。外部来信与 Hook、queue 的组合及完整通信桥尚待验证。
+先用小实验验证接收入口，随后接成双向往返。P01 空闲 queue 收信、P03 同步 Hook 注入、P04 外部文件经 Hook 注入均已通过单项实验；P02 确认 queue 单独使用未满足工具后的接收边界。P05 已准备选定 Claude 会话的首次往返，现场未执行；完整组合尚待验证。
 
 ## P01：Codex 空闲时能否被 queue 唤起
 
@@ -60,7 +60,7 @@ P02 已于 2026-09-06 执行：投递确实位于工具执行窗口内，消息�
 
 ### 准备与 PO 操作
 
-项目配置在 [hooks.json](../../../.codex/hooks.json)，处理脚本为 [PostToolProbe.mjs](PostToolProbe.mjs)。它只对 `Invoke-CodexHookProbe.ps1 -RunP03` 这类明确的测试调用生成上下文；其他命令只留下事件与匹配条件的诊断记录，无测试消息。配置暂用本机绝对路径，未改变全局权限设置。
+项目配置在 [hooks.json](../../../.codex/hooks.json)，处理脚本为 [PostToolProbe.mjs](PostToolProbe.mjs)。P03 分支只对 `Invoke-CodexHookProbe.ps1 -RunP03` 这类明确的测试调用生成上下文；P04 的外部消息分支见下节。普通命令只留下事件与匹配条件的诊断记录，无测试消息。配置暂用本机绝对路径，未改变全局权限设置。
 
 1. 在当前 Codex CLI 输入 `/hooks`，找到本项目 `PostToolUse` 下指向 `PostToolProbe.mjs` 的命令，审阅并信任它。若列表中没有这条 Hook，先报告界面情况，暂不开始测试或另开副本会话。
 2. 信任后，在当前会话发送“开始 Hook 测试”。这次无需在另一个终端运行发信脚本。
@@ -95,3 +95,67 @@ codex resume 01a074a1-bf49-72f2-9337-194555aa49f6
 重载后 P03 已通过：Hook 入口记录、完整正文的上下文事件、首次续接的正确标记和后续短动作能逐项对应。详见 [TestResults](../test/TestResults.md)。现已生效的同一定义不要求每次测试重启；本次对照也不推导所有 Hook 修改都必须重启。
 
 诊断入口记录位于 `%TEMP%/cross-session-agent-messaging/probes/P03-hook-invocations.jsonl`。后续若缺少标记，先区分是否有脚本调用记录、匹配条件是否满足，以及正文是否加入上下文；首次检查点之前仍不读取消息记录。下一步将合成正文换成外部发来的正文，再验证与 queue 的配合。
+
+## P04：外部来信经 Hook 进入工作中的会话
+
+目的：把 P03 中由 Hook 生成的正文，换成外部脚本在工具执行期间写入的正文。用一个临时 JSON 文件暂代收件箱；不安装数据库，不做自动配对，不调用 queue。本轮仍是定向原型实验，只有 P04 指定工作工具完成时才读取该文件。
+
+### PO 操作
+
+1. 在另一 PowerShell 终端运行下方命令。看到 `WAITING_FOR_BUSY_WINDOW` 且显示 `sender=P04, route=file + Hook` 后，回到原 Codex 会话发送“开始外部来信测试”。
+2. 保持两个终端运行，不输入其他内容、不按 Esc、不粘贴外部终端的消息标记。脚本看到新的 P04 工具窗口后等待 2 秒，生成正文并发布临时收信文件。
+3. 观察 `P04-CHECKPOINT` 是否包含新标记，以及之后能否正常出现 `P04-WORK-DONE`。工作结束后反馈观察；脚本若报错，保留错误提示。因为本轮没有 queue，不预期在工作结束后另起一轮自动收信。
+
+```powershell
+& .\IDEO\cross-session-agent-messaging\prototype\Send-CodexProbe.ps1 -ThreadId '<接收会话 UUID>' -ViaHook
+```
+
+`-ViaHook` 自动启用等待工具窗口，默认最多等待 3 分钟；`-DryRun` 不等待、不写信。P02 使用 `-DuringTool`，走 queue；P04 使用 `-ViaHook`，走文件与已有 Hook。两端实验编号不同会直接报错、不发送。沿用已生效的 Hook 定义，不需要为这次重测重新信任或重启。
+
+### Codex 执行约定
+
+1. 收到“开始外部来信测试”后，在当前原会话执行 `& ./IDEO/cross-session-agent-messaging/prototype/Invoke-CodexBusyWindow.ps1 -ThreadId <当前 UUID> -RunP04`，默认运行 20 秒。`exec_command` 的 `yield_time_ms` 使用 `30000`，等待工具完整结束；该工具只记录时间，不读取来信。
+2. 工具返回后的首次续接，先输出 commentary：`P04-CHECKPOINT: <实际收到的新标记>`；没有则输出 `P04-CHECKPOINT: NONE`。不得自行读取收件箱、发送记录或 Hook 日志来获得标记。
+3. 再执行 `Get-Date -Format o`，最后输出 `P04-WORK-DONE`。等 PO 反馈后再核对证据。
+
+### 临时收信与判据
+
+运行文件均位于 `%TEMP%/cross-session-agent-messaging/probes/`。外部脚本先写完整文件，再原子发布为 `P04-inbox-<会话 UUID>.json`；存在旧待收消息时拒绝覆盖。Hook 校验接收会话与已完成的工作窗口，读取整段正文，再将原文件移为 `P04-<标记>.consumed.json`。后续调用没有待收文件就不注入；读取失败或不匹配会报错并保留证据。
+
+发送记录为 `P04-<标记>.json`，Hook 注入记录为 `P04-<标记>-hook.json`；入口诊断沿用 `P03-hook-invocations.jsonl`，其中增加 `matchesP04`。文件发布、Hook 消费和模型实际获知分开判断。
+
+通过需要：文件确实在工具窗口内发布，Hook 在对应工具完成后将外部正文加入原会话的首次续接，检查点出现对应标记，原工作正常继续。仅写文件成功或脚本本地测试通过不足以判定。错过窗口或缺少关键事件记为无法判定。本轮不验证空闲唤起、queue 与 Hook 的重复唤醒处理、生成末尾收信或 Claude 方向。
+
+首轮实际使用了 P02 发送模式，未发布 P04 文件；Hook 正常执行但没有正文可读。该次保留为通道错配、无法判定，发送模式检查已修正。证据见 TestResults。
+
+2026-09-07 重跑 P04 已通过：外部正文在工具执行期间发布，由 Hook 加入工具后的首次续接，原工作继续完成；已消费文件与发送记录一致。详见 TestResults。当前仍未将 queue 与这一分支同时接入。
+
+## P05：Codex 与选定 Claude 会话的一问一答
+
+本次选定 PO 指定的 Designer 原会话 `de6f62ab-7c48-4787-8d2a-73944478e05e`。先让它接收 Codex 的短消息，再由它通过脚本回复到 Codex 原线程；不用另一 Claude 实例代答。本轮只验证首次往返，后续再覆盖连续追问及双方的接收状态。
+
+### 会话登记
+
+在选定的 Claude 会话中，请它通过自己的工具执行：
+
+```powershell
+powershell.exe -NoProfile -File "D:\ClaudeToCodex\IDEO\cross-session-agent-messaging\prototype\Register-ClaudeEndpoint.ps1"
+```
+
+脚本读取该会话自动导出的 `CLAUDE_CODE_SESSION_ID`、`CLAUDE_CODE_MESSAGING_SOCKET` 和 `CLAUDE_CODE_MESSAGING_TOKEN`，以 Windows 当前用户范围的 DPAPI 保护令牌，写入 `%TEMP%/cross-session-agent-messaging/claude-<会话 UUID>.json`。输出仅有会话 ID、文件位置及状态，不输出令牌，不发测试消息。保持该原会话运行，并让它知道接下来的 P05 是一次通信测试，可以按消息中的命令回复一次。
+
+### Codex 发信与观察
+
+登记完成并核对 UUID 后，Codex 使用选定端点文件调用：
+
+```powershell
+& .\IDEO\cross-session-agent-messaging\prototype\Send-ClaudeProbe.ps1 -EndpointPath '<端点文件路径>' -ReplyThreadId '01a074a1-bf49-72f2-9337-194555aa49f6'
+```
+
+脚本采用研究 E-H 的本机管道帧，发送包含独特标记的短消息和一条 `Reply-CodexProbe.ps1` 回信命令。Claude 应在自己的原会话执行该命令，使用实际的 Claude 会话 ID 回信；Codex 收到后只回复 `P05-ACK <标记>`，结束本次测试，避免形成自动循环。
+
+发信前确认所选 Claude 会话仍在运行并记录其状态。发信后 Codex 正常结束当前回合，PO 观察两个窗口，暂不转贴测试正文；以 60 秒作为初次观察窗口。若出现接收审批、错误或超时，记录实际现象，按正常权限规则处理，不改变全局入站设置。
+
+发送、回信记录分别为 `%TEMP%/cross-session-agent-messaging/probes/P05-<标记>-send.json` 和 `P05-<标记>-reply.json`。结合双方原会话的输入、工具执行与回应事件，确认是谁收到、谁回复；仅管道写入或 queue 成功均不足以通过。
+
+本地检查：`node --test IDEO/cross-session-agent-messaging/test/ClaudePipeProbe.test.mjs`。当前只完成隔离检查，尚未登记真实端点或向 Designer 发信。此准备沿用 [Claude 官方跨会话文档](https://code.claude.com/docs/en/cross-session-messaging) 的环境变量与认证说明；原始消息帧仍是需要现场验证的版本适配部分。

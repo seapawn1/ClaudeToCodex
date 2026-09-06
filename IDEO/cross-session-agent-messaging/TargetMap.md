@@ -1,6 +1,6 @@
 # 双向会话通信 Target Map
 
-<small><em>T1，来源于 <a href="../DesignMap.md">DesignMap</a> 的圈定。Target 与基础通信目标已由 PO 确认；前两节已结合 Designer 审阅修订，三条 HMW 保留。第三节记录 PO 已确认的初始原型方案；P01 已验证本机 Codex 的空闲 queue 收信，P02 已确认 queue 单独使用未满足工具后的接收边界，P03 已验证同步 Hook 正文注入。外部来信与 Hook、queue 的组合及完整双向通信尚未验证。背景见 <a href="../deep-research/Synthesis.md">综合结论</a> 与 <a href="../deep-research/Research.md">修订版研究报告</a>；研究基线为 design-sprint 的 6ff3397，综合结论含 f016111 的补记及原型实验更新。</em></small>
+<small><em>T1，来源于 <a href="../DesignMap.md">DesignMap</a> 的圈定。Target 与基础通信目标已由 PO 确认；前两节已结合 Designer 审阅修订，三条 HMW 保留。第三节记录初始原型方案与制作进展；P01 已验证 Codex 空闲 queue 收信，P02 确认 queue 单独使用未满足工具后的接收边界，P03、P04 已验证同步 Hook 注入及外部文件来信的定向接收。queue 与 Hook 的组合及真实 Claude 往返尚待验证，P05 已准备。背景见 <a href="../deep-research/Synthesis.md">综合结论</a> 与 <a href="../deep-research/Research.md">修订版研究报告</a>；研究基线为 design-sprint 的 6ff3397，综合结论含 f016111 的补记及原型实验更新。</em></small>
 
 ## 1. Target Goal 与 Questions
 
@@ -143,3 +143,7 @@ PO 确认原型可以简化中间环节，逐步制作、逐步解释。首步 P
 2026-09-06，P02 已执行：queue 在工具运行期间成功接受消息，但工具后的首次续接未收到正文；原工作回合结束后，同一会话才开启新回合接收。queue 单独使用未满足忙碌接收要求。下一步验证同步 `PostToolUse` Hook 的正文注入及其与 queue 的配合；P02 当次未安装 Hook，组合方案仍待实测。详见 TestResults 的 P02 记录。
 
 P03 由 Hook 在工具结束时生成一条随机消息，单独检查 `additionalContext` 能否进入首次续接。早期两次现场测试及一次诊断复测缺少 Hook 执行证据，保留为无法判定；重新加载配置后，正文在工具后的首次续接前进入上下文，检查点出现正确标记，原工作回合继续完成，P03 通过。恢复只是实验准备，标记在恢复后的工具执行结束时才生成。下一步将合成正文换成外部脚本发来的正文，再检验与 queue 的配合；单项通过不等于整个组合已验证。操作及证据见 prototype/README 与 TestResults。
+
+P04 使用外部脚本在指定工具窗口内把正文发布到一个临时 JSON 文件，Hook 在工具完成后按会话与窗口读取，并将正文加入上下文。首轮因使用 P02 queue 模式而混测，保留为无法判定；修正后于 2026-09-07 重跑通过，完整正文在工具后的首次续接前进入原会话。原型继续使用手动寻址与少量脚本，数据库、自动登记或完整命令接口留到 Scrum 再决定。本步没有同时使用 queue，完整组合仍待验证。
+
+P05 已按 PO 指定选定 Designer 会话 `de6f62ab-7c48-4787-8d2a-73944478e05e`，准备由该原会话登记自己的收信端点，随后接收 Codex 的消息并通过 queue 回信。登记、发信与回信脚本的 3 项隔离检查通过；真实端点尚未登记，尚未发信。按 PO 要求，先提交当前 Git 进度，再开展 Claude 端现场实验。P05 先验证一问一答，后续将接收状态和连续追问纳入整套原型演练。

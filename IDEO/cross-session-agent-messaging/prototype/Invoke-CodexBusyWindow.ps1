@@ -5,7 +5,9 @@ param(
     [string]$ThreadId,
 
     [ValidateRange(2, 25)]
-    [int]$Seconds = 20
+    [int]$Seconds = 20,
+
+    [switch]$RunP04
 )
 
 Set-StrictMode -Version Latest
@@ -20,6 +22,7 @@ $windowPath = Join-Path $probeDirectory ("busy-$ThreadId.json")
 $archivePath = Join-Path $probeDirectory ("busy-window-$windowId.json")
 $startedAt = [DateTimeOffset]::UtcNow
 $window = [ordered]@{
+    probe = if ($RunP04) { 'P04' } else { 'P02' }
     windowId = $windowId
     threadId = $ThreadId
     processId = $PID

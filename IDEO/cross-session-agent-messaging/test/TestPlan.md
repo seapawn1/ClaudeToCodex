@@ -1,6 +1,6 @@
 # 双向会话通信测试方案
 
-状态：T01–T05 的完整通信测试尚未执行。初始原型方案已记入 TargetMap 第三节；P01 验证了 Codex 空闲 queue 收信，P02 确认 queue 单独使用未满足工具后的接收边界，P03 验证了同步 Hook 正文注入。各单项结果见 TestResults，完整组合仍待验证。
+状态：T01–T05 的完整通信测试尚未执行。初始原型方案已记入 TargetMap 第三节；P01 验证 Codex 空闲 queue 收信，P02 确认 queue 单独使用未满足工具后的接收边界，P03、P04 验证同步 Hook 注入及外部文件来信的定向接收。P05 已准备真实 Claude 往返，尚未发信；各单项结果见 TestResults，完整组合仍待验证。
 
 依据：[TargetMap](../TargetMap.md) 的 Goal、选定 Questions 与接收规则，以及[研究实验记录](../../deep-research/experiments-2026-09-06.md)中仍需验证的缺口。此方案与 Ideate 并行准备，供不同候选方案使用共同的行为判据。
 
