@@ -1,6 +1,6 @@
 # 组合原型
 
-状态：主体已组装，9 项组合逻辑检查与 3 项管道检查通过；已完成统一接口连续对话、已消费唤醒重放抑制、双向工具边界收信，以及 Codex 生成末尾 Stop 接续。Claude 纯模型生成期间收信经五次采样判定为严格失败：消息到达会与原生成截断重合。PO 已将 Claude crossSessionInbound 设为 accept。
+状态：原型收口。9 项组合逻辑检查与 3 项管道检查通过；统一接口连续对话、旧唤醒抑制、双向工具边界收信、Codex Stop 接续均已通过。Claude 生成中收信以 `priority=next` 通过；早期截断行为被确认来自误用 `priority=now` 的抢占语义。T01–T05 在记录环境中双方向通过。
 
 ## 固定配对
 
@@ -19,7 +19,7 @@
 flowchart TD
     A["原会话 send 或 reply"] --> B["消息 ID、交流 ID 与固定收件人"]
     B --> C{"接收方"}
-    C -->|Claude| D["原生命名管道，保留接收审批"]
+    C -->|Claude| D["原生命名管道，priority=next"]
     C -->|Codex| E["先发布待收全文，再 queue 唤醒"]
     E --> F["开轮、工具后或 Stop 入口领取正文"]
     F --> G["消费记录防重复，抑制已消费消息的旧唤醒"]
@@ -55,22 +55,26 @@ node "D:\ClaudeToCodex\IDEO\cross-session-agent-messaging\prototype\Bridge.mjs" 
 配对已准备。重跑同一配对命令不会替换对象；不同配对会报错，不选择“最新会话”。
 
 ```powershell
-node "D:\ClaudeToCodex\IDEO\cross-session-agent-messaging\prototype\Bridge.mjs" pair --codex '01a074a1-bf49-72f2-9337-194555aa49f6' --claude-endpoint "$env:TEMP\cross-session-agent-messaging\claude-de6f62ab-7c48-4787-8d2a-73944478e05e.json"
+node "D:\ClaudeToCodex\IDEO\cross-session-agent-messaging\prototype\Bridge.mjs" pair --codex '01a074a1-bf49-72f2-9337-194555aa49f6' --claude-endpoint "$env:TEMP\cross-session-agent-messaging\claude-85ca6832-0f48-4dd1-8bb6-c1a635df63d4.json"
 ```
 
 ## 数据与限制
 
-运行数据位于 `%TEMP%/cross-session-agent-messaging/bridge/`。`pair.json` 保存精确会话 ID 和加密端点文件位置；`messages/` 保存消息，`pending/` 保存 Codex 的单条待收消息，`claims/` 保留领取正文，`receipts/` 与 `events.jsonl` 记录消费和发送状态。`CTC_BRIDGE_DIR` 用于隔离本地检查。
+运行数据位于 `%TEMP%/cross-session-agent-messaging/bridge-85ca6832-0f48-4dd1-8bb6-c1a635df63d4/`。`pair.json` 保存精确会话 ID 和加密端点文件位置；`messages/` 保存消息，`pending/` 保存 Codex 的单条待收消息，`claims/` 保留领取正文，`receipts/` 与 `events.jsonl` 记录消费和发送状态。`CTC_BRIDGE_DIR` 用于隔离本地检查。
 
 Codex 同时只允许一条尚未领取的消息。已有待收消息时发送报错，不覆盖正文；发送失败也不自动重试，因为正文可能已发布或领取。`wake-submitted`、`pipe-written`、`context-prepared` 均不宣称模型已读，实际收信仍通过会话事件验证。
 
 工作中已领取的消息，其旧 `[CTC-WAKE ...]` 到达时由 `UserPromptSubmit` 返回 block 抑制。只处理已知、已消费的原型信号，普通用户提示不因此被阻断。Stop 只在有新待收消息时要求继续；没有新消息就直接放行。
 
-## 接下来的验证
+## 消息优先级
 
-已单独重放一条消费过的 queue 唤醒：抑制事件、无重复正文、队列项移出和后续控制提示进入均有现场证据。随后 `codex-tools` 运行 `e087acc9-...` 完成双向工具边界收信：Claude 在 Codex 工具窗口内发信，PostToolUse 将全文交给首次续接；Codex 的反向消息在 Designer 后台任务尚未结束时进入原会话，并在下一次续接报告正确标记。真实旧唤醒也被抑制且队列清空。`codex-stop` 运行 `71908b9f-...` 进一步证明：消息在最后一次生成期间发布时，Stop 将全文交给紧接着的续接，旧唤醒随后被抑制且未形成循环。Claude 纯模型生成期间收信已按 explicit 场景判定失败：接收方下一次上下文能看到正文，但原生成在同一时刻被截断，未满足正常完成后交付。完整 T01–T05 汇总见 TestPlan；不能把本地 JSON 输出检查或模型自述当作现场通过。
+Codex→Claude 的普通消息固定使用 `priority=next`：当前流式输出完整结束，消息在相邻上下文边界进入。`now` 是显式紧急抢占语义，会中断或截断当前输出，只可用于专门测试，不进入普通协作路径；`later` 表示排在已有等待消息之后，本轮只保留协议认识，未做现场验证。
 
-随后用同一原型完成请求、回复、依赖前文的追问和再次回复，并让双方轮流处于空闲、生成中和工具执行中。沿用 Claude 审批，分别记录到达、放行与进入上下文。正式实现、更多并发、自动发现和更完善的恢复留到 Scrum。
+## 验证结论
+
+已单独重放一条消费过的 queue 唤醒：抑制事件、无重复正文、队列项移出和后续控制提示进入均有现场证据。`codex-tools` 运行 `e087acc9-...` 完成双向工具边界收信；`codex-stop` 运行 `71908b9f-...` 证明 Codex 生成末尾消息可由 Stop 交给紧接续接。Claude 生成中收信的早期五次采样使用了固定 `priority=now`，观察到当前输出截断；修正为普通 `priority=next` 后，运行 `d93b861e-...` 证明当前输出完整结束、消息进入下一次上下文并报告正确标记。T01–T05 双方向通过，完整映射见 TestPlan；本地 JSON 输出检查或模型自述不能单独当作现场通过。
+
+连续对话与各接收状态的证据已记录在 TestResults。正式实现、更多并发、自动发现、端点重建和更完善的恢复留到 Scrum。
 
 ```powershell
 node --test IDEO/cross-session-agent-messaging/test/Bridge.test.mjs

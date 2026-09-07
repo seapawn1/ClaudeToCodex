@@ -11,7 +11,10 @@ param(
     [string]$MessageFile,
 
     [ValidatePattern('^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')]
-    [string]$MessageId
+    [string]$MessageId,
+
+    [ValidateSet('now', 'next', 'later')]
+    [string]$Priority = 'next'
 )
 
 Set-StrictMode -Version Latest
@@ -46,7 +49,7 @@ $frame = [ordered]@{
     msg_id = if ($MessageFile) { $MessageId } else { [guid]::NewGuid().ToString() }
     type = 'user'
     message = @{ role = 'user'; content = $message }
-    priority = 'now'
+    priority = $Priority
     session_id = $endpoint.sessionId
 }
 $directory = Join-Path ([IO.Path]::GetTempPath()) 'cross-session-agent-messaging/probes'
@@ -54,6 +57,7 @@ $null = New-Item -ItemType Directory -Force -Path $directory
 $recordPath = Join-Path $directory ("$marker-send.json")
 $record = [ordered]@{
     probe = if ($MessageFile) { 'combined-bridge-claude-send' } else { 'P05-codex-claude-roundtrip' }
+    priority = $Priority
     marker = $marker
     senderThreadId = $ReplyThreadId
     recipientSessionId = $endpoint.sessionId

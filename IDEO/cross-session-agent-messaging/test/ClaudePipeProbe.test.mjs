@@ -87,6 +87,7 @@ test('registration protects the token and pipe sending preserves auth then messa
   assert.equal(frames.length, 2);
   assert.deepEqual(frames[0], { type: 'auth', token });
   assert.equal(frames[1].msgV, 1);
+  assert.equal(frames[1].priority, 'next');
   assert.equal(frames[1].session_id, claudeId);
   assert.equal(frames[1].message.role, 'user');
   const body = frames[1].message.content;
@@ -108,9 +109,20 @@ test('registration protects the token and pipe sending preserves auth then messa
   assert.equal(generic.code, 0, generic.stderr);
   assert.equal(frames.length, 4);
   assert.equal(frames[3].msg_id, bridgeId);
+  assert.equal(frames[3].priority, 'next');
   assert.equal(typeof frames[3].message.content, 'string');
   assert.equal(frames[3].message.content, text);
   assert.equal(frames[3].session_id, claudeId);
+
+  const urgentId = randomUUID();
+  const urgent = await runScript('Send-ClaudeProbe.ps1', [
+    '-EndpointPath', endpointPath, '-ReplyThreadId', codexId, '-MessageFile', textPath,
+    '-MessageId', urgentId, '-Priority', 'now',
+  ], env);
+  assert.equal(urgent.code, 0, urgent.stderr);
+  assert.equal(frames.length, 6);
+  assert.equal(frames[5].msg_id, urgentId);
+  assert.equal(frames[5].priority, 'now');
 });
 
 test('reply runs from Claude and queues the marker for the exact original Codex thread', windowsOnly, async (t) => {
