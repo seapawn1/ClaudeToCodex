@@ -1,6 +1,6 @@
 # 双向会话通信 Target Map
 
-<small><em>T1，来源于 <a href="../DesignMap.md">DesignMap</a> 的圈定。Target 与基础通信目标已由 PO 确认；前两节已结合 Designer 审阅修订，三条 HMW 保留。第三节记录初始原型方案与制作进展；P01 已验证 Codex 空闲 queue 收信，P02 确认 queue 单独使用未满足工具后的接收边界，P03、P04 已验证同步 Hook 注入及外部文件来信的定向接收。P05 完成含 PO 批准的真实 Claude 往返；P06 已在新配对的原会话上完成双向工具边界收信、真实旧唤醒抑制与 Codex 生成末尾 Stop 接续。Claude 纯模型生成期间收信经四次采样判定为严格失败，当前原型不能宣布完整基础通信目标全部通过。背景见 <a href="../deep-research/Synthesis.md">综合结论</a> 与 <a href="../deep-research/Research.md">修订版研究报告</a>；研究基线为 design-sprint 的 6ff3397，综合结论含 f016111 的补记及原型实验更新。</em></small>
+<small><em>T1，来源于 <a href="../DesignMap.md">DesignMap</a> 的圈定。Target 与基础通信目标已由 PO 确认；前两节已结合 Designer 审阅修订，三条 HMW 保留。第三节记录初始原型方案与制作进展；P01 已验证 Codex 空闲 queue 收信，P02 确认 queue 单独使用未满足工具后的接收边界，P03、P04 已验证同步 Hook 注入及外部文件来信的定向接收。P05 完成含 PO 批准的真实 Claude 往返；P06 已在新配对的原会话上完成双向工具边界收信、真实旧唤醒抑制与 Codex 生成末尾 Stop 接续。Claude 纯模型生成期间收信经五次采样判定为严格失败，当前原型不能宣布完整基础通信目标全部通过。背景见 <a href="../deep-research/Synthesis.md">综合结论</a> 与 <a href="../deep-research/Research.md">修订版研究报告</a>；研究基线为 design-sprint 的 6ff3397，综合结论含 f016111 的补记及原型实验更新。</em></small>
 
 ## 1. Target Goal 与 Questions
 
@@ -154,4 +154,4 @@ P05 已按 PO 指定选定 Designer 会话 `de6f62ab-7c48-4787-8d2a-73944478e05e
 
 PO 随后自行将 Claude 的 crossSessionInbound 设为 accept 并要求继续，后续实验按该配置观察实际接收，历史人工批准记录保留。准备了只用于演练的时间窗口脚本，让真实 Claude 会话先等待、再向工作中的 Codex 发信，并观察反向工具中收信及 Stop 接续；协议和消息仍由同一组合原型处理，不扩展为正式产品功能。
 
-原 Designer 会话因 `sdisk.cc` 返回 503/502 以及 Claude daemon 回收后台 worker 而断开；该外部障碍已记录。PO 显式选择新 Designer 原会话 `85ca6832-0f48-4dd1-8bb6-c1a635df63d4` 重配对，旧配对数据保留，活动 bridge 目录用指针切换。2026-09-07 的 `codex-tools` 运行 `e087acc9-...` 已通过双向工具边界收信：Claude 在 Codex 工具窗口内发信，PostToolUse 将全文交给首次续接；Codex 反向正文在 Designer 后台任务尚未结束时进入原会话，并在下一次续接报告正确标记；真实旧唤醒被抑制且队列清空。随后 `codex-stop` 运行 `71908b9f-...` 通过：消息在 Codex 最后一次生成期间发布，Stop 将全文交给紧接着的续接，旧唤醒被抑制且未形成循环。Claude 纯模型生成期间的四次 explicit 采样随后判定该格失败：第四次中消息于原总结生成中到达，接收队列与原生成截断事件毫秒级重合，下一次上下文虽获得正文，但当前调用没有正常完成。该结果不覆盖已通过的工具边界与空闲路径，也说明两侧适配不能简单对称复用。
+原 Designer 会话因 `sdisk.cc` 返回 503/502 以及 Claude daemon 回收后台 worker 而断开；该外部障碍已记录。PO 显式选择新 Designer 原会话 `85ca6832-0f48-4dd1-8bb6-c1a635df63d4` 重配对，旧配对数据保留，活动 bridge 目录用指针切换。2026-09-07 的 `codex-tools` 运行 `e087acc9-...` 已通过双向工具边界收信：Claude 在 Codex 工具窗口内发信，PostToolUse 将全文交给首次续接；Codex 反向正文在 Designer 后台任务尚未结束时进入原会话，并在下一次续接报告正确标记；真实旧唤醒被抑制且队列清空。随后 `codex-stop` 运行 `71908b9f-...` 通过：消息在 Codex 最后一次生成期间发布，Stop 将全文交给紧接着的续接，旧唤醒被抑制且未形成循环。Claude 纯模型生成期间的五次 explicit 采样随后判定该格失败：第四次中消息于原总结生成中到达，接收队列与原生成截断事件毫秒级重合，下一次上下文虽获得正文，但当前调用没有正常完成。PO 随后要求复测；第五次运行去除预告文本后仍复现，正文在消息到达点停在半句。该结果不覆盖已通过的工具边界与空闲路径，也说明两侧适配不能简单对称复用。
