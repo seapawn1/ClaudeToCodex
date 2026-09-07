@@ -14,7 +14,10 @@ const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const store = new BridgeStore();
 const { values, positionals } = parseArgs({
   allowPositionals: true,
-  options: { mode: { type: 'string' }, run: { type: 'string' }, 'reply-to': { type: 'string' }, to: { type: 'string' } },
+  options: {
+    mode: { type: 'string' }, run: { type: 'string' }, 'reply-to': { type: 'string' }, 'delay-ms': { type: 'string' },
+    to: { type: 'string' }, marker: { type: 'string' }, 'message-id': { type: 'string' },
+  },
 });
 
 function save(path, data) {
@@ -52,10 +55,12 @@ function optionalJson(path) {
 async function main() {
   const pair = store.getPair();
   const [command] = positionals;
-  if (positionals.length !== 1) throw new Error('Use create, arm, work, or reverse.');
+  if (positionals.length !== 1) throw new Error('Use create, arm, work, reverse, watch, or record.');
+  const modes = ['codex-tools', 'codex-stop', 'claude-generation'];
+
   if (command === 'create') {
     requireRole('codex');
-    if (!['codex-tools', 'codex-stop'].includes(values.mode)) throw new Error('Specify --mode codex-tools or codex-stop.');
+    if (!modes.includes(values.mode)) throw new Error(`Specify --mode as one of: ${modes.join(', ')}.`);
     const runId = randomUUID();
     const directory = join(store.root, 'scenarios', runId);
     mkdirSync(directory, { recursive: true });
@@ -70,9 +75,12 @@ async function main() {
   if (run.pairId !== pair.id || run.runId !== values.run) throw new Error('Scenario does not match this pair.');
   const armPath = join(directory, 'arm.json');
   const windowPath = join(directory, 'window.json');
+  const sentPath = join(directory, 'sent.json');
+  const resultPath = join(directory, 'result.json');
 
   if (command === 'arm') {
     requireRole('claude');
+    if (!['codex-tools', 'codex-stop'].includes(run.mode)) throw new Error('arm applies only to codex-tools or codex-stop.');
     const deadline = Date.now() + 300000;
     if (!uuid.test(values['reply-to'] ?? '')) throw new Error('arm requires --reply-to with the received setup message UUID.');
     if (existsSync(armPath)) throw new Error('This run has already been armed. Create a new run instead of repeating it.');
@@ -90,12 +98,10 @@ async function main() {
       'Leave evidence inspection until the subsequent scenario-complete notice.', values['reply-to']);
     arm.readyMessageId = ready.messageId;
     save(armPath, arm);
-    const window = await waitFor(() => existsSync(windowPath) ? readJson(windowPath) : null, 'the Codex work window', deadline);
+    const window = await waitFor(() => optionalJson(windowPath), 'the Codex work window', deadline);
     if (window.runId !== run.runId || window.mode !== run.mode) throw new Error('Wrong work window.');
     await sleep(run.mode === 'codex-tools' ? 2000 : 5000);
-    if (run.mode === 'codex-tools' && Date.now() >= Date.parse(window.plannedEndAt) - 3000) {
-      throw new Error('The tool window was missed. No test message was sent.');
-    }
+    if (run.mode === 'codex-tools' && Date.now() >= Date.parse(window.plannedEndAt) - 3000) throw new Error('The tool window was missed. No test message was sent.');
     const marker = `${run.mode === 'codex-tools' ? 'P06-TOOL' : 'P06-STOP'}-${randomUUID().replaceAll('-', '')}`;
     const body = run.mode === 'codex-tools'
       ? `P06-TOOL-MESSAGE run=${run.runId} marker=${marker}. This was sent from the original Claude session during the Codex tool window. ` +
@@ -107,7 +113,7 @@ async function main() {
     arm.phase = 'waiting-suppression';
     arm.testMessageId = sent.messageId;
     save(armPath, arm);
-    save(join(directory, 'sent.json'), { runId: run.runId, marker, submittedAt, queuedAt: new Date().toISOString(), ...sent });
+    save(sentPath, { runId: run.runId, marker, submittedAt, queuedAt: new Date().toISOString(), ...sent });
     const receipt = await waitFor(() => optionalJson(join(store.root, 'receipts', `${sent.messageId}.json`)), 'a Codex consumption record', deadline);
     let suppressed = false;
     if (receipt.hook !== 'UserPromptSubmit') {
@@ -132,6 +138,15 @@ async function main() {
   }
 
   if (command === 'work') {
+    if (run.mode === 'claude-generation') {
+      requireRole('claude');
+      if (existsSync(windowPath)) throw new Error('Use each generation window once.');
+      const startedAt = new Date().toISOString();
+      const window = { runId: run.runId, mode: run.mode, pid: process.pid, startedAt, toolEndedAt: new Date().toISOString() };
+      save(windowPath, window);
+      console.log(JSON.stringify(window));
+      return;
+    }
     requireRole('codex');
     if (!existsSync(armPath) || existsSync(windowPath)) throw new Error('Wait for the armed sender and use this work window once.');
     const arm = readJson(armPath);
@@ -146,12 +161,44 @@ async function main() {
     return;
   }
 
+  if (command === 'watch') {
+    requireRole('codex');
+    if (run.mode !== 'claude-generation' || existsSync(sentPath)) throw new Error('watch applies once to claude-generation only.');
+    const deadline = Date.now() + 300000;
+    const window = await waitFor(() => optionalJson(windowPath), 'the Claude generation signal', deadline);
+    if (window.runId !== run.runId || window.mode !== run.mode) throw new Error('Wrong generation window.');
+    const delayMs = Number(values['delay-ms'] ?? '1200');
+    if (!Number.isInteger(delayMs) || delayMs < 500 || delayMs > 30000) throw new Error('--delay-ms must be an integer from 500 through 30000.');
+    const sendAt = Date.parse(window.toolEndedAt) + delayMs;
+    if (Date.now() < sendAt) await sleep(sendAt - Date.now());
+    const marker = `P06-CLAUDE-GEN-${randomUUID().replaceAll('-', '')}`;
+    const submittedAt = new Date().toISOString();
+    const sent = await send(`P06-CLAUDE-GEN-MESSAGE run=${run.runId} marker=${marker}. This was sent from Codex after your generation signal and before your long final summary was expected to finish. ` +
+      'At your first context after the current generation, report P06-CLAUDE-GEN-CHECKPOINT with this actual marker, then run the provided record command once, and finish with P06-CLAUDE-GEN-DONE. Do not read scenario records to obtain the marker.');
+    save(sentPath, { runId: run.runId, marker, submittedAt, queuedAt: new Date().toISOString(), ...sent });
+    const result = await waitFor(() => optionalJson(resultPath), 'the Claude checkpoint result', deadline);
+    const watch = { runId: run.runId, testMessageId: sent.messageId, resultRecordedAt: result.reportedAt, completedAt: new Date().toISOString() };
+    save(join(directory, 'watch.json'), watch);
+    console.log(JSON.stringify(watch));
+    return;
+  }
+
+  if (command === 'record') {
+    requireRole('claude');
+    if (run.mode !== 'claude-generation' || existsSync(resultPath)) throw new Error('record applies once to claude-generation only.');
+    if (!/^P06-CLAUDE-GEN-[0-9a-f]{32}$/.test(values.marker ?? '') || !uuid.test(values['message-id'] ?? '')) throw new Error('record requires the actual marker and received message UUID.');
+    const message = store.message(values['message-id']);
+    if (message.to?.tool !== 'claude' || message.to?.sessionId !== pair.claudeId || !message.body?.includes(values.marker)) throw new Error('The recorded message does not match this Claude session and marker.');
+    const result = { runId: run.runId, marker: values.marker, messageId: values['message-id'], reportedAt: new Date().toISOString(), reportedBy: 'original-claude-session' };
+    save(resultPath, result);
+    console.log(JSON.stringify(result));
+    return;
+  }
+
   if (command === 'reverse') {
     requireRole('codex');
     const arm = readJson(armPath);
-    if (run.mode !== 'codex-tools' || arm.phase !== 'waiting-suppression' || values.to !== arm.testMessageId) {
-      throw new Error('Reverse delivery requires the actual received tool-test message and a still-waiting Claude tool.');
-    }
+    if (run.mode !== 'codex-tools' || arm.phase !== 'waiting-suppression' || values.to !== arm.testMessageId) throw new Error('Reverse delivery requires the actual received tool-test message and a still-waiting Claude tool.');
     const marker = `P06-CLAUDE-TOOL-${randomUUID().replaceAll('-', '')}`;
     const sent = await send(`P06-REVERSE-TOOL run=${run.runId} marker=${marker}. This reply was sent while your original foreground scenario tool was still waiting. ` +
       'When that tool finishes, first report P06-CLAUDE-TOOL-CHECKPOINT with this marker from your actual context. Do not read scenario records to obtain it. Finish locally after the checkpoint; no bridge reply is needed.', values.to);
@@ -159,7 +206,7 @@ async function main() {
     console.log(JSON.stringify({ runId: run.runId, reverseMessageId: sent.messageId, submitted: true }));
     return;
   }
-  throw new Error('Use create, arm, work, or reverse.');
+  throw new Error('Use create, arm, work, reverse, watch, or record.');
 }
 
 main().catch((error) => {
