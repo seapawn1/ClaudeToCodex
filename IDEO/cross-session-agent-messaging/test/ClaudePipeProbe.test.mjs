@@ -97,6 +97,20 @@ test('registration protects the token and pipe sending preserves auth then messa
   assert.equal(readJson(recordPath).pipeWrite, 'completed');
   assert.equal(readJson(recordPath).receipt, 'unverified');
   assert.equal(readFileSync(recordPath, 'utf8').includes(token), false);
+
+  const bridgeId = randomUUID();
+  const textPath = join(directory, 'peer-body.txt');
+  const text = 'Peer message: \u4f60\u597d.\nQuotes "stay literal" and so do $variables.';
+  writeFileSync(textPath, text);
+  const generic = await runScript('Send-ClaudeProbe.ps1', [
+    '-EndpointPath', endpointPath, '-ReplyThreadId', codexId, '-MessageFile', textPath, '-MessageId', bridgeId,
+  ], env);
+  assert.equal(generic.code, 0, generic.stderr);
+  assert.equal(frames.length, 4);
+  assert.equal(frames[3].msg_id, bridgeId);
+  assert.equal(typeof frames[3].message.content, 'string');
+  assert.equal(frames[3].message.content, text);
+  assert.equal(frames[3].session_id, claudeId);
 });
 
 test('reply runs from Claude and queues the marker for the exact original Codex thread', windowsOnly, async (t) => {

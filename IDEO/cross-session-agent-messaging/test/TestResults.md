@@ -1,6 +1,6 @@
 # 双向会话通信实验记录
 
-当前状态：P01 空闲 queue 收信、P03 同步 Hook 注入、P04 外部文件经 Hook 注入均已通过各自单项实验；P02 确认 queue 单独使用未满足工具后的接收边界。P04 首轮混测记录保留。P05 已完成一次经 PO 批准放行后的真实 Claude 往返；无需逐条批准的自动接收、queue 与 Hook 的组合及完整通信测试仍待验证。
+当前状态：P01 空闲 queue 收信、P03 同步 Hook 注入、P04 外部文件经 Hook 注入均已通过单项实验；P02 确认 queue 单独使用未满足工具后的接收边界。P05 完成经 PO 批准的真实 Claude 往返；P06 已在显式替换后的新 Designer 原会话上完成双向工具边界收信，并验证真实旧唤醒抑制。Stop 接续、生成中非工具阶段的更细覆盖和完整 T01–T05 汇总仍待执行。
 
 ## P01：Codex 空闲 queue 收信
 
@@ -249,3 +249,113 @@ Claude 暂存提示为：`The sender did not attest its permission mode and this
 本次确认了选定的两个原会话能完成请求与回复，PO 没有搬运测试正文，但批准了一次接收。当前没有修改全局入站设置，也没有把 PO 对这一条消息的批准视为对后续消息或权限变更的批准。
 
 PO 随后确认暂时保留现有 Claude 接收审批，是否修改原生接收设置以后再决定，不制作自动批准机制。后续按现有规则开展组合原型和连续对话验证，分别记录消息到达、审批放行、进入上下文的时间；审批等待不计为传输延迟，不把含审批的实验宣称为无需审批接收通过。设置调整不是继续原型的前置条件。
+
+## P06：组合原型准备与验证
+
+- 状态：**现场验证开始**。已先提交前期结论 `9d45155`，再开始组合制作；当前使用其后的组合原型工作树。
+- 原型入口：`prototype/Bridge.mjs`；数据与去重逻辑在 `BridgeStore.mjs`，queue 适配器为 `BridgeQueue.ps1`，Claude 管道复用已验证的 `Send-ClaudeProbe.ps1` 并支持通用正文文件。
+- 固定配对：`7c1808fd-50d4-4726-b1d7-430dd49e63af`；Codex 为 `01a074a1-bf49-72f2-9337-194555aa49f6`，Designer 为 `de6f62ab-7c48-4787-8d2a-73944478e05e`。配对已写入用户临时目录；准备时核对 Designer 仍为同一 PID 与启动时间、状态 idle。
+- 已实现：双方统一 send/reply；保持交流 ID 与回复引用；Codex 待收全文先发布，再 queue 唤醒；三个 Hook 共用原子领取与消费记录；仅对已消费消息的旧唤醒进行抑制。
+- 本地检查：9 项组合检查通过，覆盖固定配对、原会话身份、回复与追问关联、空闲注入、工具后消费、Stop 接续、正常提示与其他会话隔离、单条待收限制、并发领取，以及 CLI 到 queue 的投递。3 项管道检查通过，含通用正文的中文、换行、引号保持；发现的 PowerShell 扩展属性序列化问题已改用纯文本读取修正。
+- 配置核对：准备时官方 hooks/list 识别原探针及新增三条 Hook，无警告或错误。开始本次现场验证前，已核对新增 PostToolUse、UserPromptSubmit、Stop 定义的信任哈希；真实回复已由 UserPromptSubmit 加入上下文。
+- 范围：短文本最多 2000 字符，Codex 一条待收位置，无自动重试、自动配对、数据库或新审批机制。消费文件只表示 Hook 已准备正文，不等于模型已读。
+
+### 现场必须核对
+
+1. 已被工作中 Hook 消费的消息，其残余 queue 唤醒能否被 UserPromptSubmit 正常抑制；队列是否正常清理，后续新消息与普通用户提示是否仍正常处理。
+2. 消息在生成末尾到达时，Stop 的正文是否进入紧接着的续接，且无新消息时不会继续循环。
+3. 同一对原会话以同一个组合完成请求、回复、追问与再次回复；再按既有 TestPlan 覆盖双方空闲、生成中、工具执行中。保留 Claude 审批并记录放行时间。
+
+本地脚本输出不能替代这三项现场证据；若关键条件不成立，记录并调整组合。启用和操作见 [Bridge](../prototype/Bridge.md)。
+
+### 本次现场安排
+
+PO 发起“开始组合验证”后，核对三条新增 Hook 的信任记录、配对与空收件箱，Designer 仍为选定的原会话、状态 idle。先通过统一入口询问最小演练场景，再根据其回答追问一次，作为基础往返和接续的运行证据；仍须单独核对工作中消费后的旧唤醒抑制、Stop 接续以及各接收状态，不能仅凭本轮对话完成就宣称全部通过。
+
+### 连续对话的首轮观察
+
+交流 ID 为 `60d6db21-71fe-4b8a-b858-eaae489e7c2e`，配对保持 `7c1808fd-50d4-4726-b1d7-430dd49e63af`。已通过统一入口完成以下链条，双方仍为原 Codex 与 Designer，会话审批照旧。
+
+| 顺序 | 消息 ID | 方向 | 引用 |
+|---|---|---|---|
+| 请求演练场景 | `f2d2fa08-a063-4a33-9b6a-e7ec20224f56` | Codex → Claude | 新交流 |
+| 场景与结束条件建议 | `691d0029-2734-4496-9e85-b383680785d4` | Claude → Codex | 引用第一条 |
+| 按已确定接收规则追问 | `b4881708-2c38-4be0-bb01-c0b36d91bf11` | Codex → Claude | 引用第二条 |
+| 对判定方式的再次回答 | `457c1c72-7373-40bf-bc54-d81c04c71656` | Claude → Codex | 引用第三条 |
+| 结论、校正与关闭通知 | `9adca1fb-ddd3-4dce-86cc-753c5f5b4ed7` | Codex → Claude | 引用第四条；无需回信 |
+
+两条 Claude 回复的消费记录均为 `UserPromptSubmit`，分别在 UTC `2026-09-06T18:31:20.690Z` 和 `18:34:50.689Z` 准备正文；相应会话输入已直接携带完整消息，Codex 据内容继续追问与收束。消息正文、交流关联和消费记录位于组合原型运行目录。关闭通知已完成管道写入，其接收状态仍按 Claude 原生审批处理。
+
+该轮证明了统一接口下的基本连续往返。Designer 建议中的旧宽窄口径与仅靠自述的判据没有作为需求采用，已通过消息校正；通信接续是否成立与建议质量分开判断。旧唤醒抑制和 Stop 等组合条件仍未因此获得通过结论。
+
+### 旧唤醒重放与后续队列（通过）
+
+在 Codex 待收位置为空、第四条回复已有消费记录的条件下，重放该消息的旧唤醒，并紧接着排入一条普通控制提示。控制提示来自本地测试脚本，不是 Claude 的新来信。
+
+控制编号为 `6153b88bea3e4fecb78925e7f2a9ea28`，重放消息 ID 为 `457c1c72-7373-40bf-bc54-d81c04c71656`。以下为 2026-09-07 北京时间（UTC+8）。
+
+| 时间 | 事实 | 依据 |
+|---|---|---|
+| 02:50:19.762 起 | 先排入旧唤醒，再排入普通控制提示 | `P06-duplicate-6153b88bea3e4fecb78925e7f2a9ea28.json` |
+| 02:51:39.873 | 前一工作回合正常结束 | ordinal 3689 |
+| 02:51:40.297 | UserPromptSubmit 抑制已消费消息的旧唤醒 | `events.jsonl` 的 `wake-suppressed` |
+| 02:51:40.335 | 旧唤醒的处理回合结束 | ordinal 3692 |
+| 02:51:40.342 | 队列继续启动控制提示的回合 | ordinal 3693 |
+| 02:51:40.747 | 控制提示成为原 Codex 会话输入 | `UserMessage`，ordinal 3696 |
+
+- 旧唤醒队列项：`01a0780e-aa15-76f1-8f23-f7f1fc4b879a`。
+- 控制提示队列项：`01a0780e-ab0b-73c1-bfaf-1f465b00f03d`。
+- 旧唤醒处理回合：`01a0780f-d9e3-7c63-9c91-374221bf3c0e`；会话记录仅有回合开始、上下文与结束，未新增正文输入或模型回复，`logs_2.sqlite` 中该回合的 `feedback_tags` 采样日志计数为 0。
+- 控制提示回合：`01a0780f-dbb2-7c70-9fbd-aaeb5320183e`，即本次自动进入的核对请求。
+- 只读查询 `queue_1.sqlite.queued_items`：上述两个 ID 均已不在队列中；组合收件箱也为空。
+
+结论：当前版本中，UserPromptSubmit 对已消费唤醒返回 block 后，旧正文没有再次交付，队列继续处理了紧接着的普通提示，无需 PO 手动重试队列。本次只验证这段抑制与推进机制；重放对象原先由 UserPromptSubmit 消费，并非一次真实工具期间发送产生的竞争情形。实际组合 PostToolUse 收信与 Stop 接续仍待验证。没有在已关闭的 Designer 交流中追加消息，也没有循环排入更多控制提示。
+
+### 后续接收配置与工作窗口
+
+PO 随后明确告知，已自行将 Claude 接收设置改为 accept 并要求继续。只读核对用户级 `C:/Users/DELL/.claude/settings.json` 得到 `crossSessionInbound: accept`，工具权限默认仍为 `bypassPermissions`；Designer 工作树的项目与本地配置未设置该项。历史 P05 的人工批准条件保留，后续实验按新的配置记录实际接收，不制作自动批准机制。
+
+新增仅用于验证的 `RunBridgeScenario.mjs`，通过真实原会话的工具安排发送时间。先做 codex-tools：Claude 前台工具回复准备好，等待 Codex 的工作窗口后使用统一入口主动发信；Codex 在首次续接报告标记并回信，使反向消息到达仍在执行工具的 Claude。完成通知需等待实际旧唤醒的抑制记录；其出现不是通过判据，仍需核对两个原会话的输入与工具时序。
+
+随后做 codex-stop，发送方在生成信号后延迟发信。接收记录必须证实 Stop 将正文交给紧接着的续接；未捕捉到指定状态时不判通过。脚本已做语法检查，现场运行结果待补充。
+
+### 会话断开、显式重配对
+
+原 Designer `de6f62ab-7c48-4787-8d2a-73944478e05e` 的会话记录显示，模型请求先后出现 `503 Service temporarily unavailable` 与 `502 Upstream service temporarily unavailable`，均指向 `sdisk.cc`。Claude daemon 随后在 UTC `2026-09-07T14:00:06Z` 将该后台 worker 记为 killed，旧进程与管道消失。该断开属于外部模型网关和 Claude 后台生命周期问题，不是本通信桥的投递错误；旧端点写入成功不能证明旧进程仍可获知消息。
+
+PO 随后显式指定新 Designer 会话 `85ca6832-0f48-4dd1-8bb6-c1a635df63d4`。为保留旧证据，不移动旧 `bridge/` 目录；新增 `%TEMP%/cross-session-agent-messaging/active-bridge.json` 指向 `bridge-85ca6832-0f48-4dd1-8bb6-c1a635df63d4/`。`BridgeStore` 优先读取该指针，`CTC_BRIDGE_DIR` 仍用于测试隔离。新配对 ID 为 `0b05be67-e886-4809-83b3-f94921abac3c`。这是显式替换，不把旧会话测试结果转移到新会话。
+
+### codex-tools 双向工具边界（通过）
+
+运行编号 `e087acc9-39ca-405b-b18a-5ac658702305`。以下时间为北京时间（UTC+8）。
+
+| 时间 | 事实 | 依据 |
+|---|---|---|
+| 22:28:39.354 | Designer 原会话启动 arm 场景工具 | Claude transcript 工具调用 `call_f8ecdef2a5784088bb8305f4` |
+| 22:28:41.234 | Designer 发出准备完成消息 `f08f31f3...` | 消息记录 |
+| 22:28:45.849 | Codex 原会话通过 UserPromptSubmit 获得准备消息 | receipt 与 rollout ordinal 4342 |
+| 22:28:59.206 至 22:29:19.220 | Codex 20 秒工作窗口执行 | `window.json` |
+| 22:29:01.242 | Designer 在窗口内创建测试消息 `24da2db2...` | `sent.json` |
+| 22:29:01.951 | 唤醒进入 Codex queue | events `wake-submitted` |
+| 22:29:19.268 | Codex 工具执行完成 | rollout ordinal 4350 |
+| 22:29:20.819 | PostToolUse 领取完整正文并准备上下文 | receipt `hook: PostToolUse` |
+| 22:29:41.779 | Codex 首次续接报告正确标记 | rollout ordinal 4356 |
+| 22:29:43.274 | Codex 反向消息 `35c8de3c...` 写入 Designer 管道 | events `pipe-written` |
+| 22:29:43.262 | 反向正文进入 Designer 原会话上下文；此时 arm 后台任务尚未结束 | Claude transcript peer message 与 task `bczjshys7` |
+| 22:30:05.430 | 真实旧唤醒被抑制 | events `wake-suppressed` |
+| 22:30:07.522 | Designer arm 任务完成通知 | Claude task notification |
+| 22:30:22.124 | Designer 首次续接报告正确反向标记 | Claude transcript |
+| 22:30:15.813 | Codex 收到完成通知 | rollout ordinal 4383 |
+
+- Codex 输入消息标记：`P06-TOOL-14e78b51fb944d599bfdd3f67f9bbdef`。
+- 反向消息标记：`P06-CLAUDE-TOOL-b0041f291b4c4066801f37c110c43e12`。
+- Codex 检查点：`P06-CODEX-TOOL-CHECKPOINT: P06-TOOL-14e78b51fb944d599bfdd3f67f9bbdef`。
+- Claude 检查点：`P06-CLAUDE-TOOL-CHECKPOINT: P06-CLAUDE-TOOL-b0041f291b4c4066801f37c110c43e12`。
+- 相关队列项：准备消息 `01a07c45-7a2e-70c2-a038-21dd2e8ddbab`、测试消息 `01a07c45-c31a-7552-9e17-0ae05b5eb0da`、完成通知 `01a07c46-c2ba-7b41-9ced-4fab9d4ff584`；只读查询确认均不在 `queued_items`。
+- 原始运行文件：新活动 bridge 目录下 `scenarios/e087acc9-39ca-405b-b18a-5ac658702305/`。
+- Codex 原始记录：既有 rollout JSONL，ordinals 4342、4350、4356、4383。
+- Claude 原始记录：`C:/Users/DELL/.claude/projects/D--ClaudeToCodex/85ca6832-0f48-4dd1-8bb6-c1a635df63d4.jsonl`。
+
+结论：在新配对的两个原会话中，Codex 于工具结束后的首次续接获得工具窗口内发来的完整正文；随后旧唤醒被抑制且队列清空。Codex 的反向正文在 Designer 的 arm 后台任务尚未结束时进入其原会话上下文，并在下一次模型续接中报告正确标记。该轮通过双向“工具/任务边界”收信验证。
+
+范围限定：Claude 侧的工具调用返回了后台任务句柄，反向正文进入上下文发生在该后台任务尚未结束、下一次模型调用之前；这证明相邻调用边界，但不能推广为所有前台阻塞工具和模型生成中状态均已覆盖。Stop 接续仍未测试，不能据此宣称完整 P06 或 T01–T05 全部通过。

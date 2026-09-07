@@ -1,5 +1,5 @@
 {
-  "description": "P03 prototype: test context injection after an explicitly requested tool.",
+  "description": "Cross-session messaging probes and the combined prototype bridge.",
   "hooks": {
     "PostToolUse": [
       {
@@ -11,6 +11,42 @@
             "timeout": 5,
             "async": false,
             "additionalContextLimit": 3000
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:/ClaudeToCodex/IDEO/cross-session-agent-messaging/prototype/Bridge.mjs\" hook",
+            "timeout": 5,
+            "async": false,
+            "additionalContextLimit": 20000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:/ClaudeToCodex/IDEO/cross-session-agent-messaging/prototype/Bridge.mjs\" hook",
+            "timeout": 5,
+            "async": false,
+            "additionalContextLimit": 20000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:/ClaudeToCodex/IDEO/cross-session-agent-messaging/prototype/Bridge.mjs\" hook",
+            "timeout": 5,
+            "async": false
           }
         ]
       }

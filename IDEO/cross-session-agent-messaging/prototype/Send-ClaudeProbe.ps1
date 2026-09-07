@@ -6,7 +6,12 @@ param(
     [ValidatePattern('^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')]
     [string]$ReplyThreadId = $env:CODEX_THREAD_ID,
 
-    [switch]$DryRun
+    [switch]$DryRun,
+
+    [string]$MessageFile,
+
+    [ValidatePattern('^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')]
+    [string]$MessageId
 )
 
 Set-StrictMode -Version Latest
@@ -30,9 +35,15 @@ $message = "Codex peer message for the agreed communication prototype. Marker: $
     "Please reply once to the original Codex session by running this command from your current session tool:`n" +
     $replyCommand + "`n`nThen report locally that the reply was submitted. " +
     'Do not start another session, edit project files, or send further messages for this probe.'
+if ($MessageFile) {
+    if (-not $MessageId) { throw 'A bridge message file requires its message UUID.' }
+    $message = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $MessageFile).ProviderPath, [Text.Encoding]::UTF8)
+    if (-not $message.Trim()) { throw 'Bridge message text is empty.' }
+    $marker = 'BRIDGE-' + $MessageId
+}
 $frame = [ordered]@{
     msgV = 1
-    msg_id = [guid]::NewGuid().ToString()
+    msg_id = if ($MessageFile) { $MessageId } else { [guid]::NewGuid().ToString() }
     type = 'user'
     message = @{ role = 'user'; content = $message }
     priority = 'now'
@@ -42,7 +53,7 @@ $directory = Join-Path ([IO.Path]::GetTempPath()) 'cross-session-agent-messaging
 $null = New-Item -ItemType Directory -Force -Path $directory
 $recordPath = Join-Path $directory ("$marker-send.json")
 $record = [ordered]@{
-    probe = 'P05-codex-claude-roundtrip'
+    probe = if ($MessageFile) { 'combined-bridge-claude-send' } else { 'P05-codex-claude-roundtrip' }
     marker = $marker
     senderThreadId = $ReplyThreadId
     recipientSessionId = $endpoint.sessionId
@@ -83,6 +94,6 @@ try {
     $record.pipeWriteFinishedAt = [DateTimeOffset]::UtcNow.ToString('o')
     $record | ConvertTo-Json | Set-Content -Encoding UTF8 -LiteralPath $recordPath
 }
-Write-Output "P05 record: $recordPath"
+Write-Output "Pipe send record: $recordPath"
 if ($record.error) { throw "Claude pipe write failed: $($record.error)" }
-Write-Output 'P05 message written to the selected Claude pipe. Actual receipt and reply remain unverified.'
+Write-Output 'Message written to the selected Claude pipe. Actual receipt and reply remain unverified.'
