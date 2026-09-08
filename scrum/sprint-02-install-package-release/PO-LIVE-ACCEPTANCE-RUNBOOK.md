@@ -1,0 +1,48 @@
+# 候选 2 现场验收运行手册（PO 参与版）
+
+目标：一轮真实使用同时取得 AC-08-01c（hook 执行）技术证据与 PO 体验反馈。先确认 AC，再由 PO 确认 DoD；Review/Retro 后正式发布，顺序不变。
+
+## 环境隔离设计（操作员准备，PO 零配置）
+
+| 污染源 | 隔离方式 |
+|---|---|
+| Planning 桥旧 hooks（`D:\ClaudeToCodex\.codex\hooks.json`） | 验收 Codex 会话在**全新项目目录** `D:\ClaudeToCodex-Accept` 启动——项目级 hooks 按项目目录加载，旧 hooks 不出现 |
+| 默认数据目录与既有配对（Planning pair `8e053501…`） | 启动终端由**操作员**预设 `$env:CTC_BRIDGE_DIR = "$env:LOCALAPPDATA\ClaudeToCodex\bridge-accept-c2"`（隔离数据目录；这是文档化的隔离机制，PO 不设置任何环境变量） |
+| 隔离宿主未登录模型账户（上轮受阻原因） | 使用 **PO 真实 CODEX_HOME**（本机已登录）启动真会话——插件安装进真实缓存，hook 信任发生在真实会话 |
+
+## 操作员准备（SM 或 Developer，一次性）
+
+```powershell
+New-Item -ItemType Directory -Force D:\ClaudeToCodex-Accept | Out-Null
+cd D:\ClaudeToCodex-Accept
+$env:CTC_BRIDGE_DIR = "$env:LOCALAPPDATA\ClaudeToCodex\bridge-accept-c2"
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref sprint-02-install-package-release
+codex plugin add claudetocodex@claudetocodex-dev
+# 绑定核对：安装目录与候选 2 ZIP 逐文件一致（SHA256 185da0bf…6cb5e6b）
+```
+
+保持该终端打开（继承隔离数据目录），交 PO 使用。
+
+## PO 的最少人工步骤（仅登录/授权/自然语言）
+
+1. 在准备好的终端启动 Codex 会话（如需登录，按提示完成——本机通常已登录）。
+2. `/hooks`：审核并**信任三条 `claudetocodex` hook**（一次性人工授权，产品不代改）。
+3. 在同目录（或任一新目录）正常启动一个 Claude Code 会话，起个可识别的名字（如 "accept-c2"）。
+4. 回到 Codex 会话说：「**连接 Claude 会话 accept-c2**」。
+5. 自然语言交流一轮真实协作：Codex 发请求 → Claude 回复 → Codex 追问 → Claude 再答（消息里带唯一标记，如 `CTC-C2-ACCEPT-<随机>`）。
+
+PO 全程不执行 register/pair、不复制任何 ID、不设置环境变量。
+
+## 证据采集与绑定（操作员）
+
+- **AC-08-01c hook 执行**：Claude→Codex 方向的回复会触发 Codex 会话内插件 hooks；证据 = `%LOCALAPPDATA%\ClaudeToCodex\bridge-accept-c2\events.jsonl` 中的 `context-prepared` 记录（核对 pairId=本次新 pair、时间在本轮内）。
+- **AC-08-01d skill 可用**：Codex 会话记录中 claudetocodex skill 被发现/触发连接的片段。
+- **候选绑定**：安装缓存目录（用户 CODEX_HOME 下 `plugins\cache\claudetocodex-dev\claudetocodex\1.0.0`）与候选 2 ZIP 的逐文件一致性 + ZIP SHA256。
+- 复判（仓库运行）：`powershell -NoProfile -File bridge\release\Test-Acceptance.ps1 -HookEvidence <bridge-accept-c2\events.jsonl> -SkillEvidence <会话记录文件>`，两证齐全预期 10/0/0、退出 0。
+- 全部过程资料归档至本 Sprint 文件夹（如 `po-acceptance-c2/`）。
+
+## 回答 PO 的三个问题（口径）
+
+1. **为何 hook 项未通过**：不是产品缺陷——上轮隔离宿主未登录模型账户且 hooks 未信任，真实执行证据尚未取得；产品按设计保留人工信任，SM 未代信任、未绕过。
+2. **PO 能否参与**：能，且这正是下一步——同一轮真实使用同时产出技术证据与体验反馈。
+3. **如何继续发布**：本轮 → AC 复判（SM 定稿技术验收）→ PO 确认 DoD → Sprint Review → Retro → 正式发布同一份候选 2 资产（不重建）。
