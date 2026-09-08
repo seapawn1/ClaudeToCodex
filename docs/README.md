@@ -1,26 +1,21 @@
 # Docs
 
-This directory keeps durable project knowledge. Process-heavy materials are distilled here before entering; their original versions remain recoverable from Git history.
+This directory keeps durable project knowledge. Process-heavy records are distilled into review documents before cleanup; original Sprint evidence remains recoverable through Git history.
 
 ## Current documents
 
-- [DeepResearchSynthesis.md](DeepResearchSynthesis.md): cross-tool messaging research conclusions, evidence boundaries, rejected risks, and items handed to Scrum.
-- [ideo-design/cross-session-agent-messaging.md](ideo-design/cross-session-agent-messaging.md): the closed Design Sprint target, selected bridge architecture, T01-T05 evidence summary, and engineering handoff boundary.
+- [scrum-sprint/sprint-01-bridge-review-retro.md](scrum-sprint/sprint-01-bridge-review-retro.md): Sprint 01 Increment review, value inspection, backlog adaptation, and retrospective.
+- [DeepResearchSynthesis.md](DeepResearchSynthesis.md): cross-tool messaging research conclusions, evidence boundaries, rejected risks, and Scrum handoff.
+- [ideo-design/cross-session-agent-messaging.md](ideo-design/cross-session-agent-messaging.md): closed Design Sprint target, selected architecture, T01–T05 evidence, and engineering boundary.
 
-## Design Sprint archive
+## Sprint 01 archive
 
-The active IDEO process directories were removed after closure. The annotated tag `design-sprint-closed` marks the design-sprint closing commit, while its parent baseline `3b43b80` still contains the complete research, ideation, prototype, and test files.
-
-Useful recovery commands:
+One-off Sprint Backlog and evidence files were removed from the active tree after being distilled into the Sprint 01 review. Use:
 
 ```powershell
-git show design-sprint-closed --no-patch
-git ls-tree -r --name-only design-sprint-closed^ IDEO
-git show design-sprint-closed^:IDEO/deep-research/Synthesis.md
+git show sprint-01-bridge-review-retro --no-patch
+git show sprint-01-bridge-review-retro^:scrum/SprintBacklog.md
+git show 5ce9128:bridge/docs/evidence/smoke-20260908-2/MATRIX.md
 ```
 
-The obsolete prototype hooks were removed after closure in commit `5edff9b`; they will be rebuilt under the future product structure during Scrum, not restored from the old IDEO paths.
-
-## Future organization
-
-The Scrum phase has started. The product, product vision, DoD placeholders, PBI table, and value-flow map live in [../scrum/ProductBacklog.md](../scrum/ProductBacklog.md); sprint records and implementation documentation should be added under `scrum/` as the work emerges. This directory should continue to favor readable, stable knowledge over preserving every working-process file.
+The annotated `sprint-01-bridge-review-retro` tag records the retention and cleanup decision.
