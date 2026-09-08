@@ -65,7 +65,7 @@ PBI-02、03、06、07 均留在 Product Backlog。本次不另做安装器、卸
 | WI-03 | 候选包自检（预发布） | 仓库外解压候选包：`Verify-Release.ps1` 核对 manifest；运行三套离线回归；在临时干净项目执行 `install --hooks-file`，核对 hook 命令指向解压位置；不运行 register（避免干扰 Planning 桥端点）。 | 校验通过；回归通过；hook 路径锚定包内 cli.mjs | 完成 |
 | WI-04 | 候选资产准备与草稿 Release（非正式） | 候选 ZIP 与 `.sha256` 本地构建、自检并在 `%LOCALAPPDATA%\ClaudeToCodex\releases\candidates\1.0.0\` 暂存（仅为构建暂存）；目标仓库确认后上传为 **GitHub 草稿 Release** 资产供 PO 下载；**不打正式 tag、不正式发布**；Developer 不自行选择可见性、不创建仓库。 | 草稿 Release 中的资产与本地候选为同一文件（SHA256 一致） | 完成 |
 | WI-05 | PO 验收轮（需 PO 参与） | PO **从 GitHub 草稿 Release 下载同一份 ZIP**，在无现成 bridge 配置的新项目按 `INSTALL.md` 完成安装、配对与双向请求/回复/追问/再答；双侧原始会话及 hook 使用同一独立 `CTC_BRIDGE_DIR`；唯一标记与接收方原始会话事件核对；PO 记录版本、环境、问题与结论。 | 2.2 验收标准；验收对象与后续正式发布资产为同一文件 | 待开始 |
-| WI-06 | 正式发布（PO 验收通过后） | 在验收通过的 commit 上打 tag `v1.0.0`；将**通过验收的同一份资产**转为正式 GitHub Release（不重建、不重传不同内容），复核校验值一致；manifest 中 `sourceCommit` 即 tag 指向的 commit。 | tag、manifest、正式 Release 资产三者可核对；正式资产与验收资产校验值一致 | 待开始 |
+| WI-06 | 正式发布（PO 验收通过后） | 在验收通过的 commit 上打 tag `v1.0.0`；将**通过验收的同一份资产**转为正式 GitHub Release（不重建、不重传不同内容），复核校验值一致；manifest 中 `sourceCommit` 即 tag 指向的 commit。**取包来源约束：重传备选只能使用已验收的 GitHub 资产（SHA256 `c5d448d4…5c563`，可从 GitHub 重新下载或用已验证回读副本）；本地 `releases\candidates\1.0.0\` 中为过期旧包（`32e2a385…`，commit `95fc7f7` 时期产物），不得取用。** | tag、manifest、正式 Release 资产三者可核对；正式资产与验收资产校验值一致 | 待开始 |
 
 顺序依据：PBI-05 原验收要求「正式发布前，PO 使用最终分发的同一份发布物…验收通过」，故 PO 验收（WI-05）先于正式 tag 与正式位置（WI-06）；验收未通过则修复、重建候选、重新验收， tag 始终落在最终通过的 commit 上。
 
