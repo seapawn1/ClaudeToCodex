@@ -125,8 +125,8 @@ install 子命令：生成/更新三条 hook 注册（PostToolUse 无 matcher、
 完成判据：smoke 文档存在且含五要素；首次运行产出十格判定矩阵完整填表，每格至少一份现场证据（会话事件记录 + 唯一标记）留存于声明位置。
 
 **WI-10 使用说明、边界声明与 smoke 重复运行收口**（1d，依赖 WI-09）→ PBI-01.4 AC1（可重复性第二次运行）、AC2、AC3；Sprint DoD 交叉核对
-使用说明四部分：安装（含人工信任/resume 重载与 crossSessionInbound 设置）、配置（register/pair、单配对模型与显式重配对、数据目录位置与生命周期边界）、发起通信与回复（send/reply 用法、trim 后 1..2000 字符上限、单待收槽、失败不自动重试与 status 对账、receipt 恒 unverified 的送达语义）、故障排查（身份环境变量污染、pending 单槽占用、端点失效走显式重配对）。边界声明逐条对照设计文档 §4 清单，并补平台（Windows-only）与版本基线，不得暗示未验证能力已完成。最后按 smoke 文档做第二次独立运行（新会话/新标记/独立数据目录），并对照 3.7 Sprint DoD 核对记录逐项核对留档。
-完成判据：四类任务各含可直接执行步骤；第二次独立运行按既有 smoke 文档完成并通过同样证据判定；边界声明逐条对应设计文档 §4 并点名平台与两 CLI 版本；3.7 Sprint DoD 核对记录全部勾选并留档。
+使用说明四部分：安装（含人工信任/resume 重载与 crossSessionInbound 设置）、配置（register/pair、单配对模型与显式重配对、数据目录位置与生命周期边界）、发起通信与回复（send/reply 用法、trim 后 1..2000 字符上限、单待收槽、失败不自动重试与 status 对账、receipt 恒 unverified 的送达语义）、故障排查（身份环境变量污染、pending 单槽占用、端点失效走显式重配对）。边界声明逐条对照设计文档 §4 清单，并补平台（Windows-only）与版本基线，不得暗示未验证能力已完成。最后按 smoke 文档做第二次独立运行（新会话/新标记/独立数据目录），并对照 3.7 Increment 收口核对记录逐项核对留档。
+完成判据：四类任务各含可直接执行步骤；第二次独立运行按既有 smoke 文档完成并通过同样证据判定；边界声明逐条对应设计文档 §4 并点名平台与两 CLI 版本；3.7 Increment 收口核对记录全部勾选并留档。
 
 ### 3.3 Sprint 假设
 
@@ -144,7 +144,7 @@ install 子命令：生成/更新三条 hook 注册（PostToolUse 无 matcher、
 - **Q3 平台边界**：首个 Increment 声明 Windows-only；跨平台列入未验证边界。已写回 2.2。
 - **Q4 正文上限**：沿用 trim 后 1..2000 字符。已写回 2.2。
 - **Q5 可重复定义**：同一版本基线下至少两次独立运行通过；每次使用独立 runId、新会话、唯一标记，并使用隔离数据目录或显式重配对。已写回 2.2。
-- **Q6 DoD**：全局 Definition of Output Done 不修改；Developer Plan 增设 3.7 Sprint DoD 核对记录，引用 PBI AC、自动化回归、smoke 证据和干净环境复验结果。
+- **Q6 DoD**：全局 Definition of Output Done 不修改；Developer Plan 增设 3.7 Increment 收口核对记录，引用 PBI AC、自动化回归、smoke 证据和干净环境复验结果。
 
 ### 3.5 主要风险与缓解
 
@@ -161,9 +161,9 @@ install 子命令：生成/更新三条 hook 注册（PostToolUse 无 matcher、
 
 _待填写。_
 
-### 3.7 Sprint DoD 核对记录（Increment 收口时填写）
+### 3.7 Increment 收口核对记录
 
-全局 Definition of Output Done（第 1 节）不变。本清单是 Sprint 层核对记录，逐项引用客观证据，由 Developer 在 Increment 收口时填写。
+全局 Definition of Output Done（第 1 节）不变。本节不是新的 DoD，而是本 Increment 收口时的证据核对记录，用于逐项引用客观证据，判断 DoD 与 PBI AC 是否已满足。
 
 | # | 核对项 | 状态 | 证据位置 |
 |---|---|---|---|
