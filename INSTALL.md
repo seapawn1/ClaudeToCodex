@@ -6,7 +6,7 @@
 
 - Windows 10 及以上（已验证：Windows 10 Pro 19045）。
 - Node.js（已验证基线 v24.14.0）。
-- Codex CLI ≥ 0.117.0（已验证：0.153.4），终端可用 `codex`。
+- Codex CLI（本轮插件已验证版本：0.153.4；更早版本未验证），终端可用 `codex`。
 - 一个正在运行的 Claude Code 会话（知道它的名字即可）。
 
 ## 1. 安装插件
@@ -19,7 +19,7 @@ codex plugin add claudetocodex@claudetocodex-dev
 ## 2. 必要授权（人工步骤，产品不代改）
 
 - 在 Codex 会话中运行 `/hooks`，审核并信任三条 `claudetocodex` bridge hook（插件 hook 属非托管，需人工信任）。
-- 完全退出该 Codex 会话后 `codex resume <threadId>` 重载（hook 不热加载）。
+- hook 不热加载：完全退出该 Codex 会话后，重开时运行 `codex resume`（会话选择器，无需手写会话 ID）继续同一会话。
 - Claude 侧接收策略：`crossSessionInbound` 默认将外来消息暂存等待批准；`accept` 为已验证配置，由你自行确认或设置。
 
 ## 3. 指定 Claude 会话
