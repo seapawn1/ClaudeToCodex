@@ -21,7 +21,7 @@ codex plugin add claudetocodex@claudetocodex-dev
 # 绑定核对：安装目录与候选 2 ZIP 逐文件一致（SHA256 185da0bf…6cb5e6b，固定 commit b6286c0）
 ```
 
-**PO 的启动入口**：运行 `scrum\sprint-02-install-package-release\po-acceptance-c2\Start-AcceptCodex.ps1`——它校验插件已装、进入隔离项目目录、仅在该窗口设定验收数据目录并启动 Codex（提示可选 `codex resume` 会话选择器继续上次验收会话）；PO 无需手配任何环境变量或 ID。
+**PO 的启动入口**：在 PowerShell 中运行 `& "D:\ClaudeToCodex\scrum\sprint-02-install-package-release\po-acceptance-c2\Start-AcceptCodex.ps1"`（本机执行策略 RemoteSigned 允许本地脚本，无需额外参数）——它校验插件已装、进入隔离项目目录、仅在该窗口设定验收数据目录并启动 Codex；支持 `codex resume` 会话选择器继续上次验收会话（信任 hooks 后如宿主要求重载：退出后重跑入口选 y 即可）；PO 无需手配任何环境变量或 ID。脚本为 UTF-8 带 BOM（PS 5.1 兼容，ParseFile 0 错误）。
 
 ## PO 的最少人工步骤（仅登录/授权/自然语言）
 
