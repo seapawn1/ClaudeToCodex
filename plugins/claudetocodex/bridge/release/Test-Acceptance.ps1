@@ -9,15 +9,25 @@ param(
   [string]$ReportPath,
   [switch]$SkipHostInstall,
   [string]$HookEvidence,
-  [string]$SkillEvidence
+  [string]$SkillEvidence,
+  # Override for package-derived runs: point at an extracted plugin-root (or any plugin tree).
+  # When set, repo-dependent checks (host install from this repo's marketplace, dev-tree parity
+  # scan) are skipped or scoped, and the commit is taken from the package manifest when present.
+  [string]$PluginDir
 )
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-$pluginDir = Join-Path $repoRoot 'plugins\claudetocodex'
+$packageRun = [bool]$PluginDir
+$pluginDir = if ($packageRun) { (Resolve-Path $PluginDir).Path } else { Join-Path $repoRoot 'plugins\claudetocodex' }
 $pluginBridge = Join-Path $pluginDir 'bridge'
-$commit = (git -C $repoRoot rev-parse HEAD | Out-String).Trim()
+$commit = if ($packageRun) {
+  $pkgManifest = Get-Content (Join-Path $pluginDir '.codex-plugin\plugin.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+  "package:$($pkgManifest.version)"
+} else {
+  (git -C $repoRoot rev-parse HEAD | Out-String).Trim()
+}
 
 $results = New-Object System.Collections.Generic.List[object]
 function Add-Result([string]$Ac, [string]$Name, [string]$Verdict, [string[]]$Evidence) {
@@ -91,8 +101,9 @@ if ($structureOk) { $structureEvidence = @('shipped tree: manifest fields valid;
 Add-Result 'AC-08-01a' 'Package structure validation, shipped tree (simulated)' ($(if ($structureOk) { 'PASS' } else { 'FAIL' })) $structureEvidence
 
 # ---------- AC-08-01(b): real Codex CLI host install (real host) ----------
-if ($SkipHostInstall) {
-  Add-Result 'AC-08-01b' 'Real Codex CLI isolated install (real host)' 'BLOCKED' @('skipped by -SkipHostInstall')
+if ($SkipHostInstall -or $packageRun) {
+  $reason = if ($packageRun) { 'package-derived run: this repo marketplace root is not part of the package; run from the repo for the host-install check' } else { 'skipped by -SkipHostInstall' }
+  Add-Result 'AC-08-01b' 'Real Codex CLI isolated install (real host)' 'BLOCKED' @($reason)
 } else {
   # codex refuses CODEX_HOME under %TEMP%; use a product-managed test area. Snapshot and
   # restore any caller CODEX_HOME instead of deleting the variable.
@@ -229,7 +240,9 @@ if ($leaks.Count -eq 0) {
 
 # ---------- AC-08-05(c): receive policy untouched (shipped copy first, dev tree for parity) ----------
 $policyHits = @()
-foreach ($scope in @(@{ root = $pluginBridge; label = 'shipped' }, @{ root = (Join-Path $repoRoot 'bridge'); label = 'dev' })) {
+$scopes = @(@{ root = $pluginBridge; label = 'shipped' })
+if (-not $packageRun) { $scopes += @{ root = (Join-Path $repoRoot 'bridge'); label = 'dev' } }
+foreach ($scope in $scopes) {
   $policyHits += Select-String -Path (Join-Path $scope.root '*.mjs'), (Join-Path $scope.root 'delivery\*.ps1') -Pattern 'crossSessionInbound' -ErrorAction SilentlyContinue |
     Where-Object { $_.Line -notmatch 'console\.log|Write-Output|reminder|policy:' } |
     ForEach-Object { "$($scope.label) $($_.Filename):$($_.LineNumber)" }

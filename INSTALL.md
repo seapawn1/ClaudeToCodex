@@ -1,63 +1,53 @@
-# ClaudeToCodex 1.0.0 安装与使用（最短路径）
+# ClaudeToCodex 1.0.0 安装与使用（Codex CLI 插件）
 
-本文只覆盖从本发布物出发的最短可用路径。完整说明、排查与边界见包内 `bridge\docs\USAGE.md`。
+最短路径：**安装插件 → 必要授权 → 选择会话 → 交流**。无需手动登记端点、复制会话 ID 或配置数据目录；Claude 侧无需安装任何东西。
 
 ## 前置条件
 
 - Windows 10 及以上（已验证：Windows 10 Pro 19045）。
-- 已安装 Node.js（已验证基线 v24.14.0；命令行可用 `node`）。
-- 两个正在运行的原始会话：一个 Codex、一个 Claude Code。
-- 一个**无现成 bridge 配置的目标项目**（项目内没有本产品的 hook）。
+- Node.js（已验证基线 v24.14.0）。
+- Codex CLI ≥ 0.117.0（已验证：0.153.4），终端可用 `codex`。
+- 一个正在运行的 Claude Code 会话（知道它的名字即可）。
 
-## 名词
+## 1. 安装插件
 
-- **产品目录**：本 ZIP 的解压位置，例如 `%LOCALAPPDATA%\ClaudeToCodex\app\claude-to-codex-1.0.0`（内含 `bridge\` 子目录，请保留该层级）。
-- **数据目录**（`CTC_BRIDGE_DIR`）：消息与配对数据的存放位置，**两个会话必须使用同一个**。
-- **目标项目**：你要在其中启用跨会话协作的项目。
+```powershell
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref <候选分支或版本ref>
+codex plugin add claudetocodex@claudetocodex-dev
+```
 
-## 步骤
+> 正式发布后 ref 固定为 `v1.0.0` tag / main；验收阶段使用候选分支 ref。
 
-1. **获取与解压**：从 GitHub Release 下载 `claude-to-codex-1.0.0.zip`（仓库 [seapawn1/ClaudeToCodex](https://github.com/seapawn1/ClaudeToCodex/releases)；验收阶段从草稿 Release 下载同一份资产），解压到固定的产品目录（示例同上）。可用随附的 `.sha256` 与包内 `manifest.json` 核对完整性（校验脚本在包内 `bridge\release\Verify-Release.ps1`）。
-2. **选定数据目录**：本例用 `%LOCALAPPDATA%\ClaudeToCodex\bridge-1.0.0`。它必须与其他正在使用的 bridge 数据目录（如默认目录）区分开。
-3. **先进入目标项目目录，再设置环境变量**（环境变量只在启动两个工作会话的终端里设置，不要用 `setx` 全局设置，以免影响其他 bridge 会话）：
+## 2. 必要授权（人工步骤，产品不代改）
 
-   ```powershell
-   cd <目标项目>
-   $env:CTC_BRIDGE_DIR = "$env:LOCALAPPDATA\ClaudeToCodex\bridge-1.0.0"
-   ```
+- 在 Codex 会话中运行 `/hooks`，审核并信任三条 `claudetocodex` bridge hook（插件 hook 属非托管，需人工信任）。
+- 完全退出该 Codex 会话后 `codex resume <threadId>` 重载（hook 不热加载）。
+- Claude 侧接收策略：`crossSessionInbound` 默认将外来消息暂存等待批准；`accept` 为已验证配置，由你自行确认或设置。
 
-   然后从该终端分别启动（或重启）两个验收会话：**Codex 会话必须在目标项目目录内启动**，才能读取步骤 4 写入该项目的 `.codex\hooks.json`；从其他目录启动的 Codex 读不到这份项目级 hook 配置，`/hooks` 中不会出现 bridge 定义。Claude Code 会话同样从该目录启动即可。两侧会话及其 hook 继承同一数据目录。
-4. **安装 hook**（在任一终端，指向目标项目）：
+## 3. 选择会话并连接（在目标 Codex 会话内）
 
-   ```powershell
-   node "<产品目录>\bridge\cli.mjs" install --hooks-file "<目标项目>\.codex\hooks.json"
-   ```
+```powershell
+codex plugin list --json                 # 取 claudetocodex 的 installedPath，下称 <PLUGIN_ROOT>
+node "<PLUGIN_ROOT>\bridge\cli.mjs" sessions      # 列出运行中的 Claude 会话（名称/状态/存活）
+node "<PLUGIN_ROOT>\bridge\cli.mjs" connect --name <名称的唯一片段>
+```
 
-5. **信任与重载**（Codex 会话内，人工步骤）：运行 `/hooks`，审核并信任三条 bridge hook 定义；随后完全退出该 Codex 会话，用 `codex resume <threadId>` 重新加载。hook 定义变更会使旧信任失效，需要重新信任。
-6. **确认 Claude 侧接收策略**：Claude Code 的 `crossSessionInbound` 默认把外来消息暂存等待批准；`accept` 为已验证配置。请由你自行确认或设置该策略——本产品不会代改，也不绕过批准机制。
-7. **登记 Claude 端点**（在 Claude Code 会话内运行）：
+- 重名会列出候选，换更长的片段重试；找不到、会话已退出、端点异常都会明确报错，不会误连或静默替换已有配对。
+- 也可以直接对 Codex 说「连接 Claude 会话」，由 claudetocodex skill 引导完成。
 
-   ```powershell
-   node "<产品目录>\bridge\cli.mjs" register
-   ```
+## 4. 交流
 
-   输出中的 `ENDPOINT_FILE` 即端点文件路径。
-8. **配对**（任一侧，需 Codex 会话 ID 与端点文件路径）：
+```powershell
+node "<PLUGIN_ROOT>\bridge\cli.mjs" send --body "..."        # 发送（1..2000 字符）
+node "<PLUGIN_ROOT>\bridge\cli.mjs" status                    # 配对/待收/事件
+```
 
-   ```powershell
-   node "<产品目录>\bridge\cli.mjs" pair --codex <codexThreadId> --claude-endpoint <端点文件>
-   ```
+Claude 的来信自带**回复入口**——一条现成命令，已携带数据目录与安装路径；Claude 会话直接按入口 `reply` 即可，无需任何配置。
 
-9. **发送与回复**：
+## 核对与验证（可选）
 
-   ```powershell
-   node "<产品目录>\bridge\cli.mjs" send --body "..."
-   node "<产品目录>\bridge\cli.mjs" reply --to <messageId> --body-file <UTF-8 文本文件>
-   ```
+Release 资产中的 ZIP 即插件包（解压后就是插件根，含 `manifest.json` 每文件 SHA256 与来源 commit）；`bridge\release\Verify-Release.ps1` 可核对完整性，`bridge\release\Test-Acceptance.ps1` 为逐项技术验收入口。
 
-   `status` 可查看当前配对、待收消息与事件记录。
-10. **验收/核对接收**：以唯一标记（消息体内唯一字符串）+ 接收方原始会话中的事件记录判定送达；本地 `submitted:true` 只表示已尝试投递。
+## 能力边界（沿用已声明）
 
-## 能力边界（沿用当前已声明）
-
-Windows-only；单 Codex 与单 Claude 原始会话；短文本（trim 后 1..2000 字符）；串行投递；回执恒 `unverified`；发送失败不自动重试；会话重启或端点失效后不自动恢复，需按 `USAGE.md` §2 显式重配对（保留旧数据目录并时间戳归档，再 register + pair）；CLI 版本升级后的契约漂移未验证。
+Windows-only；单对会话；短文本（trim 后 1..2000 字符）；串行投递；回执恒 `unverified`；失败不自动重试；Claude 会话重启后旧端点失效，重新 `connect` 即可（不静默替换）；CLI 版本升级后的契约漂移未验证。
