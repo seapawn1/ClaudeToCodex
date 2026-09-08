@@ -25,7 +25,7 @@ node "<PLUGIN_ROOT>\bridge\cli.mjs" send --body "..."
 - [Sprint 01 Bridge Review & Retro](docs/scrum-sprint/sprint-01-bridge-review-retro.md)：首个 Increment 的检视与回顾。
 - [Product Backlog](scrum/ProductBacklog.md)：当前产品、DoD 与后续 PBI。
 - [Sprint 02 Backlog](scrum/sprint-02-install-package-release/SprintBacklog.md)：本冲刺计划与施工记录。
-- [Host evidence steps](docs/HOST-EVIDENCE-STEPS.md)：真实宿主验收证据的取得步骤。
+- [Host evidence steps](scrum/sprint-02-install-package-release/HOST-EVIDENCE-STEPS.md)：真实宿主验收证据的取得步骤（Sprint 过程资料）。
 
 自动化回归与逐项技术验收：
 
