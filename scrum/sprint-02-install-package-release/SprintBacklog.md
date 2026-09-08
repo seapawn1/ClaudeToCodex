@@ -69,9 +69,9 @@ PO 依首用反馈新增 PBI-08（Codex CLI 插件化与免手动配置连接）
 
 | # | 工作项 | 内容 | 验证 | 状态 |
 |---|---|---|---|---|
-| WI-07 | 插件格式与自动发现核验 + 骨架 | 依官方文档核实 Codex CLI 插件格式（`.codex-plugin/plugin.json`、`.agents/skills/`、`hooks/hooks.json`）与隔离加载机制；核实 `~/.claude/sessions` 可发现字段（会话名、id、管道、peer key）。产出最小插件骨架与事实清单。 | 骨架在隔离配置下被真实 Codex CLI 加载（skill/hooks 可见）；事实清单记入本节 | 进行中 |
+| WI-07 | 插件格式与自动发现核验 + 骨架 | 依官方文档核实 Codex CLI 插件格式（`.codex-plugin/plugin.json`、`.agents/skills/`、`hooks/hooks.json`）与隔离加载机制；核实 `~/.claude/sessions` 可发现字段（会话名、id、管道、peer key）。产出最小插件骨架与事实清单。 | 骨架在隔离配置下被真实 Codex CLI 加载（skill/hooks 可见）；事实清单记入本节 | 完成 |
 | WI-08 | 插件封装与免手动连接 | bridge 封装进插件结构；连接 skill 枚举运行中 Claude 会话、按名选择、自动发现端点并建联；处理唯一匹配/找不到/重名/端点失效/已有不同配对五类行为；回复指引携带安装位置与数据位置（扩展 renderPeer）。 | 五类建联行为自动测试通过；Planning 桥不受影响 | 完成（真实宿主 connect 现场留待 WI-09/验收轮） |
-| WI-09 | AC-08-01..05 技术检查与证据 | 一条可重复技术验收入口，逐 AC 报告（通过/失败/受阻），失败/受阻非零退出；扩展 store/pipe/hook 回归；真实宿主加载证据与模拟测试分开记录。 | 全部 AC 有报告；模拟/真实证据齐备 | 待开始 |
+| WI-09 | AC-08-01..05 技术检查与证据 | 一条可重复技术验收入口，逐 AC 报告（通过/失败/受阻），失败/受阻非零退出；扩展 store/pipe/hook 回归；真实宿主加载证据与模拟测试分开记录。 | 全部 AC 有报告；模拟/真实证据齐备 | 完成（8 通过/0 失败/2 受阻；01c/01d 宿主证据待 SM 轮以 -HookEvidence/-SkillEvidence 复判） |
 | WI-10 | 插件候选分发（PBI-05） | Build-Release 产插件包（含 manifest）；README/INSTALL 重写为「安装插件 → 必要授权 → 选择会话 → 交流」；上传 GitHub 草稿 Release 新候选并回读核对。 | GitHub 下载资产与本地构建哈希一致；包内无凭据 | 待开始 |
 | WI-11 | SM 技术验收与 PO 亲身验收（需 SM/PO 参与） | SM 运行技术验收入口并独立审查实现与候选；通过后通知 PO，PO 从 GitHub 安装同一插件候选，完成真实请求/回复/追问/再答并记录结论。 | SM 验收记录 + PO DoD 结论；技术通过不代替 PO DoD | 待开始 |
 | WI-12 | 正式发布（PO 验收、Review、Retro 均结束后经 SM 交接） | 在验收通过的 commit 打 tag `v1.0.0`；同一份插件资产转正式 Release；tag/manifest/资产三者可核对。 | 正式资产与验收资产校验值一致 | 待开始 |
