@@ -1,0 +1,19 @@
+{
+  "name": "claudetocodex",
+  "version": "1.0.0",
+  "description": "ClaudeToCodex - cross-session bridge between Codex and Claude Code original sessions (Windows, single pair, short text).",
+  "author": {
+    "name": "seapawn1"
+  },
+  "repository": "https://github.com/seapawn1/ClaudeToCodex",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ClaudeToCodex",
+    "shortDescription": "Bridge work messages between Codex and a running Claude Code session.",
+    "longDescription": "Connect this Codex session to a running Claude Code session, then send, reply and follow up across sessions without the PO relaying text.",
+    "developerName": "seapawn1",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": ["Connect to a running Claude session and send it a work message."]
+  }
+}

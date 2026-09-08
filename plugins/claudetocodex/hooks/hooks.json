@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"%PLUGIN_ROOT%/plugin-probe.mjs\" percent", "timeout": 5, "async": false }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"${PLUGIN_ROOT}/plugin-probe.mjs\" dollar", "timeout": 5, "async": false }
+        ]
+      }
+    ]
+  }
+}
