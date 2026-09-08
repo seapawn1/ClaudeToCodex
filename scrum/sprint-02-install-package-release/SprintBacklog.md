@@ -60,8 +60,8 @@ PBI-02、03、06、07 均留在 Product Backlog。本次不另做安装器、卸
 |---|---|---|---|---|
 | WI-01 | 发布物清单与打包脚本 | 包内容：`bridge/`（代码、delivery、docs、test、release）、`INSTALL.md`、`RELEASE-NOTES.md`、构建时生成的 `manifest.json`（每文件 SHA256、版本、来源 commit）；打包脚本 `bridge/release/Build-Release.ps1` 从指定 Git ref 构建 ZIP，保留 `bridge/` 目录层级；校验脚本 `bridge/release/Verify-Release.ps1` 供核对清单与哈希。 | 脚本从 Git ref 构建出候选包 | 完成 |
 | WI-02 | 最短安装使用说明与版本说明 | `INSTALL.md` 覆盖 2.2 枚举全部步骤（含 Claude 侧入站策略确认与双侧一致 `CTC_BRIDGE_DIR`）；`RELEASE-NOTES.md` 覆盖分发内容、前置条件（Node 已验证基线 v24.14.0）、支持范围与限制、使用范围声明。 | 与 2.2 三行验收逐项对照 | 完成 |
-| WI-03 | 候选包自检（预发布） | 仓库外解压候选包：`Verify-Release.ps1` 核对 manifest；运行三套离线回归；在临时干净项目执行 `install --hooks-file`，核对 hook 命令指向解压位置；不运行 register（避免干扰 Planning 桥端点）。 | 校验通过；回归通过；hook 路径锚定包内 cli.mjs | 进行中 |
-| WI-04 | 候选发布物就位（非正式） | 自检通过后，将候选 ZIP 与 `.sha256` 放入 `%LOCALAPPDATA%\ClaudeToCodex\releases\candidates\1.0.0\`，记录 commit 与校验值；**不打 tag、不进正式位置**。 | 候选位置内容与校验值记录一致 | 待开始 |
+| WI-03 | 候选包自检（预发布） | 仓库外解压候选包：`Verify-Release.ps1` 核对 manifest；运行三套离线回归；在临时干净项目执行 `install --hooks-file`，核对 hook 命令指向解压位置；不运行 register（避免干扰 Planning 桥端点）。 | 校验通过；回归通过；hook 路径锚定包内 cli.mjs | 完成 |
+| WI-04 | 候选发布物就位（非正式） | 自检通过后，将候选 ZIP 与 `.sha256` 放入 `%LOCALAPPDATA%\ClaudeToCodex\releases\candidates\1.0.0\`，记录 commit 与校验值；**不打 tag、不进正式位置**。 | 候选位置内容与校验值记录一致 | 完成 |
 | WI-05 | PO 验收轮（需 PO 参与） | PO 以候选位置的**同一份 ZIP** 在无现成 bridge 配置的新项目按 `INSTALL.md` 完成安装、配对与双向请求/回复/追问/再答；双侧原始会话及 hook 使用同一独立 `CTC_BRIDGE_DIR`；唯一标记与接收方原始会话事件核对；PO 记录版本、环境、问题与结论。 | 2.2 验收标准；验收对象与后续正式发布物为同一文件 | 待开始 |
 | WI-06 | 正式发布（PO 验收通过后） | 在验收通过的 commit 上打 tag `v1.0.0`；将**通过验收的同一份 ZIP 原文件**移入 `%LOCALAPPDATA%\ClaudeToCodex\releases\1.0.0\`（不重建），复核校验值一致；manifest 中 `sourceCommit` 即 tag 指向的 commit。 | tag、manifest、正式位置三者可核对；正式包与验收包校验值一致 | 待开始 |
 
@@ -71,3 +71,5 @@ PBI-02、03、06、07 均留在 Product Backlog。本次不另做安装器、卸
 
 - 2026-09-09：第三节填写完成，WI-01 开工。
 - 2026-09-09：WI-01/02 完成（commit `e26f990` + 校验脚本补充提交）；依 DOD-ORDER-N 调整顺序为「候选就位 → PO 验收 → 正式 tag 与发布」，未打 tag、未写入正式位置；WI-03 进行中。
+- 2026-09-09：WI-03 自检通过——`Verify-Release.ps1` 对候选 ZIP 校验 `VERIFY=OK`（15 文件、0 多余）；解压副本（仓库外）离线回归 16/16；临时干净项目两次 install 后 hook 命令仍单组且指向解压位置、退出码 0。
+- 2026-09-09：WI-04 完成——候选包（commit `d5d1c31`，SHA256 `01b52e9c…d38f7f`）就位 `%LOCALAPPDATA%\ClaudeToCodex\releases\candidates\1.0.0\`，就位后校验值复核一致。下一步 WI-05 等 PO 参与。
