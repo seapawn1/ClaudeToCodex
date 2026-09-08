@@ -4,7 +4,7 @@
 
 时间盒：2026-09-09 至 2026-09-15（Asia/Shanghai，一周上限，可提前交付）。
 
-状态：按 PO 首用反馈新增 PBI-08，与 PBI-05 共同交付 Codex CLI 插件；Developer 审阅后施工，SM 技术验收通过后交 PO 亲身验收。旧 ZIP 为前一候选的证据，不代表新插件已通过验收。
+状态：候选 2（commit b6286c0）技术验收已由 SM 独立复验通过（仓库 Test-Acceptance 以现场证据复跑 10 PASS / 0 FAIL / 0 BLOCKED，exit 0；28 回归通过）；现场轮已完成。PO 体验与 DoD 结论待 PO 本人表达，未预标 Done。旧 ZIP 为前一候选的证据，不代表新插件已通过验收。
 
 ## 1. Sprint Goal 与 DoD
 
@@ -51,7 +51,7 @@ PBI-08 负责插件与自动连接，PBI-05 负责分发同一插件候选及验
 | PBI-08 / AC-08-04 双向通信 | 沿用单对会话、短文本、串行请求/回复/追问与普通消息 priority=next，维持去重和原会话身份。 | 复用并扩展管道、存储、hook 回归，自动核对对象、conversationId/replyTo、消息正文及注入次数。真实会话收信仍以唯一标记加接收方原始会话事件判定。 |
 | PBI-08 / AC-08-05 授权与失败行为 | 保留插件 hooks 信任及 Claude 入站所需授权；不自动改权限或绕过提示。 | 自动核对接收设置不被修改、连接异常和超时不返回成功、凭据不出现在正文及日志中。授权提示或宿主不可用时报告受阻，不以跳过代替通过。 |
 | PBI-05 插件分发与说明 | GitHub 候选提供插件包、校验值、版本说明和实际可用的安装入口；README/INSTALL 按「安装插件、必要授权、选择会话、交流」说明，替代手动 register/pair 教程作为首用路径。 | 从 GitHub 重新下载，核对包、manifest 和来源版本；包内无端点、令牌、配对或消息记录。在仓库外通过插件入口安装，引用不回指开发工作区。 |
-| SM 技术验收与 PO 验收 | Developer 提供一条可重复执行的技术验收入口和 AC 对应报告；SM 检视实现、运行检查并核对候选后，才通知 PO 亲身验收。 | 技术报告逐项列出通过、失败或受阻，失败/受阻返回非零退出码；模拟与真实宿主证据分别记录。PO 从 GitHub 安装同一插件候选，完成真实请求、回复、追问与再答并记录体验结论；技术通过不代替 PO DoD。 |
+| SM 技术验收与 PO 验收 | Developer 提供一条可重复执行的技术验收入口和 AC 对应报告；SM 检视实现、运行检查并核对候选。技术验收与 PO 亲身验收可由同一轮真实使用支撑，分别据实确认。 | 技术报告逐项列出通过、失败或受阻，失败/受阻返回非零退出码；模拟与真实宿主证据分别记录。PO 从 GitHub 安装同一插件候选，完成真实请求、回复、追问与再答并记录体验结论；技术通过不代替 PO DoD。 |
 
 目标仓库：[seapawn1/ClaudeToCodex](https://github.com/seapawn1/ClaudeToCodex)，可见性为公开。当前未附开源许可证，按此事实说明许可状态，不自行新增许可证授权；「首批用户是 PO 本人」不限制发布渠道为本地。
 
@@ -59,7 +59,7 @@ PBI-08 负责插件与自动连接，PBI-05 负责分发同一插件候选及验
 
 PBI-02、03、06、07 继续留在 Product Backlog，本次不整体纳入。范围不增加桌面端、多会话并发、卸载、升级或自动恢复；仅处理目标 Codex CLI 插件安装及一次连接所必需的行为。必要的实现选择与任务拆解由 Developer 负责；影响 Goal 或显著扩大范围时及时摊开。
 
-后续顺序：Developer 自检 → SM 技术验收 → PO 亲身验收 → Sprint Review → Sprint Retrospective → 正式发布同一份通过验收的插件资产。前一 ZIP 候选保留为历史，不沿用其验收状态或哈希指代新插件。
+后续顺序：Developer 自检 → SM 技术验收与 PO 亲身验收（同一轮真实使用支撑 AC 与 PO DoD 两类结论，分别据实确认）→ Sprint Review → Sprint Retrospective → 正式发布同一份通过验收的插件资产。前一 ZIP 候选保留为历史，不沿用其验收状态或哈希指代新插件。
 
 ## 3. Developer 施工计划
 
@@ -73,7 +73,7 @@ PO 依首用反馈新增 PBI-08（Codex CLI 插件化与免手动配置连接）
 | WI-08 | 插件封装与免手动连接 | bridge 封装进插件结构；连接 skill 枚举运行中 Claude 会话、按名选择、自动发现端点并建联；处理唯一匹配/找不到/重名/端点失效/已有不同配对五类行为；回复指引携带安装位置与数据位置（扩展 renderPeer）。 | 五类建联行为自动测试通过；Planning 桥不受影响 | 完成（真实宿主 connect 现场留待 WI-09/验收轮） |
 | WI-09 | AC-08-01..05 技术检查与证据 | 一条可重复技术验收入口，逐 AC 报告（通过/失败/受阻），失败/受阻非零退出；扩展 store/pipe/hook 回归；真实宿主加载证据与模拟测试分开记录。 | 全部 AC 有报告；模拟/真实证据齐备 | 完成（8 通过/0 失败/2 受阻；01c/01d 宿主证据待 SM 轮以 -HookEvidence/-SkillEvidence 复判） |
 | WI-10 | 插件候选分发（PBI-05） | Build-Release 产插件包（含 manifest）；README/INSTALL 重写为「安装插件 → 必要授权 → 选择会话 → 交流」；上传 GitHub 草稿 Release 新候选并回读核对。 | GitHub 下载资产与本地构建哈希一致；包内无凭据 | 完成 |
-| WI-11 | SM 技术验收与 PO 亲身验收（需 SM/PO 参与） | SM 运行技术验收入口并独立审查实现与候选；通过后通知 PO，PO 从 GitHub 安装同一插件候选，完成真实请求/回复/追问/再答并记录结论。 | SM 验收记录 + PO DoD 结论；技术通过不代替 PO DoD | 进行中（SM 验收：F01/F02/F03 复验通过；AC-08-01c 受阻——3 hooks untrusted，等宿主授权后做真实执行验证；PO 验收未开始） |
+| WI-11 | SM 技术验收与 PO 亲身验收（需 SM/PO 参与） | SM 运行技术验收入口并独立审查实现与候选；PO 从 GitHub 安装同一插件候选参与真实使用。 | SM 验收记录 + PO DoD 结论；技术通过不代替 PO DoD | 进行中（SM 技术验收已通过：候选 2 独立复验 PASS，现场证据复跑 10/0/0 exit 0、28 回归通过；现场轮已完成；待 PO 表达体验/DoD 结论，未预标 Done） |
 | WI-12 | 正式发布（PO 验收、Review、Retro 均结束后经 SM 交接） | 在验收通过的 commit 打 tag `v1.0.0`；同一份插件资产转正式 Release；tag/manifest/资产三者可核对。 | 正式资产与验收资产校验值一致 | 待开始 |
 
 顺序：Developer 自检（WI-07～09）→ 插件候选分发（WI-10）→ SM 技术验收 → PO 亲身验收（WI-11）→ Sprint Review → Sprint Retrospective → 正式发布（WI-12）。前 ZIP 候选（SHA256 `c5d448d4…`）保留为历史证据，其验收状态与哈希不指代新插件候选。
@@ -118,3 +118,4 @@ PO 依首用反馈新增 PBI-08（Codex CLI 插件化与免手动配置连接）
 - 2026-09-09：依 LAUNCHER-PARSE-AV 修复启动入口 PS5.1 兼容：Start-AcceptCodex.ps1 转为 UTF-8 带 BOM（原无 BOM 中文脚本被 PS5.1 按 ANSI 读取致 3 个解析错误），本机 powershell.exe 5.1 Parser::ParseFile 复验 0 错误；横幅补「信任后如需重载：退出重跑入口选 y 续同一会话」；手册启动命令去掉 -ExecutionPolicy Bypass（用户策略 RemoteSigned 允许本地脚本）。SM 侧：新项目宿主加载核对通过（3 条候选 hooks 加载、Planning 项目 hooks 未混入、仍 untrusted，prepared-host-loader.json）。插件字节不变。
 - 2026-09-09：依 EXISTING-PEER-AW 简化现场验收：验收 Codex（隔离 bridge-accept-c2 目录）直接连接现有 Developer Claude 会话（d7ac02ca，Planning 配对保留不动），PO 无需另开 Claude 会话；手册 PO 步骤改为「使用已运行且可辨认的 Claude 会话，本轮可选现有 Developer」。现场轮约定：Claude 侧按候选消息随附回复入口响应（入口携带验收数据目录与安装路径），完成请求/回复/追问/再答，不只给 submitted 回执；SM 核对新 pairId、接收方原始会话事件与唯一标记；业务主题用 1.0.0 首次使用/发布说明核查。测试未开始前不主动发消息。
 - 2026-09-09：依 NORMAL-USE-AZ（PO 反馈）修正现场验收口径：PO 按正常方式说话，不输入/重复测试标记——关联改由自动字段（messageId/pairId/conversationId/replyTo）+ 验收数据目录 + 时间窗 + 接收方原始会话完整消息建立；正文标记如需由操作员取证环节处理。本轮即同一轮同时支撑技术结论（SM 记录 AC 检查）与体验结论（PO 表达是否接受）——共同操作、分别据实确认，不拆两轮，不预标 Done。已同步修改运行手册目标与步骤；仅改当前手册与进度记录，不追改历史证据、不改候选内容。首回合已完成（验收 pair e4e56322：请求 1c3cdf85 → 回复 7f2825ad，经随附入口走 bridge-accept-c2 与安装缓存）；等待追问回合。
+- 2026-09-09：SM 独立完成候选 2 技术复验：PASS——四条消息各收信 1 次、存储与正文一致、pair/对象/conversation/replyTo 正确；宿主 metadata（hooks.additional_context、turnId、item_completed toolUseId）与 context-prepared 全部对应；两次 PostToolUse、两次 wake-suppressed、无重复注入/pending/send-error，并排除 transcript 读取误判；末条 85a0e79b 已于 19:51:55 进入验收 Codex 原始会话（此前 pending 表述作废）。仓库 Test-Acceptance 以绑定现场证据复跑 10/0/0、exit 0，28 回归通过。第三节 WI-11 与顶部状态已对齐：技术 AC 通过、现场轮完成、PO 体验/DoD 待本人表达（未预标 Done）；2.2 顺序口径改为同一轮分别确认。口径纠正（依 SM）：context-prepared 单条仍属 unverified，收信以原始会话+关联核对为准（本次两层证据齐全方判通过）——INSTALL 排查参考已同步纠正。证据文件（live-*、SM-Technical-Acceptance.md）由 SM 定稿，未暂存。

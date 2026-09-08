@@ -47,7 +47,7 @@ node "$PLUGIN_ROOT\bridge\cli.mjs" send --body "..."
 node "$PLUGIN_ROOT\bridge\cli.mjs" status
 ```
 
-连接异常时：找不到/重名/会话已退出/端点失效都会明确报错并列出候选，不会误连或静默替换已有配对；Claude 会话重启后重新连接即可。
+连接异常时：找不到/重名/会话已退出/端点失效都会明确报错并列出候选，不会误连或静默替换已有配对；Claude 会话重启后重新连接即可。事件记录中 `context-prepared` 是投递线索，**单条仍属 unverified**——收信判定以对方原始会话中实际出现该消息并完成关联核对为准。
 
 ## 核对与验证（可选）
 
