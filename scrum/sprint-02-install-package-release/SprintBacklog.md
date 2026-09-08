@@ -73,3 +73,4 @@ PBI-02、03、06、07 均留在 Product Backlog。本次不另做安装器、卸
 - 2026-09-09：WI-01/02 完成（commit `e26f990` + 校验脚本补充提交）；依 DOD-ORDER-N 调整顺序为「候选就位 → PO 验收 → 正式 tag 与发布」，未打 tag、未写入正式位置；WI-03 进行中。
 - 2026-09-09：WI-03 自检通过——`Verify-Release.ps1` 对候选 ZIP 校验 `VERIFY=OK`（15 文件、0 多余）；解压副本（仓库外）离线回归 16/16；临时干净项目两次 install 后 hook 命令仍单组且指向解压位置、退出码 0。
 - 2026-09-09：WI-04 完成——候选包（commit `d5d1c31`，SHA256 `01b52e9c…d38f7f`）就位 `%LOCALAPPDATA%\ClaudeToCodex\releases\candidates\1.0.0\`，就位后校验值复核一致。下一步 WI-05 等 PO 参与。
+- 2026-09-09：依 ACCEPTANCE-PREP-P 修正 INSTALL.md 步骤 3（先进入目标项目目录再启动会话；Codex 必须在目标项目目录内启动才能读到项目级 `.codex\hooks.json`）并对齐第三节开头顺序。候选包重建并替换就位（新 commit `81dffd1`，SHA256 `426b66a7…5a4f`，取代 `01b52e9c…`）：Verify-Release 全文件核对 OK，包内 INSTALL 已含新步骤；代码未变，回归结论（16/16）沿用。仍无 tag、正式位置未写入。
