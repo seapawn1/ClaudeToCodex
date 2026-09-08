@@ -7,3 +7,6 @@ SeaPawn.md
 
 # Claude Code 本地 worktree
 /.claude/worktrees/
+
+# 桥安装器生成的本机 Codex hook 注册（含安装位置绝对路径，随 `bridge install` 生成）
+/.codex/
