@@ -84,6 +84,22 @@ Increment 已集成到产品中，可通过标准产品入口使用，并通过�
 
 ### 3.2 工作项（11 项，合计约 9.5 人日）
 
+进度（2026-09-08 更新）：
+
+| WI | 状态 | 证据 |
+|---|---|---|
+| WI-00 基线确认 | 完成 | 3.6 记录；codex 0.153.4 / claude 2.1.263 与设计基线一致，无漂移（`0d8e738`） |
+| WI-01 骨架与入口 | 完成 | `bridge/entry.mjs` 单一来源；`node --check` 全过；无 IDEO 路径与绝对路径常量（`f17d4ea`） |
+| WI-02 数据目录/单配对/登记 | 完成 | store.test：稳定根 + `CTC_BRIDGE_DIR` 覆盖、配对幂等/冲突拒绝、register 端点 DPAPI 无明文 |
+| WI-03 Claude→Codex 发送链 | 完成 | store.test：原子发布/单槽/身份判定/假 codex shim 捕获 `['queue','--thread',…]` 精确参数 |
+| WI-04 Codex hook 交付 | 完成 | store.test：三事件契约、恰一次消费、已消费唤醒抑制、session/agent/畸形/引号四负例 |
+| WI-05 安装器 | 完成 | install.test：三条注册指向安装位置、幂等、替换原型残留、保留外部 hook；测试发现并修复「注册命令漏 `hook` 子命令」缺陷 |
+| WI-06 现场首验 M1 | **待 PO 现场窗口** | 剧本就绪（SMOKE.md §1–§4、§6）；需 PO 协调双原会话约 0.5 天 |
+| WI-07 Codex→Claude 投递链 | 完成 | pipe.test：auth→消息帧序、priority=next、中文/换行/引号保真、身份不符拒绝、死端点留证 |
+| WI-08 离线回归 | 完成 | `node --test` 16/16 通过（2026-09-08，bridge/test/ 三文件；不引用任何历史路径） |
+| WI-09 smoke 定义与首次执行 | 文档完成，**首次现场运行待 PO** | `bridge/docs/SMOKE.md`（五要素齐备） |
+| WI-10 说明/边界/第二次运行 | 文档完成，第二次运行与 3.7 收口待首次运行后 | `bridge/docs/USAGE.md`（四类任务+§5 边界对照设计文档清单+版本基线）、`README.md` 产品入口 |
+
 **WI-00 环境与版本基线确认**（0.5d，无依赖）→ PBI-01.4 AC3 前置
 记录 codex / claude CLI 当前版本，与记录基线（codex 0.153.4、claude 2.1.263）比对；逐项确认契约仍在：`codex queue --thread --message`、hooks.json 三事件 schema 与 `trusted_hash`、Claude 会话三环境变量、`crossSessionInbound` 设置项。不写产品代码；结论写入 3.6；任一不符登记为障碍并通知 SM/PO。约定：CLI 版本变化 ⇒ 重跑对应通道验证。
 完成判据：3.6 含两个版本号与逐项契约存在/缺失结论；不一致项已进障碍清单并通知 SM。
