@@ -1,6 +1,6 @@
 # Design Map
 
-<small><em>本工作稿已根据深度研究与专家讨论修订。结论、证据边界及待验证事项见 <a href="deep-research/Synthesis.md">研究与专家讨论综合结论</a>。</em></small>
+<small><em>本工作稿已根据深度研究与专家讨论修订。结论、证据边界及待验证事项见 <a href="../docs/DeepResearchSynthesis.md">研究与专家讨论综合结论</a>。</em></small>
 
 ## 1. 挑战、目标与关键问题
 
@@ -71,4 +71,4 @@ flowchart TD
 
 | 编号 | 目标文档 | 圈定范围 | 状态 |
 |---|---|---|---|
-| T1 | [双向会话通信](cross-session-agent-messaging/TargetMap.md) | 从发送问题到反馈回到原会话，包含必要的追问往返 | 原型级通过并收口；待移交 Scrum 产品化 |
+| T1 | [双向会话通信](../docs/ideo-design/cross-session-agent-messaging.md) | 从发送问题到反馈回到原会话，包含必要的追问往返 | 原型级通过并收口；待移交 Scrum 产品化 |
