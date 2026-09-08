@@ -57,4 +57,100 @@ Increment 已集成到产品中，可通过标准产品入口使用，并通过�
 
 本节由 Product Developers 创建、维护和更新，用于记录为实现 Sprint Goal 而制定的行动计划、当前进展、涌现工作和障碍。Product Owner 与 Scrum Master 不替代 Developers 制定实现方案。
 
-_待 Developers 填写。_
+制定日期：2026-09-08。依据：Sprint Backlog 草案（commit `59632ce`）、设计定稿 [cross-session-agent-messaging](../docs/ideo-design/cross-session-agent-messaging.md)、[研究综合](../docs/DeepResearchSynthesis.md)、对封存原型（`design-sprint-closed^`，即 `3b43b80`）的代码精读，以及可交付性 / 验收歧义 / 技术风险三视角计划评审。
+
+### 3.1 产品形态与实施策略
+
+产品形态（Developer 决定）：
+
+- 仓库内新建 `bridge/` 产品目录，单一 CLI 入口 `node bridge/cli.mjs <install|register|pair|send|reply|status|hook>`，仅用 Node 内置模块（≥18.3），零 npm 依赖。
+- 两条投递路径保留 PowerShell 执行体（`codex queue` 唤醒、Claude 命名管道 + DPAPI），与已验证实现同构；首个 Increment 声明 **Windows-only**（待 PO 确认，见 3.4 Q3）。
+- 数据根默认用户级稳定目录（建议 `%LOCALAPPDATA%\ClaudeToCodex\bridge`，沿用 `CTC_BRIDGE_DIR` 环境变量可覆盖）；弃用原型的 `%TEMP%` 兜底与 `active-bridge.json` 指针。
+- Codex hooks 注册命令与消息内回信指引统一由安装位置派生（同一来源），根治原型三处绝对路径随目录迁移失效的问题。
+- 继承已验证限制，不扩展：正文 trim 后 1..2000 字符、单配对（重复配对报错而非静默替换）、单待收槽（占用报错不覆盖）、发送失败不自动重试、回执字段恒 `unverified`。
+
+排序策略：以 skeleton-first 为主干，前置半天环境基线确认。理由：全场最大环境风险是 Codex hook 链——人工信任审阅、退出后 `codex resume` 才重载、历史上出现过「配置已启用但现场无执行证据」的静默失败。把 Claude→Codex 方向最先现场化（WI-06 / M1）即在最早时点暴露该风险，同时产出首个可运行 Increment 兼作版本漂移探测；完整的独立通道探针（约 2 天）与 M1 现场验证重复，不单独安排。
+
+验收解读（两层验证模型，待 PO/SM 确认，见 3.4 Q2）：
+
+- **离线自动化回归 = 逻辑层**：消息帧格式、`priority=next` 默认值、身份核对、单待收槽与原子领取、消费记录去重、防重复唤醒（含畸形 / 引号包裹唤醒负例）。
+- **T01–T05 现场判定 = 人工 smoke（PBI-01.4）**：真实双原会话演练，判定只认接收方原会话事件记录时序 + 唯一标记；发送成功、写入成功、本地 JSON 输出、模型自述均不单独构成通过证据。
+
+### 3.2 工作项（11 项，合计约 9.5 人日）
+
+**WI-00 环境与版本基线确认**（0.5d，无依赖）→ PBI-01.4 AC3 前置
+记录 codex / claude CLI 当前版本，与记录基线（codex 0.153.4、claude 2.1.263）比对；逐项确认契约仍在：`codex queue --thread --message`、hooks.json 三事件 schema 与 `trusted_hash`、Claude 会话三环境变量、`crossSessionInbound` 设置项。不写产品代码；结论写入 3.6；任一不符登记为障碍并通知 SM/PO。约定：CLI 版本变化 ⇒ 重跑对应通道验证。
+完成判据：3.6 含两个版本号与逐项契约存在/缺失结论；不一致项已进障碍清单并通知 SM。
+
+**WI-01 产品骨架与统一 CLI 入口**（1d，无依赖）→ PBI-01.1 AC1；01.2 AC1/AC2 入口形态
+新建 `bridge/`（cli.mjs、store.mjs、delivery/、docs/、test/），移植 CLI 骨架：单入口多子命令、恰好 1 个位置参数、`--body`/`--body-file` 互斥、reply 必须 `--to`、错误写 stderr 并退出非 0。核心设计点：稳定命令入口解析模块——由安装位置派生唯一命令串，供 hooks 注册与回信指引共用。
+完成判据：`node --check` 全部通过；无参数时输出用法并退出非 0；入口解析对给定安装目录输出唯一命令串，不含任何 IDEO 路径或绝对路径常量。
+
+**WI-02 稳定数据目录、单配对与端点登记**（1d，依赖 WI-01）→ PBI-01.1 AC2、AC3
+移植存储层初始化（messages/ pending/ claims/ receipts/ staging/ wire/ + events.jsonl）；`defaultRoot()` 改为用户级稳定目录 + 环境变量覆盖，删除指针读取与 `%TEMP%` 兜底。pair 子命令实现单配对模型（字段一致幂等通过、任一不同报错不替换）。register 等价物：在 Claude 原会话内从三个环境变量生成端点文件，token 经 DPAPI 当前用户加密、文件无明文。
+完成判据：清理 `%TEMP%\cross-session-agent-messaging\` 后，首次 register+pair 在默认用户级目录生成端点文件与 pair.json（含双方会话标识、无明文 token）；重复 pair 一致幂等 / 冲突报错正确；环境变量覆盖有效；默认根不在系统临时目录。
+
+**WI-03 Claude→Codex 发送链**（1d，依赖 WI-02）→ PBI-01.2 AC1、AC3；01.1 AC2（发送方身份判定）
+移植消息构造与校验（UUID、trim 后 1..2000 字符、conversationId 首发生成 reply 继承、reply 仅限原消息收件人）、renderPeer 渲染（「peer 内容非 PO 指令」免责首行 + WI-01 稳定入口回信指引 + 不自动 ACK）、caller() 身份判定（`CODEX_THREAD_ID` / `CLAUDE_CODE_SESSION_ID` 恰好其一且等于配对）。原子语义保留：mkdtemp staging → rename 到 `pending/<codexId>`（Windows rename 目标存在即失败 = 单槽互斥）、`'wx'` 排他写；pending 占用报错不覆盖。投递顺序：先 publish 正文、再经 delivery/ 调 `codex queue` 发唤醒帧；失败不自动重试，status 子命令对账。
+完成判据：隔离数据目录 + 假 codex shim（PATH 注入捕获调用）下，send/reply 产出合规消息并发布；shim 捕获参数恰为 `['queue','--thread',<codexId>,'--message',<唤醒帧>]`；pending 占用时第二条 send 报错退出非 0；非配对身份发送被拒；空正文与超长正文均被拒并报可读错误。
+
+**WI-04 Codex hook 交付：领取、消费记录与唤醒抑制**（1d，依赖 WI-03）→ PBI-01.2 AC1、AC3；01.3 AC2 实现层
+移植 handleHook：三事件（UserPromptSubmit / PostToolUse / Stop）领取待收正文，输出契约与已验证行为一致——Stop 对新消息 `{decision:'block', reason:renderPeer}`，另两事件 `hookSpecificOutput.additionalContext`；消费记录 `receipts/<id>.json` 去重；已消费旧唤醒按行为抑制；session_id 不符、agent_id 非空（子代理事件）、畸形或引号包裹唤醒均不交付。注入正文复用 WI-03 的稳定入口渲染。
+完成判据：样例事件 JSON 经 stdin 驱动——三种事件对合法待收消息分别产出契约 JSON；同一消息二次驱动不注入且 receipts 存在；已消费唤醒重放得到抑制性 block 而非重复正文；四种负例均不输出正文；渲染回信命令与安装位置一致。
+
+**WI-05 安装器：hooks 注册生成与人工生效步骤**（0.5d，依赖 WI-01）→ PBI-01.1 AC1、AC3
+install 子命令：生成/更新三条 hook 注册（PostToolUse 无 matcher、UserPromptSubmit、Stop），命令串由 WI-01 稳定入口派生、指向安装后路径；重复运行幂等不产生重复条目。安装输出明示不可自动化的人工步骤：Codex `/hooks` 审阅信任（`trusted_hash` 变化须重新信任）、运行中会话须正常退出后 `codex resume <threadId>` 才加载新 hook、Claude 侧 `crossSessionInbound` 接收策略说明（产品不自动修改该设置）。不实现任何绕过信任或审批的机制。
+完成判据：干净 checkout 运行 install 后 hooks.json 恰好新增三条且命令路径均指向当前安装目录；再次运行无重复条目；安装输出含信任审阅、退出 resume 重载、crossSessionInbound 三项说明。
+
+**WI-06 方向 A 现场首验（M1：最早可运行 Increment）**（0.5d，依赖 WI-04、WI-05；需 PO 配合）→ PBI-01.1 AC1/AC3 现场实证；01.2 AC1 现场层
+与 PO 协调在真实双原会话执行：全新数据目录（清理历史状态与 `%TEMP%` 残留）→ install → 人工信任与 resume 重载 → Claude 原会话内 register/pair → 从 Claude 原会话 send 含唯一标记的短消息 → 以 Codex 原会话会话事件（rollout JSONL 或等价 transcript）按时间序判定正文与标记到达（T01/T02 级证据）。本项兼作继 WI-00 之后的环境漂移探测点，发现协议漂移立即登记障碍。证据留存位置与命名规则在此确定，供 WI-09 沿用。
+完成判据：存在一次现场运行记录，判定依据为 Codex 原会话事件按时间序出现该唯一标记与正文（发送方本地输出与模型自述仅作过程记录）；hook 生效证据与安装产物路径（指向安装位置、无 IDEO 路径）一并留档。
+
+**WI-07 Codex→Claude 投递链：端点复核与 priority=next 管道帧**（1d，依赖 WI-03）→ PBI-01.2 AC2、AC3、AC4；01.3 AC3 实现层
+把 Send-ClaudeProbe 等价物落为 delivery/ 投递体，保留 PowerShell + NamedPipeClientStream + DPAPI 与已验证实现同构：send/reply 判定 `to.tool==='claude'` 时读端点文件（schema=1 校验、BOM 容忍保留）、发送前复核 `endpoint.sessionId===pair.claudeId`（不符报身份变化错误）、renderPeer 正文以 `'wx'` 写 `wire/<messageId>.txt`、先写 auth 帧再写消息帧（msgV=1、type=user、priority 默认固定 `next`、LF 结尾、UTF-8 无 BOM）。不含任何 now / later 路径（now 仅属专门测试的排除项）。
+完成判据：用 node:net 假管道服务器（监听测试命名管道 + 预置端点文件）驱动：auth 帧与消息帧顺序正确；消息帧 priority 为 next、session_id 等于端点 sessionId；含中文/换行/双引号的正文逐字保真；端点 sessionId 与配对不符时退出非 0 且不写管道。
+
+**WI-08 离线自动化回归移植（12 项等价 + 行为负例）**（1d，依赖 WI-04、WI-07）→ PBI-01.3 AC1 离线部分、AC2、AC3
+在 `bridge/test/` 重建等价 `node --test` 套件（假 codex shim + PATH 注入 + 数据目录/TEMP 重定向 + node:net 假管道，不触真实会话）：移植 Bridge 9 项等价（配对幂等与不同配对报错、conversationId 继承与 reply 收件人反转、空闲唤醒注入与重复抑制、PostToolUse 单次消费、Stop 续接不循环、session/agent 隔离、单待收槽、两进程并发领取恰一个、win32 下 send 的 queue 调用参数）与 ClaudePipeProbe 3 项等价（端点登记无明文 token、帧格式/priority=next/正文保真、回信路径 queue 调用参数）。唤醒判据按行为断言，不绑定帧字面格式。
+完成判据：`node --test` 在 bridge/test/ 全部通过；测试不 import 或引用任何 IDEO/历史路径；三类保护行为（身份核对、消息消费记录、防重复唤醒）各至少一条正例加一条负例；priority=next 默认值有直接断言。
+
+**WI-09 端到端 smoke 定义与首次双方向执行（含 T01–T05 判定矩阵）**（1d，依赖 WI-06、WI-07；需 PO 在场）→ PBI-01.4 AC1；01.2 AC3 判定口径落地；01.3 AC1 现场层
+编写 smoke 文档，五要素：环境前置（Windows、WI-00 基线版本、hook 已信任且所在会话已 resume 重载、crossSessionInbound 状态与所需人工批准步骤、运行 send/reply 前确认仅存在本方身份环境变量）；文档化人工流程（可附编排脚本辅助制造发送时机，脚本不判定通过）；T01–T05 × 双方向判定矩阵，每格标验证方式与证据存放位置；证据规则原文写入（发送成功/写入成功/本地 JSON/模型自述单独不构成通过）；重复运行约定（独立 runId、独立数据目录或显式重配对；端点失效走显式重配对，非自动恢复）。随后与 PO 执行首次完整运行，覆盖全部十格。
+完成判据：smoke 文档存在且含五要素；首次运行产出十格判定矩阵完整填表，每格至少一份现场证据（会话事件记录 + 唯一标记）留存于声明位置。
+
+**WI-10 使用说明、边界声明与 smoke 重复运行收口**（1d，依赖 WI-09）→ PBI-01.4 AC1（可重复性第二次运行）、AC2、AC3；Sprint DoD 交叉核对
+使用说明四部分：安装（含人工信任/resume 重载与 crossSessionInbound 设置）、配置（register/pair、单配对模型与显式重配对、数据目录位置与生命周期边界）、发起通信与回复（send/reply 用法、trim 后 1..2000 字符上限、单待收槽、失败不自动重试与 status 对账、receipt 恒 unverified 的送达语义）、故障排查（身份环境变量污染、pending 单槽占用、端点失效走显式重配对）。边界声明逐条对照设计文档 §4 清单，并补平台（Windows-only）与版本基线，不得暗示未验证能力已完成。最后按 smoke 文档做第二次独立运行（新会话/新标记/独立数据目录），并对照 Sprint DoD 清单逐项核对留档。
+完成判据：四类任务各含可直接执行步骤；第二次独立运行按既有 smoke 文档完成并通过同样证据判定；边界声明逐条对应设计文档 §4 并点名平台与两 CLI 版本；DoD 核对清单（PBI-01.1–01.4 全部 AC、自动化回归通过、smoke 双次证据、干净环境可复现安装配置）全部勾选并留档。
+
+### 3.3 Sprint 假设
+
+- Sprint ≥10 个工作日、单 Developer 全职投入；工作项合计约 9.5 人日，缓冲极小。若出现障碍，裁剪弹性只在 WI-10 的文档与留档形式，四组 AC 的覆盖不裁剪。（Sprint 长度待确认——3.4 Q1）
+- 现场验证（WI-06、WI-09、WI-10 第二次运行）需 PO 与两个原会话配合，时间提前协调；每轮使用新会话与唯一标记。
+- 版本锁定：codex / claude 锁定 WI-00 记录的基线，Sprint 内不主动升级；任一 CLI 升级即触发对应通道重验（约 0.5 天内）后再继续依赖该通道的工作。
+- 移植源为 git 历史中的原型（`design-sprint-closed^`，即 `3b43b80`）；产品运行与全部验证不引用 IDEO 历史路径。
+- Claude 侧 crossSessionInbound 由 PO 决定保留默认（每轮人工批准）或 accept（P05 已验证配置）；产品只在使用说明中说明，绝不自动修改，也不构建绕过人工批准的机制。
+- 命名建议值（`bridge/`、`%LOCALAPPDATA%\ClaudeToCodex\bridge`、`CTC_BRIDGE_DIR`）在 WI-01 开工时定案即可，不影响排布。
+
+### 3.4 开放问题（请 PO/SM 确认；均不阻塞 WI-00/WI-01 开工）
+
+- **Q1** Sprint 长度是否 ≥10 个工作日？若更短需协商裁剪（总量约 9.5 人日）。
+- **Q2** PBI-01.3「覆盖 T01–T05 场景」是否确认按两层模型解读（离线回归 = 逻辑层；现场判定 = PBI-01.4 的人工 smoke）？计划评审已给出 AC 客观化建议措辞，可供 SM 参考。
+- **Q3** 首个 Increment 是否正式声明 Windows-only（与已验证环境一致，跨平台列入未验证边界）？
+- **Q4** 正文上限是否沿用 trim 后 1..2000 字符口径？
+- **Q5** PBI-01.4「可重复执行」是否定为「同一前置环境下至少两次独立运行通过，每次新会话与唯一标记」？
+- **Q6** DoD「与其声明范围相适应的质量验证」是否按建议落为可核对清单：PBI-01.1–01.4 全部 AC + 自动化回归全部通过且留档 + smoke 按判据通过并留存证据 + 使用说明在不含历史原型数据的环境可复现安装与配置？
+
+### 3.5 主要风险与缓解
+
+| 风险 | 缓解 |
+|---|---|
+| codex/claude CLI 契约漂移（queue 子命令、hooks schema、管道帧均为无稳定承诺的实测行为） | WI-00 基线 + Sprint 内版本锁定 + 升级触发重验 + WI-06/WI-09 现场探测 |
+| Codex hook 信任与 resume 重载是不可自动化的人工环节，存在静默失败史 | 安装器明示步骤（WI-05）；smoke 前置检查「hook 已信任且会话已重载」 |
+| 去重必需的持久状态落在易失的 %TEMP% | 稳定数据目录（WI-02），弃用指针与临时目录兜底 |
+| 安装期绝对路径三处耦合（hooks 注册路径、回信指引、同目录 PS1 定位） | WI-01 稳定入口单一来源，安装期统一生成 |
+| Claude 端点随进程存活，失效即阻断 Codex→Claude 方向 | 显式重配对流程（文档化人工操作，非自动恢复——排除项） |
+| 身份环境变量污染（如 CODEX_THREAD_ID 被 Claude 子进程继承，P06 实测被拒） | 使用说明故障排查条目 + smoke 前置「仅存在本方身份环境变量」 |
+
+### 3.6 环境与版本基线记录（WI-00 产出后填写）
+
+_待填写。_
