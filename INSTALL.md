@@ -19,13 +19,14 @@
 
 1. **解压**：把 ZIP 解压到固定的产品目录（示例同上）。
 2. **选定数据目录**：本例用 `%LOCALAPPDATA%\ClaudeToCodex\bridge-1.0.0`。它必须与其他正在使用的 bridge 数据目录（如默认目录）区分开。
-3. **只在启动两个工作会话的终端里设置环境变量**（不要用 `setx` 全局设置，以免影响其他 bridge 会话）：
+3. **先进入目标项目目录，再设置环境变量**（环境变量只在启动两个工作会话的终端里设置，不要用 `setx` 全局设置，以免影响其他 bridge 会话）：
 
    ```powershell
+   cd <目标项目>
    $env:CTC_BRIDGE_DIR = "$env:LOCALAPPDATA\ClaudeToCodex\bridge-1.0.0"
    ```
 
-   然后从该终端分别启动（或重启）Codex 与 Claude Code 会话，使两侧会话及其 hook 继承同一数据目录。
+   然后从该终端分别启动（或重启）两个验收会话：**Codex 会话必须在目标项目目录内启动**，才能读取步骤 4 写入该项目的 `.codex\hooks.json`；从其他目录启动的 Codex 读不到这份项目级 hook 配置，`/hooks` 中不会出现 bridge 定义。Claude Code 会话同样从该目录启动即可。两侧会话及其 hook 继承同一数据目录。
 4. **安装 hook**（在任一终端，指向目标项目）：
 
    ```powershell
