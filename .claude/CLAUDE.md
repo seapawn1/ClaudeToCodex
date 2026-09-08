@@ -1,8 +1,8 @@
 # Project Context
 
-## Design Work
+## Scrum Work
 
-Read the current [Design Map](../IDEO/DesignMap.md) for the challenge, goal, questions, map, and target status.
+Read [ProductBacklog.md](../scrum/ProductBacklog.md) for the product, product vision, Definition of Done placeholders, Product Backlog Items, and value-flow map.
 
 The closed design target is [cross-session agent messaging](../docs/ideo-design/cross-session-agent-messaging.md). Its distilled goal, architecture, evidence, and Scrum handoff boundary live in `docs/`; original process files remain recoverable from the `design-sprint-closed` tag.
 

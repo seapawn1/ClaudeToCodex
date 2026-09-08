@@ -23,4 +23,4 @@ The obsolete prototype hooks were removed after closure in commit `5edff9b`; the
 
 ## Future organization
 
-Scrum artifacts such as the Product Log, Product Backlog, sprint records, and implementation documentation should be added in a separate structure when that phase starts. This directory should continue to favor readable, stable knowledge over preserving every working-process file.
+The Scrum phase has started. The product, product vision, DoD placeholders, PBI table, and value-flow map live in [../scrum/ProductBacklog.md](../scrum/ProductBacklog.md); sprint records and implementation documentation should be added under `scrum/` as the work emerges. This directory should continue to favor readable, stable knowledge over preserving every working-process file.
