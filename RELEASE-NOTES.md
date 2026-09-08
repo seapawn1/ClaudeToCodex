@@ -2,7 +2,7 @@
 
 - **版本**：1.0.0
 - **来源**：Git tag `v1.0.0`；对应 commit 见包内 `manifest.json`（`sourceCommit`），构建日期取该 commit 的提交时间。
-- **分发**：GitHub Release（验收阶段先以草稿 Release 提供同一份资产；正式发布与验收资产为同一文件）。
+- **分发**：[seapawn1/ClaudeToCodex](https://github.com/seapawn1/ClaudeToCodex) 的 GitHub Release（验收阶段先以草稿 Release 提供同一份资产；正式发布与验收资产为同一文件）。
 - **完整性核对**：每个文件的 SHA256 见包内 `manifest.json`；ZIP 整包校验值见 Release 资产中的 `claude-to-codex-1.0.0.zip.sha256`。
 
 ## 分发内容
@@ -34,7 +34,7 @@
 
 ## 使用范围
 
-本发布物经 GitHub Release 分发；仓库可见性与分发许可以发布仓库的设置及其声明为准。
+本发布物经公开仓库 [seapawn1/ClaudeToCodex](https://github.com/seapawn1/ClaudeToCodex) 的 GitHub Release 分发。截至本版本发布，该仓库尚未附加开源许可证；作者保留所有权利，未随包授予再分发许可。
 
 ## 验证
 
