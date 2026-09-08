@@ -157,9 +157,21 @@ install 子命令：生成/更新三条 hook 注册（PostToolUse 无 matcher、
 | Claude 端点随进程存活，失效即阻断 Codex→Claude 方向 | 显式重配对流程（文档化人工操作，非自动恢复——排除项） |
 | 身份环境变量污染（如 CODEX_THREAD_ID 被 Claude 子进程继承，P06 实测被拒） | 使用说明故障排查条目 + smoke 前置「仅存在本方身份环境变量」 |
 
-### 3.6 环境与版本基线记录（WI-00 产出后填写）
+### 3.6 环境与版本基线记录（WI-00，2026-09-08 确认）
 
-_待填写。_
+| 检查项 | 当前状态 | 与基线比对 |
+|---|---|---|
+| codex CLI 版本 | `codex-cli 0.153.4` | 一致，无漂移 |
+| claude CLI 版本 | `2.1.263 (Claude Code)` | 一致，无漂移 |
+| Node.js | `v24.14.0` | 满足 ≥18.3 |
+| `codex queue` 子命令 | 存在；`--thread <Session UUID>`、`--message <TEXT>` 参数形状与原型一致 | 一致 |
+| Codex hooks 信任机制 | 存在（顶层 `--dangerously-bypass-hook-trust` 标志证明持久化 hook 信任机制在）；`config.toml` 有 `[projects.'d:\claudetocodex'] trust_level = "trusted"`；本机当前无 hooks.json（`5edff9b` 移除后未重建，符合预期） | 机制在；三事件 schema 的最终确认留 WI-06 现场验证 |
+| `codex hooks list` 子命令 | 0.153.4 无此命令（设计期 README 所述 `hooks/list` 来自官方文档其他版本描述） | 记录差异，不构成阻塞 |
+| Claude 会话三环境变量 | 本会话实测齐备：`CLAUDE_CODE_SESSION_ID`、`CLAUDE_CODE_MESSAGING_SOCKET`（`\\.\pipe\` 命名管道）、`CLAUDE_CODE_MESSAGING_TOKEN` 均存在 | 契约在；本会话可作为 Codex→Claude 方向的真实接收端 |
+| 身份环境变量污染 | 本 Claude 会话内 `CODEX_THREAD_ID` 为空 | 无污染 |
+| `crossSessionInbound` | 用户级 `~/.claude/settings.json` 为 `accept`（设计期 P05 后 PO 设置，已验证配置） | Codex→Claude 消息不会暂存等待批准 |
+
+**结论**：全部契约与设计基线一致，无漂移，无障碍登记。Sprint 内锁定 codex 0.153.4 / claude 2.1.263；任一 CLI 升级即触发对应通道重验。
 
 ### 3.7 Increment 收口核对记录
 
