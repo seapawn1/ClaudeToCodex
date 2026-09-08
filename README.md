@@ -7,12 +7,9 @@
 ```powershell
 codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref <ref>
 codex plugin add claudetocodex@claudetocodex-dev
-# Codex 会话内 /hooks 信任三条 bridge hook，codex resume 重载
-codex plugin list --json        # installedPath 即 <PLUGIN_ROOT>
-node "<PLUGIN_ROOT>\bridge\cli.mjs" sessions
-node "<PLUGIN_ROOT>\bridge\cli.mjs" connect --name <Claude 会话名片段>
-node "<PLUGIN_ROOT>\bridge\cli.mjs" send --body "..."
 ```
+
+随后只需三步：Codex 会话内 `/hooks` 信任三条 bridge hook 并 `codex resume` 重载；对 Codex 说「**连接 Claude 会话**，叫 XX 的那个」；然后直接交流（发送、回复、追问均由插件 skill 完成，无需复制路径或 ID）。详见 [INSTALL.md](INSTALL.md)。
 
 完整安装、授权、连接、回复与边界说明见 [INSTALL.md](INSTALL.md)。
 
@@ -27,7 +24,7 @@ node "<PLUGIN_ROOT>\bridge\cli.mjs" send --body "..."
 - [Sprint 02 Backlog](scrum/sprint-02-install-package-release/SprintBacklog.md)：本冲刺计划与施工记录。
 - [Host evidence steps](scrum/sprint-02-install-package-release/HOST-EVIDENCE-STEPS.md)：真实宿主验收证据的取得步骤（Sprint 过程资料）。
 
-自动化回归与逐项技术验收：
+自动化回归与逐项技术验收（排查/开发用；安装后的 skill 自行从插件缓存定位，不依赖 `codex plugin list` 的安装路径字段）：
 
 ```powershell
 node --test bridge/test/store.test.mjs bridge/test/pipe.test.mjs bridge/test/install.test.mjs bridge/test/connect.test.mjs
