@@ -27,9 +27,9 @@ codex plugin add claudetocodex@claudetocodex-dev
 
 1. 在准备好的终端启动 Codex 会话；如 CLI 提示登录，按指引自行完成（实测当前 login status 未确认已登录——不作为已确认事实）。
 2. `/hooks`：审核并**信任三条 `claudetocodex` hook**（一次性人工授权，产品不代改）。
-3. 在同目录（或任一新目录）正常启动一个 Claude Code 会话，起个可识别的名字（如 "accept-c2"）。
-4. 回到 Codex 会话说：「**连接 Claude 会话 accept-c2**」。
-5. 自然语言交流一轮真实协作：Codex 发请求 → Claude 回复 → Codex 追问 → Claude 再答（消息里带唯一标记，如 `CTC-C2-ACCEPT-<随机>`）。
+3. 使用**已运行且可辨认的 Claude 会话**即可——本轮可直接选用现有 Developer 会话（名称含 `[developer]-[sprint-02]`），无需另开；如另开新会话也支持。
+4. 回到 Codex 会话说：「**连接 Claude 会话 <该会话名的唯一片段>**」。
+5. 自然语言交流一轮真实协作：Codex 发请求 → Claude 回复 → Codex 追问 → Claude 再答（消息里带唯一标记，如 `CTC-C2-ACCEPT-<随机>`）。Claude 侧按消息随附回复入口响应（入口自带本次验收的数据目录与安装路径）；业务主题建议用 1.0.0 首次使用/发布说明核查。
 
 PO 全程不执行 register/pair、不复制任何 ID、不设置环境变量。
 
