@@ -1,14 +1,15 @@
 import { execFile } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store.mjs';
+import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
 import { cliPath, commandString, repoRoot } from './entry.mjs';
 
 const execute = promisify(execFile);
 const directory = fileURLToPath(new URL('.', import.meta.url));
-const usage = 'Use one of: install, register, pair, send, reply, status, hook.';
+const usage = 'Use one of: install, register, pair, connect, sessions, send, reply, status, hook.';
 
 const HOOK_EVENTS = [
   { event: 'PostToolUse', options: { additionalContextLimit: 20000 } },
@@ -51,7 +52,7 @@ async function main() {
     options: {
       codex: { type: 'string' }, 'claude-endpoint': { type: 'string' },
       body: { type: 'string' }, 'body-file': { type: 'string' }, to: { type: 'string' },
-      'hooks-file': { type: 'string' },
+      'hooks-file': { type: 'string' }, name: { type: 'string' }, 'sessions-dir': { type: 'string' },
     },
   });
   const [command] = positionals;
@@ -79,6 +80,44 @@ async function main() {
   if (command === 'pair') {
     if (!values.codex || !values['claude-endpoint']) throw new Error('pair requires --codex and --claude-endpoint.');
     console.log(JSON.stringify(store.pair(values.codex, values['claude-endpoint']), null, 2));
+    return;
+  }
+  if (command === 'sessions') {
+    const rows = listSessions(values['sessions-dir'] ? resolve(values['sessions-dir']) : sessionsDir())
+      .map(({ name, sessionId, status, alive, hasKey, cwd }) => ({ name, sessionId, status, alive, hasKey, cwd }));
+    console.log(JSON.stringify(rows, null, 2));
+    return;
+  }
+  if (command === 'connect') {
+    if (!values.name) throw new Error('connect requires --name <part of the Claude session name>.');
+    const registry = values['sessions-dir'] ? resolve(values['sessions-dir']) : sessionsDir();
+    const session = selectSession(values.name, registry);
+    const codexId = process.env.CODEX_THREAD_ID;
+    if (!codexId || !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(codexId)) {
+      throw new Error('connect must run inside the selected Codex session (CODEX_THREAD_ID missing).');
+    }
+    // Synthesize the endpoint from the session registry: same-user DPAPI wrapping of
+    // the registry peer key, so the Claude side never registers anything manually.
+    const keyFile = readdirSync(registry).find((f) => f.startsWith(`${session.pid}.`) && f.endsWith('.key'));
+    const token = readFileSync(join(registry, keyFile), 'utf8').trim();
+    const protectedToken = (await execute('powershell.exe', [
+      '-NoProfile', '-Command',
+      `ConvertTo-SecureString -AsPlainText -Force -String ${JSON.stringify(token)} | ConvertFrom-SecureString`,
+    ], { windowsHide: true, timeout: 15000 })).stdout.trim();
+    store.initialize();
+    const endpointPath = join(store.root, 'endpoints', `claude-${session.sessionId}.json`);
+    writeFileSync(endpointPath, JSON.stringify({
+      schema: 1,
+      sessionId: session.sessionId,
+      socket: session.socket,
+      tokenProtected: protectedToken,
+      registeredAt: new Date().toISOString(),
+      cwd: session.cwd ?? null,
+      origin: 'connect-synthesis',
+    }, null, 2) + '\n');
+    const pair = store.pair(codexId, endpointPath);
+    store.event('connect', { pairId: pair.id, claudeSession: session.sessionId, claudeName: session.name, codexId: pair.codexId, endpoint: endpointPath });
+    console.log(JSON.stringify({ pair, claudeSession: { sessionId: session.sessionId, name: session.name, status: session.status }, hint: `Send with: node "${cliPath()}" send --body "..."` }, null, 2));
     return;
   }
   if (command === 'status') {
@@ -112,7 +151,7 @@ async function main() {
       const endpoint = readJson(pair.endpointPath);
       if (endpoint.sessionId !== pair.claudeId) throw new Error('Claude endpoint identity changed.');
       const wirePath = join(store.root, 'wire', `${message.id}.txt`);
-      writeFileSync(wirePath, renderPeer(message), { flag: 'wx' });
+      writeFileSync(wirePath, renderPeer(message, store.root), { flag: 'wx' });
       await execute('powershell.exe', [
         '-NoProfile', '-File', join(directory, 'delivery', 'Send-ClaudePipe.ps1'),
         '-EndpointPath', pair.endpointPath, '-ReplyThreadId', pair.codexId,
