@@ -4,7 +4,7 @@
 
 时间盒：2026-09-09 至 2026-09-15（Asia/Shanghai，一周上限，可提前交付）。
 
-状态：候选 2（commit b6286c0）技术验收已由 SM 独立复验通过（仓库 Test-Acceptance 以现场证据复跑 10 PASS / 0 FAIL / 0 BLOCKED，exit 0；28 回归通过）；现场轮已完成。PO 体验与 DoD 结论待 PO 本人表达，未预标 Done。旧 ZIP 为前一候选的证据，不代表新插件已通过验收。
+状态：候选 2（commit b6286c0）技术验收与 PO DoD 均已通过（SM 复验 10/0/0 exit 0、28 回归；PO 于 2026-09-09 明确「满意，通过我负责的 DoD」）。Sprint 02 Review 进行中；Retro 与正式发布未开始。PBI-08 完成口径已齐；PBI-05 尚余正式发布动作（并 main、tag v1.0.0、草稿转正式），不作整条完成宣称。旧 ZIP 为前一候选的证据。
 
 ## 1. Sprint Goal 与 DoD
 
@@ -73,7 +73,7 @@ PO 依首用反馈新增 PBI-08（Codex CLI 插件化与免手动配置连接）
 | WI-08 | 插件封装与免手动连接 | bridge 封装进插件结构；连接 skill 枚举运行中 Claude 会话、按名选择、自动发现端点并建联；处理唯一匹配/找不到/重名/端点失效/已有不同配对五类行为；回复指引携带安装位置与数据位置（扩展 renderPeer）。 | 五类建联行为自动测试通过；Planning 桥不受影响 | 完成（真实宿主 connect 现场留待 WI-09/验收轮） |
 | WI-09 | AC-08-01..05 技术检查与证据 | 一条可重复技术验收入口，逐 AC 报告（通过/失败/受阻），失败/受阻非零退出；扩展 store/pipe/hook 回归；真实宿主加载证据与模拟测试分开记录。 | 全部 AC 有报告；模拟/真实证据齐备 | 完成（8 通过/0 失败/2 受阻；01c/01d 宿主证据待 SM 轮以 -HookEvidence/-SkillEvidence 复判） |
 | WI-10 | 插件候选分发（PBI-05） | Build-Release 产插件包（含 manifest）；README/INSTALL 重写为「安装插件 → 必要授权 → 选择会话 → 交流」；上传 GitHub 草稿 Release 新候选并回读核对。 | GitHub 下载资产与本地构建哈希一致；包内无凭据 | 完成 |
-| WI-11 | SM 技术验收与 PO 亲身验收（需 SM/PO 参与） | SM 运行技术验收入口并独立审查实现与候选；PO 从 GitHub 安装同一插件候选参与真实使用。 | SM 验收记录 + PO DoD 结论；技术通过不代替 PO DoD | 进行中（SM 技术验收已通过：候选 2 独立复验 PASS，现场证据复跑 10/0/0 exit 0、28 回归通过；现场轮已完成；待 PO 表达体验/DoD 结论，未预标 Done） |
+| WI-11 | SM 技术验收与 PO 亲身验收（需 SM/PO 参与） | SM 运行技术验收入口并独立审查实现与候选；PO 从 GitHub 安装同一插件候选参与真实使用。 | SM 验收记录 + PO DoD 结论；技术通过不代替 PO DoD | 完成（SM 技术验收 PASS 10/0/0 exit 0；PO DoD 已通过——2026-09-09「满意，通过我负责的 DoD」；证据见 sm-acceptance-candidate-2/ 与 po-acceptance-c2/live-*） |
 | WI-12 | 正式发布（PO 验收、Review、Retro 均结束后经 SM 交接） | 在验收通过的 commit 打 tag `v1.0.0`；同一份插件资产转正式 Release；tag/manifest/资产三者可核对。 | 正式资产与验收资产校验值一致 | 待开始 |
 
 顺序：Developer 自检（WI-07～09）→ 插件候选分发（WI-10）→ SM 技术验收 → PO 亲身验收（WI-11）→ Sprint Review → Sprint Retrospective → 正式发布（WI-12）。前 ZIP 候选（SHA256 `c5d448d4…`）保留为历史证据，其验收状态与哈希不指代新插件候选。
@@ -120,3 +120,4 @@ PO 依首用反馈新增 PBI-08（Codex CLI 插件化与免手动配置连接）
 - 2026-09-09：依 NORMAL-USE-AZ（PO 反馈）修正现场验收口径：PO 按正常方式说话，不输入/重复测试标记——关联改由自动字段（messageId/pairId/conversationId/replyTo）+ 验收数据目录 + 时间窗 + 接收方原始会话完整消息建立；正文标记如需由操作员取证环节处理。本轮即同一轮同时支撑技术结论（SM 记录 AC 检查）与体验结论（PO 表达是否接受）——共同操作、分别据实确认，不拆两轮，不预标 Done。已同步修改运行手册目标与步骤；仅改当前手册与进度记录，不追改历史证据、不改候选内容。首回合已完成（验收 pair e4e56322：请求 1c3cdf85 → 回复 7f2825ad，经随附入口走 bridge-accept-c2 与安装缓存）；等待追问回合。
 - 2026-09-09：SM 独立完成候选 2 技术复验：PASS——四条消息各收信 1 次、存储与正文一致、pair/对象/conversation/replyTo 正确；宿主 metadata（hooks.additional_context、turnId、item_completed toolUseId）与 context-prepared 全部对应；两次 PostToolUse、两次 wake-suppressed、无重复注入/pending/send-error，并排除 transcript 读取误判；末条 85a0e79b 已于 19:51:55 进入验收 Codex 原始会话（此前 pending 表述作废）。仓库 Test-Acceptance 以绑定现场证据复跑 10/0/0、exit 0，28 回归通过。第三节 WI-11 与顶部状态已对齐：技术 AC 通过、现场轮完成、PO 体验/DoD 待本人表达（未预标 Done）；2.2 顺序口径改为同一轮分别确认。口径纠正（依 SM）：context-prepared 单条仍属 unverified，收信以原始会话+关联核对为准（本次两层证据齐全方判通过）——INSTALL 排查参考已同步纠正。证据文件（live-*、SM-Technical-Acceptance.md）由 SM 定稿，未暂存。
 - 2026-09-09：SM 验收报告与五份现场证据已独立提交（b20d0a3，SM-Technical-Acceptance.md + po-acceptance-c2/live-*）。候选 2 冻结确认（Release 384994893 仍为 draft，ZIP digest 185da0bf… 不变）。时间口径约定（依 SM 建议，自本条起）：事件时间统一标注时区（UTC 双写 Asia/Shanghai）；此前进度记录中的裸时间（如 19:51:55）均指 2026-09-08 UTC，历史行不追改。下一步：PO 表达体验与是否接受 Increment → Review / Retro → 交接正式发布。
+- 2026-09-09：PO 明确通过其负责的 DoD（「满意，通过我负责的 DoD，开始 review」）——PBI-08 技术与 PO 两类结论已齐；Sprint 02 Review 开始（SM 主持，Developer 已交四点发言，见 bridge 消息与 SprintReview.md）。PBI-05 正式发布动作（并 main、tag v1.0.0、同一冻结资产转正式）按 PO 安排在 Review/Retro 后执行。候选继续冻结。
