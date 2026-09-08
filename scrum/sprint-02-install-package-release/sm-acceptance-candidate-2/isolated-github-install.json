@@ -1,0 +1,41 @@
+{
+  "at": "2026-09-08T19:14:00.705Z",
+  "testHome": "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\test\\sm-plugin-candidate2-20260909\\codex-home",
+  "records": [
+    {
+      "args": [
+        "plugin",
+        "marketplace",
+        "add",
+        "https://github.com/seapawn1/ClaudeToCodex",
+        "--ref",
+        "sprint-02-install-package-release",
+        "--json"
+      ],
+      "status": 0,
+      "stdout": "{\n  \"marketplaceName\": \"claudetocodex-dev\",\n  \"installedRoot\": \"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\ClaudeToCodex\\\\test\\\\sm-plugin-candidate2-20260909\\\\codex-home\\\\.tmp\\\\marketplaces\\\\claudetocodex-dev\",\n  \"alreadyAdded\": false\n}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "plugin",
+        "add",
+        "claudetocodex@claudetocodex-dev",
+        "--json"
+      ],
+      "status": 0,
+      "stdout": "{\n  \"pluginId\": \"claudetocodex@claudetocodex-dev\",\n  \"name\": \"claudetocodex\",\n  \"marketplaceName\": \"claudetocodex-dev\",\n  \"version\": \"1.0.0\",\n  \"installedPath\": \"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\ClaudeToCodex\\\\test\\\\sm-plugin-candidate2-20260909\\\\codex-home\\\\plugins\\\\cache\\\\claudetocodex-dev\\\\claudetocodex\\\\1.0.0\",\n  \"authPolicy\": \"ON_INSTALL\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "args": [
+        "plugin",
+        "list",
+        "--json"
+      ],
+      "status": 0,
+      "stdout": "{\n  \"installed\": [\n    {\n      \"pluginId\": \"claudetocodex@claudetocodex-dev\",\n      \"name\": \"claudetocodex\",\n      \"marketplaceName\": \"claudetocodex-dev\",\n      \"version\": \"1.0.0\",\n      \"installed\": true,\n      \"enabled\": true,\n      \"source\": {\n        \"source\": \"local\",\n        \"path\": \"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\ClaudeToCodex\\\\test\\\\sm-plugin-candidate2-20260909\\\\codex-home\\\\.tmp\\\\marketplaces\\\\claudetocodex-dev\\\\plugins\\\\claudetocodex\"\n      },\n      \"marketplaceSource\": {\n        \"sourceType\": \"git\",\n        \"source\": \"https://github.com/seapawn1/ClaudeToCodex.git\"\n      },\n      \"installPolicy\": \"AVAILABLE\",\n      \"authPolicy\": \"ON_INSTALL\"\n    }\n  ],\n  \"available\": []\n}\n",
+      "stderr": ""
+    }
+  ]
+}

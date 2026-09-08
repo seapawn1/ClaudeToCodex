@@ -1,0 +1,40 @@
+{
+  "at": "2026-09-08T19:17:12.665Z",
+  "id": 384994893,
+  "tagName": "v1.0.0-plugin-candidate.2",
+  "draft": true,
+  "targetCommit": "b6286c0b6756ac418a295521fbde1072fc89671f",
+  "assets": [
+    {
+      "name": "acceptance-report-from-package.json",
+      "digest": "sha256:c02f774f172ceb30142f3fc6019454a6d29f81a6755cf65a336e853e2f9c450d",
+      "size": 5879
+    },
+    {
+      "name": "acceptance-report-repo.json",
+      "digest": "sha256:cd26f36652fe8bcd5fd03f50a6a692ca1755892592750ef1ac67d6ea550c1e94",
+      "size": 6322
+    },
+    {
+      "name": "claude-to-codex-plugin-1.0.0.zip",
+      "digest": "sha256:185da0bfc6e5c656a38e4c60567485a626566bf741925e69101362e5d6cb5e6b",
+      "size": 43365
+    },
+    {
+      "name": "claude-to-codex-plugin-1.0.0.zip.sha256",
+      "digest": "sha256:a413949054e41411805dd8bc63fbb2b76a660432d400cc5da5ab5ba75d2374f2",
+      "size": 99
+    },
+    {
+      "name": "HOST-EVIDENCE-STEPS.md",
+      "digest": "sha256:d22a6aba39390d78477177c126e2c0d4d6cb8a7efc51ace342d2369635f6b6a4",
+      "size": 4352
+    },
+    {
+      "name": "RELEASE-NOTES.md",
+      "digest": "sha256:08410e66001d698bb7373b4337d5e3b931b4fe9fd31d9873d894c97d2ab8163f",
+      "size": 2682
+    }
+  ],
+  "downloadedZipSha256": "185da0bfc6e5c656a38e4c60567485a626566bf741925e69101362e5d6cb5e6b"
+}
