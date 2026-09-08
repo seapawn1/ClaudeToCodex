@@ -2,7 +2,7 @@
 
 - **版本**：1.0.0（Codex CLI 插件形态）
 - **来源**：Git 仓库 [seapawn1/ClaudeToCodex](https://github.com/seapawn1/ClaudeToCodex)；本包对应 commit 见包内 `manifest.json`（`sourceCommit`），构建时间取该 commit 的提交时间。
-- **安装入口**：`codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref <ref>` 后 `codex plugin add claudetocodex@claudetocodex-dev`；安装说明见仓库 `INSTALL.md`。
+- **安装入口**：`codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.0.0` 后 `codex plugin add claudetocodex@claudetocodex-dev`；安装说明见仓库 `INSTALL.md`。
 - **完整性核对**：每个文件的 SHA256 见包内 `manifest.json`；ZIP 整包校验值见 Release 资产中的 `.sha256` 文件；`bridge\release\Verify-Release.ps1` 可自动核对。
 
 ## 分发内容
@@ -41,4 +41,4 @@ ZIP 根即插件根，`manifest.json` 为完整清单。概览：
 
 ## 验证
 
-发布前离线回归（store / pipe / install / connect 四套）与逐项技术验收入口 `bridge\release\Test-Acceptance.ps1` 已在本发布物解压副本上运行；真实宿主加载与会话级证据记录见开发仓库 Sprint Backlog。
+发布前离线回归（store / pipe / install / connect 四套）与逐项技术验收入口 `bridge\release\Test-Acceptance.ps1` 已在本发布物解压副本上运行；真实宿主加载与执行、以及 PO 亲身验收的记录见 [Sprint 02 Review](docs/scrum-sprint/sprint-02-install-package-release-review.md)（验收对象即本包字节：SHA256 `185da0bf…6cb5e6b`，manifest `sourceCommit` 为 `b6286c0`）。

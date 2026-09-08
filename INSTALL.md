@@ -12,11 +12,9 @@
 ## 1. 安装插件
 
 ```powershell
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref <候选分支或版本ref>
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.0.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
-
-> 正式发布后 ref 固定为 `v1.0.0` tag / main；验收阶段使用候选分支 ref。
 
 ## 2. 必要授权（人工步骤，产品不代改）
 

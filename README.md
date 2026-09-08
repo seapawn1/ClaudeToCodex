@@ -5,7 +5,7 @@
 ## 快速开始（Codex CLI 插件）
 
 ```powershell
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref <ref>
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.0.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
 
@@ -20,9 +20,8 @@ codex plugin add claudetocodex@claudetocodex-dev
 - [bridge/docs/USAGE.md](bridge/docs/USAGE.md)：底层桥的完整使用说明与排查。
 - [bridge/docs/SMOKE.md](bridge/docs/SMOKE.md)：端到端 smoke 剧本与证据规则。
 - [Sprint 01 Bridge Review & Retro](docs/scrum-sprint/sprint-01-bridge-review-retro.md)：首个 Increment 的检视与回顾。
+- [Sprint 02 Install, Package, Release Review](docs/scrum-sprint/sprint-02-install-package-release-review.md)：1.0.0 插件 Increment 的检视与回顾（含验收证据索引，过程资料经收口蒸馏，历史在 Git）。
 - [Product Backlog](scrum/ProductBacklog.md)：当前产品、DoD 与后续 PBI。
-- [Sprint 02 Backlog](scrum/sprint-02-install-package-release/SprintBacklog.md)：本冲刺计划与施工记录。
-- [Host evidence steps](scrum/sprint-02-install-package-release/HOST-EVIDENCE-STEPS.md)：真实宿主验收证据的取得步骤（Sprint 过程资料）。
 
 自动化回归与逐项技术验收（排查/开发用；安装后的 skill 自行从插件缓存定位，不依赖 `codex plugin list` 的安装路径字段）：
 
