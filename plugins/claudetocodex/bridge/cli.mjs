@@ -98,10 +98,18 @@ async function main() {
     }
     // Synthesize the endpoint from the session registry: same-user DPAPI wrapping of
     // the registry peer key, so the Claude side never registers anything manually.
-    // The key travels via process environment, never on the command line, and error
-    // paths never echo it.
+    // Registry key files are JSON ({peerToken, procStartFt, pidDomain}); only the
+    // peerToken authenticates to the host pipe. The token travels via process
+    // environment, never the command line, and error paths never echo it.
     const keyFile = readdirSync(registry).find((f) => f.startsWith(`${session.pid}.`) && f.endsWith('.key'));
-    const token = readFileSync(join(registry, keyFile), 'utf8').trim();
+    let keyRecord;
+    try {
+      keyRecord = JSON.parse(readFileSync(join(registry, keyFile), 'utf8'));
+    } catch {
+      throw new Error(`Peer key file for pid ${session.pid} is not the expected registry JSON record.`);
+    }
+    const token = typeof keyRecord?.peerToken === 'string' ? keyRecord.peerToken.trim() : '';
+    if (!token) throw new Error(`Peer key record for pid ${session.pid} has no peerToken field.`);
     let protectedToken;
     try {
       protectedToken = (await execute('powershell.exe', [

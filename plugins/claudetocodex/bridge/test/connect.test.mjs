@@ -23,7 +23,7 @@ test.after(() => {
   rmSync(registry, { recursive: true, force: true });
 });
 
-function writeSession(pid, name, sessionId, { key = true, socket = '\\\\.\\pipe\\LOCAL\\ctc-test-pipe' } = {}) {
+function writeSession(pid, name, sessionId, { key = true, socket = '\\\\.\\pipe\\LOCAL\\ctc-test-pipe', peerToken = null } = {}) {
   // Drop stale key files for this pid so a keyless rewrite stays keyless.
   for (const f of readdirSync(registry)) {
     if (f.startsWith(`${pid}.`) && f.endsWith('.key')) rmSync(join(registry, f), { force: true });
@@ -32,7 +32,14 @@ function writeSession(pid, name, sessionId, { key = true, socket = '\\\\.\\pipe\
     pid, sessionId, name, messagingSocketPath: socket,
     status: 'idle', cwd: 'C:\\nowhere', startedAt: Date.now(), updatedAt: Date.now(),
   }));
-  if (key) writeFileSync(join(registry, `${pid}.abcdef.key`), `key-for-${sessionId}`);
+  // Real registry key files are JSON records ({peerToken, procStartFt, pidDomain}).
+  if (key === true) {
+    writeFileSync(join(registry, `${pid}.abcdef.key`), JSON.stringify({
+      peerToken: peerToken ?? `token-${sessionId}`, procStartFt: 134333582258617163, pidDomain: 'win32:test',
+    }));
+  } else if (key !== false) {
+    writeFileSync(join(registry, `${pid}.abcdef.key`), key); // raw fixture content (e.g. malformed record)
+  }
 }
 
 // Codex-side child processes must present ONLY the Codex identity; an ambient
@@ -88,7 +95,7 @@ test('connect rejects an alive session without a peer key', async () => {
 });
 
 test('connect pairs a uniquely named live session and synthesizes the endpoint', async () => {
-  writeSession(process.pid, 'Alpha dev room', '11111111-2222-4333-8444-555555555555');
+  writeSession(process.pid, 'Alpha dev room', '11111111-2222-4333-8444-555555555555', { peerToken: 'token-alpha-dev-room' });
   const r = await runConnect('dev room');
   assert.equal(r.code, 0);
   const out = JSON.parse(r.stdout);
@@ -98,7 +105,26 @@ test('connect pairs a uniquely named live session and synthesizes the endpoint',
   assert.equal(endpoint.schema, 1);
   assert.equal(endpoint.socket, '\\\\.\\pipe\\LOCAL\\ctc-test-pipe');
   assert.ok(endpoint.tokenProtected.length > 50, 'DPAPI-protected token expected');
+  // F01 regression: the protected credential must be exactly the peerToken, not the whole key file.
+  const { stdout: plain } = await execute('powershell.exe', [
+    '-NoProfile', '-Command',
+    '$s = ConvertTo-SecureString -String $env:CTC_PROTECTED; [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))',
+  ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PROTECTED: endpoint.tokenProtected } });
+  const decrypted = plain.trim();
+  assert.equal(decrypted, 'token-alpha-dev-room', 'protected credential must equal the peerToken field only');
+  assert.notEqual(decrypted.length, JSON.stringify({ peerToken: 'token-alpha-dev-room', procStartFt: 134333582258617163, pidDomain: 'win32:test' }).length);
   assert.match(readFileSync(join(root, 'events.jsonl'), 'utf8'), /"type":"connect"/);
+});
+
+test('connect rejects a key record that lacks the peerToken field', async () => {
+  writeSession(process.pid, 'No token room', '77777777-8888-4999-aaaa-bbbbbbbbbbbb', {
+    key: JSON.stringify({ procStartFt: 1, pidDomain: 'win32:test' }),
+  });
+  const r = await runConnect('No token');
+  assert.notEqual(r.code, 0);
+  assert.match(r.stderr, /has no peerToken field/);
+  // Restore the record other tests rely on.
+  writeSession(process.pid, 'Alpha dev room', '11111111-2222-4333-8444-555555555555', { peerToken: 'token-alpha-dev-room' });
 });
 
 test('connect never silently replaces an existing different pair', async () => {
@@ -152,7 +178,7 @@ test('send to a dead endpoint fails loudly and never reports submitted', async (
   // A well-shaped pipe name that nothing listens on: connect pairs, the send must fail.
   const isolated = mkdtempSync(join(tmpdir(), 'ctc-deadpipe-'));
   try {
-    writeSession(process.pid, 'Silent pipe room', '66666666-7777-4888-9999-aaaaaaaaaaaa', { socket: '\\\\.\\pipe\\LOCAL\\ctc-no-listener-here' });
+    writeSession(process.pid, 'Silent pipe room', '66666666-7777-4888-9999-aaaaaaaaaaaa', { socket: '\\\\.\\pipe\\LOCAL\\ctc-no-listener-here', peerToken: 'CTC-PEER-SECRET-6666' });
     let connect;
     try {
       const { stdout } = await execute('node', [cli, 'connect', '--name', 'Silent pipe', '--sessions-dir', registry], {
@@ -178,7 +204,7 @@ test('send to a dead endpoint fails loudly and never reports submitted', async (
     assert.ok(!send.stdout.includes('"submitted"'), 'failed send must not print a submitted receipt');
     const events = readFileSync(join(isolated, 'events.jsonl'), 'utf8');
     assert.match(events, /"type":"send-error"/, 'failure must be recorded as send-error');
-    assert.ok(!events.includes('key-for-'), 'peer key must not leak into events');
+    assert.ok(!events.includes('CTC-PEER-SECRET-6666'), 'peer token must not leak into events');
   } finally {
     rmSync(isolated, { recursive: true, force: true });
     // Restore the registry record other tests rely on.

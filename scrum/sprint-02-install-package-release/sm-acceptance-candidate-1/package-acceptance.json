@@ -1,0 +1,93 @@
+{
+    "at":  "2026-09-08T19:01:38.6249802Z",
+    "commit":  "package:1.0.0",
+    "plugin":  "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\test\\sm-plugin-candidate1-20260909\\extracted",
+    "suiteRoot":  "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\test\\sm-plugin-candidate1-20260909\\extracted\\bridge",
+    "checks":  [
+                   {
+                       "ac":  "AC-08-01a",
+                       "name":  "Package structure validation, shipped tree (simulated)",
+                       "verdict":  "PASS",
+                       "evidence":  [
+                                        "shipped tree: manifest fields valid; SKILL.md present; EVERY hook command anchors to ${PLUGIN_ROOT}/bridge/cli.mjs; bridge bundled"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-01b",
+                       "name":  "Real Codex CLI isolated install (real host)",
+                       "verdict":  "BLOCKED",
+                       "evidence":  [
+                                        "package-derived run: this repo marketplace root is not part of the package; run from the repo for the host-install check"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-01c",
+                       "name":  "Hook execution in live host session",
+                       "verdict":  "BLOCKED",
+                       "evidence":  [
+                                        "needs an interactive Codex session plus user hook trust (non-managed hooks); not decidable headlessly",
+                                        "SM round: pass -HookEvidence \u003cbridge events.jsonl or equivalent log\u003e to verdict this check"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-01d",
+                       "name":  "Skill availability in live host session",
+                       "verdict":  "BLOCKED",
+                       "evidence":  [
+                                        "skill discovery happens inside an interactive Codex session; not decidable headlessly",
+                                        "SM round: pass -SkillEvidence \u003csession transcript or skill listing mentioning claudetocodex\u003e to verdict this check"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-02",
+                       "name":  "Auto-connect: unique/not-found/ambiguous/dead/stale/no-key/malformed-socket/different-pair (simulated, shipped copy)",
+                       "verdict":  "PASS",
+                       "evidence":  [
+                                        "connect.test.mjs pass=11 fail=0",
+                                        "endpoint-failure cases covered: stale registry record, missing peer key, non-pipe socket, and a dead-pipe send"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-03",
+                       "name":  "No manual config: reply entry carries data dir and the RUNNING CLI location (simulated, shipped copy)",
+                       "verdict":  "PASS",
+                       "evidence":  [
+                                        "connect.test.mjs pass=11 fail=0",
+                                        "reply entry is pinned to commandString() of the module under test (relocates with the installation); no-env default data location is product-managed (defaultRoot unit); test isolation variables are harness-only"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-05a",
+                       "name":  "Failures are failures: non-zero exits, no fake success, no key material (simulated, shipped copy)",
+                       "verdict":  "PASS",
+                       "evidence":  [
+                                        "negative connect cases exit non-zero; dead-pipe send exits non-zero, prints no submitted receipt, records send-error; peer key never appears in listings or events; key travels via process env, never the command line"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-04",
+                       "name":  "Message pipeline: objects, conversationId/replyTo, dedup, single wake/injection (simulated, shipped copy)",
+                       "verdict":  "PASS",
+                       "evidence":  [
+                                        "store pass=11; pipe pass=3; install pass=2; parsed fail counts: 0/0/0",
+                                        "real-session receipt remains judged by unique marker plus receiving original-session events - that part is the PO end-to-end round, not this harness"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-05b",
+                       "name":  "No endpoints/keys/pairing/messages inside package (static + content scan)",
+                       "verdict":  "PASS",
+                       "evidence":  [
+                                        "shipped tree scanned by name (endpoint/pair/events/.key/data dirs) and content (DPAPI-like blobs)"
+                                    ]
+                   },
+                   {
+                       "ac":  "AC-08-05c",
+                       "name":  "Host receive policy never modified (static, shipped + dev)",
+                       "verdict":  "PASS",
+                       "evidence":  [
+                                        "only user-facing reminder text mentions crossSessionInbound; no code path reads or writes host settings in either tree"
+                                    ]
+                   }
+               ]
+}
