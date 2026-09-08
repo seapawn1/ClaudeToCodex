@@ -1,0 +1,166 @@
+{
+  "at": "2026-09-08T19:35:31.614Z",
+  "sourceCommit": "b6286c0b6756ac418a295521fbde1072fc89671f",
+  "project": "D:/ClaudeToCodex-Accept",
+  "dataRoot": "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\bridge-accept-c2",
+  "codexHome": "C:\\Users\\DELL\\.codex",
+  "before": {
+    "planningPairSha256": "aaa46a336cf6aaa27d9c150ee315fbb5103563940fc483a2849eb0b3f3a12e5b",
+    "planningHooksSha256": "44ba93f78ced9aeafe9eaef79ea1defb7be7fe0b0f31031891fd1eb6fcddcf60",
+    "acceptProjectExisted": false,
+    "acceptDataExisted": false
+  },
+  "records": [
+    {
+      "args": [
+        "plugin",
+        "marketplace",
+        "add",
+        "https://github.com/seapawn1/ClaudeToCodex",
+        "--ref",
+        "b6286c0b6756ac418a295521fbde1072fc89671f",
+        "--json"
+      ],
+      "status": 0,
+      "output": {
+        "marketplaceName": "claudetocodex-dev",
+        "installedRoot": "C:\\Users\\DELL\\.codex\\.tmp\\marketplaces\\claudetocodex-dev",
+        "alreadyAdded": false
+      }
+    },
+    {
+      "args": [
+        "plugin",
+        "add",
+        "claudetocodex@claudetocodex-dev",
+        "--json"
+      ],
+      "status": 0,
+      "output": {
+        "pluginId": "claudetocodex@claudetocodex-dev",
+        "name": "claudetocodex",
+        "marketplaceName": "claudetocodex-dev",
+        "version": "1.0.0",
+        "installedPath": "C:\\Users\\DELL\\.codex\\plugins\\cache\\claudetocodex-dev\\claudetocodex\\1.0.0",
+        "authPolicy": "ON_INSTALL"
+      }
+    },
+    {
+      "args": [
+        "plugin",
+        "list",
+        "--json"
+      ],
+      "status": 0,
+      "output": {
+        "installed": [
+          {
+            "pluginId": "claudetocodex@claudetocodex-dev",
+            "name": "claudetocodex",
+            "marketplaceName": "claudetocodex-dev",
+            "version": "1.0.0",
+            "installed": true,
+            "enabled": true,
+            "source": {
+              "source": "local",
+              "path": "C:\\Users\\DELL\\.codex\\.tmp\\marketplaces\\claudetocodex-dev\\plugins\\claudetocodex"
+            },
+            "marketplaceSource": {
+              "sourceType": "git",
+              "source": "https://github.com/seapawn1/ClaudeToCodex.git"
+            },
+            "installPolicy": "AVAILABLE",
+            "authPolicy": "ON_INSTALL"
+          }
+        ]
+      }
+    }
+  ],
+  "installedPath": "C:\\Users\\DELL\\.codex\\plugins\\cache\\claudetocodex-dev\\claudetocodex\\1.0.0",
+  "comparisons": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "matches": true
+    },
+    {
+      "path": "bridge/cli.mjs",
+      "matches": true
+    },
+    {
+      "path": "bridge/delivery/BridgeQueue.ps1",
+      "matches": true
+    },
+    {
+      "path": "bridge/delivery/Register-ClaudeEndpoint.ps1",
+      "matches": true
+    },
+    {
+      "path": "bridge/delivery/Send-ClaudePipe.ps1",
+      "matches": true
+    },
+    {
+      "path": "bridge/docs/SMOKE.md",
+      "matches": true
+    },
+    {
+      "path": "bridge/docs/USAGE.md",
+      "matches": true
+    },
+    {
+      "path": "bridge/entry.mjs",
+      "matches": true
+    },
+    {
+      "path": "bridge/release/Build-Release.ps1",
+      "matches": true
+    },
+    {
+      "path": "bridge/release/Test-Acceptance.ps1",
+      "matches": true
+    },
+    {
+      "path": "bridge/release/Verify-Release.ps1",
+      "matches": true
+    },
+    {
+      "path": "bridge/sessions.mjs",
+      "matches": true
+    },
+    {
+      "path": "bridge/store.mjs",
+      "matches": true
+    },
+    {
+      "path": "bridge/test/connect.test.mjs",
+      "matches": true
+    },
+    {
+      "path": "bridge/test/install.test.mjs",
+      "matches": true
+    },
+    {
+      "path": "bridge/test/pipe.test.mjs",
+      "matches": true
+    },
+    {
+      "path": "bridge/test/store.test.mjs",
+      "matches": true
+    },
+    {
+      "path": "hooks/hooks.json",
+      "matches": true
+    },
+    {
+      "path": "skills/claudetocodex/SKILL.md",
+      "matches": true
+    }
+  ],
+  "packageMatches": true,
+  "after": {
+    "planningPairUnchanged": true,
+    "planningHooksUnchanged": true,
+    "acceptanceHasPair": false
+  },
+  "hookTrustChanged": false,
+  "modelTurnStarted": false
+}
