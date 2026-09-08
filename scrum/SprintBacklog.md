@@ -94,10 +94,10 @@ Increment 已集成到产品中，可通过标准产品入口使用，并通过�
 | WI-03 Claude→Codex 发送链 | 完成 | store.test：原子发布/单槽/身份判定/假 codex shim 捕获 `['queue','--thread',…]` 精确参数 |
 | WI-04 Codex hook 交付 | 完成 | store.test：三事件契约、恰一次消费、已消费唤醒抑制、session/agent/畸形/引号四负例 |
 | WI-05 安装器 | 完成 | install.test：三条注册指向安装位置、幂等、替换原型残留、保留外部 hook；测试发现并修复「注册命令漏 `hook` 子命令」缺陷 |
-| WI-06 现场首验 M1 | **待 PO 现场窗口** | 剧本就绪（SMOKE.md §1–§4、§6）；需 PO 协调双原会话约 0.5 天 |
+| WI-06 现场首验 M1 | 完成 | 第一轮 smoke T01CX 现场闭环：正文+标记进入 Codex 原会话（rollout L891）并 reply 回到 Claude 原会话（2026-09-08 09:15Z）；证据见 `bridge/docs/evidence/smoke-20260908-1/` |
 | WI-07 Codex→Claude 投递链 | 完成 | pipe.test：auth→消息帧序、priority=next、中文/换行/引号保真、身份不符拒绝、死端点留证 |
 | WI-08 离线回归 | 完成 | `node --test` 16/16 通过（2026-09-08，bridge/test/ 三文件；不引用任何历史路径） |
-| WI-09 smoke 定义与首次执行 | 文档完成，**首次现场运行待 PO** | `bridge/docs/SMOKE.md`（五要素齐备） |
+| WI-09 smoke 定义与首次执行 | 首次运行完成（**10/10 通过，待 PO 签署**） | `bridge/docs/SMOKE.md`；第一轮证据 `bridge/docs/evidence/smoke-20260908-1/`（MATRIX.md 十格全判定，2026-09-08 09:14–09:32Z；含单槽拒绝与 wake-suppressed 现场实证） |
 | WI-10 说明/边界/第二次运行 | 文档完成，第二次运行与 3.7 收口待首次运行后 | `bridge/docs/USAGE.md`（四类任务+§5 边界对照设计文档清单+版本基线）、`README.md` 产品入口 |
 
 **WI-00 环境与版本基线确认**（0.5d，无依赖）→ PBI-01.4 AC3 前置
