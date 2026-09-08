@@ -37,7 +37,7 @@ Windows 10 Pro 19045；Node.js v24.14.0；Codex CLI 0.153.4（更早版本未验
 ## 版本与 Sprint 标签
 
 - **版本标签 `v1.0.0`**：固定指向已正式发布的提交（`48edef8`），其插件 ZIP 与被验收候选逐字节一致（来源 commit `b6286c0`，SHA256 见 Release 资产）。
-- **Sprint 标签 `sprint-02-install-package-release-review-retro`**：标记本次 Sprint 的结束提交（含本 README 收尾与 Review/Retro/记忆更新），用于追溯整个冲刺过程。
+- **Sprint 标签 `sprint-02-install-package-release-review-retro`**：与 `v1.0.0` 同指提交 `48edef8`，记录本次 Sprint 的 Review、Retro、记忆更新与收口；后续 README 整理保留在 `main`。
 
 ## 开发验证入口（可选）
 
