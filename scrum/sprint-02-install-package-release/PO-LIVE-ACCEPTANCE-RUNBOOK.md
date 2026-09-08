@@ -1,6 +1,6 @@
 # 候选 2 现场验收运行手册（PO 参与版）
 
-> **当前状态（2026-09-09）**：现场轮已完成——验收 pair `e4e56322…`，四步交互（请求/回复/追问/再答）完整，末条消息已于 2026-09-08T19:51:55Z（UTC，即 2026-09-09 03:51:55 Asia/Shanghai）进入验收 Codex 原始会话。SM 独立取证并以现场证据复跑仓库验收入口：**10 PASS / 0 FAIL / 0 BLOCKED（exit 0）**，技术 AC 通过；证据见 `po-acceptance-c2/live-*.json|jsonl` 与 `SM-Technical-Acceptance.md`（SM 定稿）。**PO 体验与 DoD 结论待 PO 本人表达。**
+> **当前状态（2026-09-09）**：现场轮已完成——验收 pair `e4e56322…`，四步交互（请求/回复/追问/再答）完整，末条消息已于 2026-09-08T19:51:55Z（UTC，即 2026-09-09 03:51:55 Asia/Shanghai）进入验收 Codex 原始会话。SM 独立取证并以现场证据复跑仓库验收入口：**10 PASS / 0 FAIL / 0 BLOCKED（exit 0）**，技术 AC 通过；证据见 `po-acceptance-c2/live-*.json|jsonl` 与 `SM-Technical-Acceptance.md`（SM 定稿）。**PO 已于 2026-09-09 明确通过其负责的 DoD（"满意，通过我负责的 DoD"）；Sprint Review 进行中。**
 
 目标：一轮真实使用，**共同操作、分别据实确认**——SM 记录技术检查结果（AC），PO 表达实际体验并决定是否接受（DoD）；同一轮证据支持两种结论，不拆分为两轮重复使用。缺证据或发现问题据实保留，不自动宣布 Done。Review/Retro 后正式发布，顺序不变。
 
