@@ -35,10 +35,19 @@ function writeSession(pid, name, sessionId, { key = true, socket = '\\\\.\\pipe\
   if (key) writeFileSync(join(registry, `${pid}.abcdef.key`), `key-for-${sessionId}`);
 }
 
-async function runConnect(name, extraEnv = {}) {
+// Codex-side child processes must present ONLY the Codex identity; an ambient
+// CLAUDE_CODE_SESSION_ID (e.g. inherited from a Claude-hosted test runner) would make
+// caller() reject with "exactly one of the two selected original sessions".
+function codexEnv(dataDir, extra = {}) {
+  const env = { ...process.env, CTC_BRIDGE_DIR: dataDir, CODEX_THREAD_ID: CODEX, ...extra };
+  delete env.CLAUDE_CODE_SESSION_ID;
+  return env;
+}
+
+async function runConnect(name, extraEnv = {}, dataDir = root) {
   try {
     const { stdout } = await execute('node', [cli, 'connect', '--name', name, '--sessions-dir', registry], {
-      env: { ...process.env, CTC_BRIDGE_DIR: root, CODEX_THREAD_ID: CODEX, ...extraEnv },
+      env: codexEnv(dataDir, extraEnv),
       windowsHide: true, timeout: 30000,
     });
     return { code: 0, stdout };
@@ -110,4 +119,83 @@ test('sessions lists registry entries without secrets', async () => {
   const devRoom = rows.find((row) => row.name === 'Alpha dev room');
   assert.ok(devRoom && devRoom.alive === true && devRoom.hasKey === true);
   assert.ok(JSON.stringify(rows).includes('key-for-') === false, 'peer keys must never appear in listings');
+});
+
+test('peer reply entry carries the data directory and installed CLI path', async () => {
+  const { renderPeer } = await import('../store.mjs');
+  const { commandString } = await import('../entry.mjs');
+  const message = {
+    id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+    pairId: '11111111-2222-4333-8444-555555555555',
+    conversationId: '22222222-3333-4444-8555-666666666666',
+    replyTo: null,
+    from: { tool: 'codex', sessionId: '0a0a0a0a-1111-4111-8111-111111111111' },
+    to: { tool: 'claude', sessionId: '11111111-2222-4333-8444-555555555555' },
+    body: 'peer body', createdAt: new Date(0).toISOString(),
+  };
+  const text = renderPeer(message, 'C:\\isolated\\bridge-data');
+  assert.match(text, /\$env:CTC_BRIDGE_DIR='C:\\isolated\\bridge-data';/);
+  assert.match(text, new RegExp(`reply --to ${message.id}`));
+  // Pin the CLI path to the module under test's own location — this is what makes the
+  // entry relocate with the installation instead of depending on any dev-workspace path.
+  assert.ok(text.includes(commandString()), 'reply entry must embed commandString() of the running CLI');
+});
+
+test('connect rejects a session whose registry socket is not a native pipe', async () => {
+  writeSession(process.pid, 'Odd socket room', '55555555-6666-4777-8888-999999999999', { socket: 'tcp://not-a-pipe' });
+  const r = await runConnect('Odd socket');
+  assert.notEqual(r.code, 0);
+  assert.match(r.stderr, /no native Windows named pipe/);
+});
+
+test('send to a dead endpoint fails loudly and never reports submitted', async () => {
+  // A well-shaped pipe name that nothing listens on: connect pairs, the send must fail.
+  const isolated = mkdtempSync(join(tmpdir(), 'ctc-deadpipe-'));
+  try {
+    writeSession(process.pid, 'Silent pipe room', '66666666-7777-4888-9999-aaaaaaaaaaaa', { socket: '\\\\.\\pipe\\LOCAL\\ctc-no-listener-here' });
+    let connect;
+    try {
+      const { stdout } = await execute('node', [cli, 'connect', '--name', 'Silent pipe', '--sessions-dir', registry], {
+        env: codexEnv(isolated),
+        windowsHide: true, timeout: 30000,
+      });
+      connect = { code: 0, stdout };
+    } catch (error) {
+      connect = { code: error.code ?? 1, stderr: String(error.stderr ?? error.message) };
+    }
+    assert.equal(connect.code, 0);
+    let send;
+    try {
+      const { stdout } = await execute('node', [cli, 'send', '--body', 'CTC-DEAD-PIPE-PROBE'], {
+        env: codexEnv(isolated),
+        windowsHide: true, timeout: 60000,
+      });
+      send = { code: 0, stdout };
+    } catch (error) {
+      send = { code: error.code ?? 1, stdout: String(error.stdout ?? ''), stderr: String(error.stderr ?? error.message) };
+    }
+    assert.notEqual(send.code, 0, 'send to a dead pipe must exit non-zero');
+    assert.ok(!send.stdout.includes('"submitted"'), 'failed send must not print a submitted receipt');
+    const events = readFileSync(join(isolated, 'events.jsonl'), 'utf8');
+    assert.match(events, /"type":"send-error"/, 'failure must be recorded as send-error');
+    assert.ok(!events.includes('key-for-'), 'peer key must not leak into events');
+  } finally {
+    rmSync(isolated, { recursive: true, force: true });
+    // Restore the registry record other tests rely on.
+    writeSession(process.pid, 'Alpha dev room', '11111111-2222-4333-8444-555555555555');
+  }
+});
+
+test('default data location is product-managed when no bridge env is preset', async () => {
+  const { defaultRoot } = await import('../store.mjs');
+  const saved = process.env.CTC_BRIDGE_DIR;
+  delete process.env.CTC_BRIDGE_DIR;
+  try {
+    const resolved = defaultRoot();
+    const base = process.env.LOCALAPPDATA ?? '';
+    assert.ok(resolved.toLowerCase().startsWith(base.toLowerCase()), `default root must live under LOCALAPPDATA, got ${resolved}`);
+    assert.ok(resolved.toLowerCase().includes('claudetocodex'));
+  } finally {
+    if (saved !== undefined) process.env.CTC_BRIDGE_DIR = saved;
+  }
 });

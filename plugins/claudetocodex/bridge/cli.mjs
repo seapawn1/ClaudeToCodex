@@ -98,12 +98,20 @@ async function main() {
     }
     // Synthesize the endpoint from the session registry: same-user DPAPI wrapping of
     // the registry peer key, so the Claude side never registers anything manually.
+    // The key travels via process environment, never on the command line, and error
+    // paths never echo it.
     const keyFile = readdirSync(registry).find((f) => f.startsWith(`${session.pid}.`) && f.endsWith('.key'));
     const token = readFileSync(join(registry, keyFile), 'utf8').trim();
-    const protectedToken = (await execute('powershell.exe', [
-      '-NoProfile', '-Command',
-      `ConvertTo-SecureString -AsPlainText -Force -String ${JSON.stringify(token)} | ConvertFrom-SecureString`,
-    ], { windowsHide: true, timeout: 15000 })).stdout.trim();
+    let protectedToken;
+    try {
+      protectedToken = (await execute('powershell.exe', [
+        '-NoProfile', '-Command',
+        '$env:CTC_PEER_KEY | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString',
+      ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PEER_KEY: token } })).stdout.trim();
+    } catch (error) {
+      throw new Error('DPAPI protection of the peer key failed; no key material is included in this message.');
+    }
+    if (!protectedToken) throw new Error('DPAPI protection returned an empty token.');
     store.initialize();
     const endpointPath = join(store.root, 'endpoints', `claude-${session.sessionId}.json`);
     writeFileSync(endpointPath, JSON.stringify({
