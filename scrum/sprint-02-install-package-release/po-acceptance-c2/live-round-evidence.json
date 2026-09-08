@@ -1,0 +1,380 @@
+{
+  "verifiedAt": "2026-09-08T20:02:48.441Z",
+  "verdict": "PASS",
+  "scope": "Independent SM provenance check of completed candidate-2 live round. PO acceptance is not inferred.",
+  "candidate": {
+    "sourceCommit": "b6286c0b6756ac418a295521fbde1072fc89671f",
+    "zipSha256": "185da0bfc6e5c656a38e4c60567485a626566bf741925e69101362e5d6cb5e6b",
+    "installedPath": "C:\\Users\\DELL\\.codex\\plugins\\cache\\claudetocodex-dev\\claudetocodex\\1.0.0",
+    "parity": [
+      {
+        "path": ".codex-plugin/plugin.json",
+        "sha256": "922c67c97ff0cbe7952ac9c9907d243600efbecb8977f4cf05a1a8dd8fb5652a",
+        "installedMatches": true,
+        "repositoryByteIdentical": false,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/cli.mjs",
+        "sha256": "ad0a13c29d487a05eb6a02503a358ee0075e2aa073ea3fd91475372bb61adc55",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/delivery/BridgeQueue.ps1",
+        "sha256": "fddb7c533e489be0fc6b4d0ec7fa8d541148c36521aef7a5df448c31f0a7f718",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/delivery/Register-ClaudeEndpoint.ps1",
+        "sha256": "c5d993a4fd691d381ca91fe88a2f6e52f7c70d7a826af12799ba4c119a8e0bc2",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/delivery/Send-ClaudePipe.ps1",
+        "sha256": "03859daa8d8b0c5bba2c5aaf1f8bd14c91009d5b178fa075bd347a512d15a40d",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/docs/SMOKE.md",
+        "sha256": "213bf3a5e52534716f9b962b39a3a189ea1aa48d67fa7f9319d142188c6e60a6",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/docs/USAGE.md",
+        "sha256": "03abdc17a01cf90639e36b01c2cd5d40ae51fc5b9aff97836af6e22d16160c31",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/entry.mjs",
+        "sha256": "c44b66c6ebc25fc2395ac25223d84ba1b25d0e4d33523bd360cdb494ecc1457e",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/release/Build-Release.ps1",
+        "sha256": "497615b8211ba560334e797b9e9610a29d4b154bfb9b1b023106130f0c808b15",
+        "installedMatches": true,
+        "repositoryByteIdentical": false,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/release/Test-Acceptance.ps1",
+        "sha256": "f79e8b7d060d9442a7887b4e3f16f21620da15d8744bf72db719ef8123601032",
+        "installedMatches": true,
+        "repositoryByteIdentical": false,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/release/Verify-Release.ps1",
+        "sha256": "4bcf3e61e17cec0ddbb833a8ccf9352809e879fed49460aeb938729e73437987",
+        "installedMatches": true,
+        "repositoryByteIdentical": false,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/sessions.mjs",
+        "sha256": "6ed02c51007ba99c4a1b18cb517191033dec9dc169d0e717ffb4a876d4778e9d",
+        "installedMatches": true,
+        "repositoryByteIdentical": false,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/store.mjs",
+        "sha256": "049ecffcc19e172512962838ae5333f3b8e9f723e92fa64e0c8c30908b2aba76",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/test/connect.test.mjs",
+        "sha256": "90ee61b410e8d3e28741a686d06f4f385c4f33b1e5a7de3629729c204cea88d3",
+        "installedMatches": true,
+        "repositoryByteIdentical": false,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/test/install.test.mjs",
+        "sha256": "9e7e59ce1e102fa5f01be5baf6c13a093f8403c27ba4a6d3bc57996b96bcfe1e",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/test/pipe.test.mjs",
+        "sha256": "8b325bcc6f0507d4655d1f934c3388ff9304f2e03a42e991caafa5d5812b7da0",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "bridge/test/store.test.mjs",
+        "sha256": "cc6e3f41815c9692bd365842c3b4442400f598a8eb74771b3cb2720fde24acf9",
+        "installedMatches": true,
+        "repositoryByteIdentical": true,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "hooks/hooks.json",
+        "sha256": "6ae7237705e7b17ec286adc671c2de131eb90aaeda46b9a1f11ebfe974a296b4",
+        "installedMatches": true,
+        "repositoryByteIdentical": false,
+        "repositoryEqualAfterLineEndingNormalization": true
+      },
+      {
+        "path": "skills/claudetocodex/SKILL.md",
+        "sha256": "383e4810812ad90fb64c8fbf68e8f2461c0aec6f2ea052afd3e59d4d9edf4373",
+        "installedMatches": true,
+        "repositoryByteIdentical": false,
+        "repositoryEqualAfterLineEndingNormalization": true
+      }
+    ]
+  },
+  "session": {
+    "id": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8",
+    "cwd": "D:\\ClaudeToCodex-Accept",
+    "cliVersion": "0.153.4",
+    "originator": "codex-tui"
+  },
+  "pair": {
+    "id": "e4e56322-1aed-4242-86a9-66e207170e5c",
+    "codexId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8",
+    "claudeId": "d7ac02ca-b4f7-4e87-b8ed-ac7b43419d42",
+    "endpointOrigin": "connect-synthesis"
+  },
+  "sources": {
+    "codex": "C:/Users/DELL/.codex/sessions/2026/09/09/rollout-2026-09-09T03-46-01-01a0828e-57ee-7ad0-82e3-8618a6e59bc8.jsonl",
+    "claude": "C:/Users/DELL/.claude/projects/D--ClaudeToCodex/d7ac02ca-b4f7-4e87-b8ed-ac7b43419d42.jsonl",
+    "bridge": "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\bridge-accept-c2\\events.jsonl"
+  },
+  "receipts": [
+    {
+      "host": "claude",
+      "line": 3188,
+      "rawSha256": "ae164e800076d1ab170119b37ad3b51f843529223e4bbcbaf750f2f3cf573c48",
+      "timestamp": "2026-09-08T19:47:50.662Z",
+      "eventType": "user",
+      "role": "user",
+      "originalEventId": "e75e3f02-d26f-47ef-b8a6-17569abec5d8",
+      "sessionId": "d7ac02ca-b4f7-4e87-b8ed-ac7b43419d42",
+      "envelope": {
+        "id": "1c3cdf85-a106-458c-b794-6a5bffe42f28",
+        "pairId": "e4e56322-1aed-4242-86a9-66e207170e5c",
+        "conversationId": "f0b8b599-d1f5-4b27-9b2f-6dd7248e8899",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "d7ac02ca-b4f7-4e87-b8ed-ac7b43419d42"
+        },
+        "body": "CTC-C2-PO-AX72：请用三点说明 ClaudeToCodex 1.0.0 已支持的能力和已知限制。请基于当前实现与验收情况作答，并在回复中保留标记 CTC-C2-PO-AX72，通过消息内的回复入口回传到本 Codex 会话。",
+        "createdAt": "2026-09-08T19:47:49.683Z"
+      },
+      "replyEntryPointsToInstalledCopy": true,
+      "replyEntryUsesAcceptanceData": true,
+      "bodySha256": "b3a2c61991d008306fb1d29ea46fc320663771ae862981054ec84faaa8aa3c9c",
+      "fullEnvelopeMatchesStoredMessage": true,
+      "receiverEnvelopeCount": 1,
+      "contextPreparedCount": 0,
+      "hookBinding": null
+    },
+    {
+      "host": "codex",
+      "line": 55,
+      "rawSha256": "0a03cf3f145ca96f1aef1d307a9be4a41d554b7de0d738f4d70c44d9ff25c571",
+      "timestamp": "2026-09-08T19:48:26.949Z",
+      "eventType": "response_item",
+      "role": "developer",
+      "originalEventId": "msg_01a08290-8ec5-74f2-989c-32c4af174c68",
+      "sessionId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8",
+      "metadata": {
+        "turn_id": "01a0828f-5638-7aa0-ad83-75d2173b77c2",
+        "create_time": 1788896906.9493964,
+        "content_item_kinds": [
+          "hooks.additional_context"
+        ]
+      },
+      "envelope": {
+        "id": "7f2825ad-1b41-42ed-bf52-93fc709edb37",
+        "pairId": "e4e56322-1aed-4242-86a9-66e207170e5c",
+        "conversationId": "f0b8b599-d1f5-4b27-9b2f-6dd7248e8899",
+        "replyTo": "1c3cdf85-a106-458c-b794-6a5bffe42f28",
+        "from": {
+          "tool": "claude",
+          "sessionId": "d7ac02ca-b4f7-4e87-b8ed-ac7b43419d42"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8"
+        },
+        "body": "CTC-C2-PO-AX72 — 回复：ClaudeToCodex 1.0.0 已支持能力与已知限制（三点，基于当前实现与验收状态）：\n\n1. 免手动配置的跨会话连接（能力）：以 Codex CLI 插件形态安装（GitHub marketplace），自动发现并按名称连接指定的运行中 Claude 会话——无需 register/pair、复制会话 ID 或配置数据目录；Claude 侧零安装，收到的消息自带可直接执行的回复入口（自动携带数据目录与安装路径）。（限制）：仅 Windows、单对会话；任一侧会话重启后旧端点失效，需重新连接，且不静默替换既有不同配对。\n\n2. 短文本双向工作消息（能力）：请求、回复、追问、再答保持对象与关联正确（conversationId / replyTo），串行投递，hook 注入带去重；送达判定以唯一标记加接收方原始会话事件为准。（限制）：正文 trim 后 1..2000 字符；回执恒为 unverified（只表示已尝试投递）；发送失败不自动重试，排查依赖 status 与事件记录。\n\n3. 可核对的分发与验证（能力）：候选以 GitHub marketplace 安装，配套版本化 ZIP（manifest 含逐文件 SHA256 与来源 commit）、完整性校验脚本 Verify-Release.ps1 与逐项技术验收入口 Test-Acceptance.ps1；插件 hooks 信任与 Claude 入站策略保留人工控制，产品不代改。（限制）：当前为候选 2（commit b6286c0），技术验收最后一项——真实宿主内 hook 执行证据——正在现场收集中，尚未正式发布；重复安装、卸载、跨版本升级及 CLI 版本升级后的契约漂移未在本版验证。\n\n（本回复经消息随附入口回传，数据目录与安装路径指向本次验收环境。）\n",
+        "createdAt": "2026-09-08T19:48:18.997Z"
+      },
+      "replyEntryPointsToInstalledCopy": true,
+      "replyEntryUsesAcceptanceData": true,
+      "bodySha256": "a7295c72740424936df80360fb504d515150449f61a5823f53ff3ae3889aa9d5",
+      "fullEnvelopeMatchesStoredMessage": true,
+      "receiverEnvelopeCount": 1,
+      "contextPreparedCount": 1,
+      "hookBinding": {
+        "bridgeEventLine": 8,
+        "contextPrepared": {
+          "at": "2026-09-08T19:48:26.898Z",
+          "type": "context-prepared",
+          "messageId": "7f2825ad-1b41-42ed-bf52-93fc709edb37",
+          "hook": "PostToolUse",
+          "turnId": "01a0828f-5638-7aa0-ad83-75d2173b77c2",
+          "toolUseId": "exec-b8dc7b46-bc8e-46a4-8841-228903e548f3",
+          "modelReceipt": "unverified",
+          "claim": "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\bridge-accept-c2\\claims\\ffcf03a3-ecc3-4bbc-8212-00ca34f1ebe9"
+        },
+        "hostTool": {
+          "line": 54,
+          "rawSha256": "208d2a26b530134a605c93a59d8c619d898b5b0e8165a1b6d622b14a70ab800e",
+          "timestamp": "2026-09-08T19:48:26.525Z",
+          "type": "item_completed",
+          "threadId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8",
+          "turnId": "01a0828f-5638-7aa0-ad83-75d2173b77c2",
+          "item": {
+            "id": "exec-b8dc7b46-bc8e-46a4-8841-228903e548f3",
+            "type": "CommandExecution"
+          }
+        },
+        "additionalContextDelayMs": 51
+      }
+    },
+    {
+      "host": "claude",
+      "line": 3260,
+      "rawSha256": "64ffca09b1a5cd64e63694a5147f4c6e932259142f254b045902fb0c4a9f3a0d",
+      "timestamp": "2026-09-08T19:51:04.348Z",
+      "eventType": "user",
+      "role": "user",
+      "originalEventId": "89223680-5736-4f1c-9ccc-bbd41195adf6",
+      "sessionId": "d7ac02ca-b4f7-4e87-b8ed-ac7b43419d42",
+      "envelope": {
+        "id": "2a18f83b-1d6c-450d-8d84-f0a525e6cdce",
+        "pairId": "e4e56322-1aed-4242-86a9-66e207170e5c",
+        "conversationId": "f0b8b599-d1f5-4b27-9b2f-6dd7248e8899",
+        "replyTo": "7f2825ad-1b41-42ed-bf52-93fc709edb37",
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "d7ac02ca-b4f7-4e87-b8ed-ac7b43419d42"
+        },
+        "body": "CTC-C2-PO-AX72：继续追问，基于你刚才对 ClaudeToCodex 1.0.0 的说明，首次使用者最需要留意哪一项限制，应该怎样处理？请选出最重要的一项，说明原因和具体处理步骤。回复继续保留标记 CTC-C2-PO-AX72，并通过本消息随附的回复入口回传。",
+        "createdAt": "2026-09-08T19:49:56.163Z"
+      },
+      "replyEntryPointsToInstalledCopy": true,
+      "replyEntryUsesAcceptanceData": true,
+      "bodySha256": "a9fa059887b0d3d586710d4a775735870b52726b91eab8265f73dc0b5ad0d537",
+      "fullEnvelopeMatchesStoredMessage": true,
+      "receiverEnvelopeCount": 1,
+      "contextPreparedCount": 0,
+      "hookBinding": null
+    },
+    {
+      "host": "codex",
+      "line": 121,
+      "rawSha256": "281e2bccf9b7c9587b11729826ac69cde5636a819933ea6417dccbe80b6374a7",
+      "timestamp": "2026-09-08T19:51:55.113Z",
+      "eventType": "response_item",
+      "role": "developer",
+      "originalEventId": "msg_01a08293-bbe9-7482-a0e4-6ec98521692b",
+      "sessionId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8",
+      "metadata": {
+        "turn_id": "01a08291-b45a-7040-b35d-33ce2fe3a46a",
+        "create_time": 1788897115.1134098,
+        "content_item_kinds": [
+          "hooks.additional_context"
+        ]
+      },
+      "envelope": {
+        "id": "85a0e79b-da73-447f-a5a6-99cd1a1becd2",
+        "pairId": "e4e56322-1aed-4242-86a9-66e207170e5c",
+        "conversationId": "f0b8b599-d1f5-4b27-9b2f-6dd7248e8899",
+        "replyTo": "2a18f83b-1d6c-450d-8d84-f0a525e6cdce",
+        "from": {
+          "tool": "claude",
+          "sessionId": "d7ac02ca-b4f7-4e87-b8ed-ac7b43419d42"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8"
+        },
+        "body": "CTC-C2-PO-AX72 — 再答：首次使用者最需要留意的一项限制\n\n最重要的一项：**「已发送」不等于「已送达」——回执恒为 unverified，submitted 只表示已尝试投递**。\n\n原因：这是所有限制中唯一会直接导致错误决策的一条。首次使用者看到发送命令成功返回，最自然的假设是\"对方已收到\"，并据此推进工作；而实际投递可能因对端会话重启、端点失效或串行槽位被占而未完成。其他限制（字数上限、单对会话等）会立刻被明确报错提醒，唯有这一条在不核对的情况下\"看起来一切正常\"，因此危害最大。\n\n具体处理步骤：\n1. **以对方原始会话的实际反应判定送达**：确认消息内容确实出现在对端会话并得到针对性回应（内容关联），而不是只看本地回执。\n2. **需要客观证据时查事件记录**：在发送侧运行 status，对照事件链（created / published 或 pipe-written / wake-submitted / context-prepared）与消息 ID；context-prepared 才表示消息已进入对方会话上下文。\n3. **遇到失败不要立刻重发**：串行投递使用单待收槽位，报错时消息可能已经发布或已被对方领取——先看 status 与事件，再决定下一步（错误信息也会提示这一点）。\n4. **对端会话重启过就重新连接**：旧端点失效后所有投递都会超时失败，这是\"看起来发不出去\"的最常见根因；重新连接后即可恢复，既有配对不会被静默替换。\n\n（本回复经消息随附入口回传，数据目录与安装路径指向本次验收环境。）\n",
+        "createdAt": "2026-09-08T19:51:34.012Z"
+      },
+      "replyEntryPointsToInstalledCopy": true,
+      "replyEntryUsesAcceptanceData": true,
+      "bodySha256": "ef3efb071078e059cc2e524e2effa1550a5345c60041533b73848c31d822a3cd",
+      "fullEnvelopeMatchesStoredMessage": true,
+      "receiverEnvelopeCount": 1,
+      "contextPreparedCount": 1,
+      "hookBinding": {
+        "bridgeEventLine": 15,
+        "contextPrepared": {
+          "at": "2026-09-08T19:51:55.061Z",
+          "type": "context-prepared",
+          "messageId": "85a0e79b-da73-447f-a5a6-99cd1a1becd2",
+          "hook": "PostToolUse",
+          "turnId": "01a08291-b45a-7040-b35d-33ce2fe3a46a",
+          "toolUseId": "call_6VsQmz4Foaq6KoRFUk01gQ71",
+          "modelReceipt": "unverified",
+          "claim": "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\bridge-accept-c2\\claims\\6f48008f-ce22-41fd-8e67-7967969e6fc6"
+        },
+        "hostTool": {
+          "line": 120,
+          "rawSha256": "f9b4e7c71c1594fd1b463d3201b925786dbd888ace6ffbb6655d34b30348cf90",
+          "timestamp": "2026-09-08T19:51:54.812Z",
+          "type": "item_completed",
+          "threadId": "01a0828e-57ee-7ad0-82e3-8618a6e59bc8",
+          "turnId": "01a08291-b45a-7040-b35d-33ce2fe3a46a",
+          "item": {
+            "id": "call_6VsQmz4Foaq6KoRFUk01gQ71",
+            "type": "Extension",
+            "kind": "clock.sleep"
+          }
+        },
+        "additionalContextDelayMs": 52
+      }
+    }
+  ],
+  "checks": {
+    "conversationAndReplyChain": true,
+    "exactBodies": true,
+    "oneEnvelopePerMessage": true,
+    "contextPreparations": 2,
+    "hostHookMetadataBindings": 2,
+    "hostToolBindings": 2,
+    "explicitHookCommandCalls": 0,
+    "pendingMessage": false,
+    "errorEvents": 0
+  },
+  "limits": [
+    "Operator-prepared isolated data directory: default-directory behavior is covered by existing isolated tests.",
+    "Codex also inspected transcript files while waiting. Tool outputs and assistant summaries were excluded from receipt proof. Only standalone incoming envelopes were counted.",
+    "context-prepared and submitted alone remain unverified; receipt here is established by original-host records and exact correlation.",
+    "Historical user-typed marker text is preserved in message bodies. Normal usage requires no manually typed marker or repeated round.",
+    "Installed files are byte-identical to the fixed ZIP; repository files may differ in CRLF/LF only.",
+    "No PO DoD conclusion or formal release authorization is inferred."
+  ]
+}
