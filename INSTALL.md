@@ -17,7 +17,7 @@
 
 ## 步骤
 
-1. **解压**：把 ZIP 解压到固定的产品目录（示例同上）。
+1. **获取与解压**：从 GitHub Release 下载 `claude-to-codex-1.0.0.zip`（验收阶段从草稿 Release 下载同一份资产），解压到固定的产品目录（示例同上）。可用随附的 `.sha256` 与包内 `manifest.json` 核对完整性（校验脚本在包内 `bridge\release\Verify-Release.ps1`）。
 2. **选定数据目录**：本例用 `%LOCALAPPDATA%\ClaudeToCodex\bridge-1.0.0`。它必须与其他正在使用的 bridge 数据目录（如默认目录）区分开。
 3. **先进入目标项目目录，再设置环境变量**（环境变量只在启动两个工作会话的终端里设置，不要用 `setx` 全局设置，以免影响其他 bridge 会话）：
 
