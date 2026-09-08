@@ -23,7 +23,7 @@ Write-Host ''
 Write-Host '=== ClaudeToCodex 候选 2 现场验收环境 ==='
 Write-Host "项目目录（隔离旧 hooks）：$project"
 Write-Host "桥数据目录（验收隔离，仅本窗口生效）：$env:CTC_BRIDGE_DIR"
-Write-Host 'Codex 登录：使用本机现有配置。'
+Write-Host 'Codex 登录：按 CLI 实际提示进行（当前 login status 未确认已登录；如提示登录，按指引自行完成）。'
 Write-Host ''
 Write-Host '进入 Codex 后的步骤：'
 Write-Host '  1) /hooks 审核并信任三条 claudetocodex hook（一次性人工授权）'

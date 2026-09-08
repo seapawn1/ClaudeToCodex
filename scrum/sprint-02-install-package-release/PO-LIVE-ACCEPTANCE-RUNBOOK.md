@@ -8,7 +8,7 @@
 |---|---|
 | Planning 桥旧 hooks（`D:\ClaudeToCodex\.codex\hooks.json`） | 验收 Codex 会话在**全新项目目录** `D:\ClaudeToCodex-Accept` 启动——项目级 hooks 按项目目录加载，旧 hooks 不出现 |
 | 默认数据目录与既有配对（Planning pair `8e053501…`） | 启动终端由**操作员**预设 `$env:CTC_BRIDGE_DIR = "$env:LOCALAPPDATA\ClaudeToCodex\bridge-accept-c2"`（隔离数据目录；这是文档化的隔离机制，PO 不设置任何环境变量） |
-| 隔离宿主未登录模型账户（上轮受阻原因） | 使用 **PO 真实 CODEX_HOME**（本机已登录）启动真会话——插件安装进真实缓存，hook 信任发生在真实会话 |
+| 隔离宿主未登录模型账户（上轮受阻原因） | 使用 **PO 真实 CODEX_HOME** 启动真会话（登录状态未确认：实测 `codex login status` 未显示已登录；PO 按 CLI 实际提示自行登录，操作员不复制凭据、不改模型配置）——插件安装进真实缓存，hook 信任发生在真实会话 |
 
 ## 操作员准备（SM 或 Developer，一次性）
 
@@ -25,7 +25,7 @@ codex plugin add claudetocodex@claudetocodex-dev
 
 ## PO 的最少人工步骤（仅登录/授权/自然语言）
 
-1. 在准备好的终端启动 Codex 会话（如需登录，按提示完成——本机通常已登录）。
+1. 在准备好的终端启动 Codex 会话；如 CLI 提示登录，按指引自行完成（实测当前 login status 未确认已登录——不作为已确认事实）。
 2. `/hooks`：审核并**信任三条 `claudetocodex` hook**（一次性人工授权，产品不代改）。
 3. 在同目录（或任一新目录）正常启动一个 Claude Code 会话，起个可识别的名字（如 "accept-c2"）。
 4. 回到 Codex 会话说：「**连接 Claude 会话 accept-c2**」。
