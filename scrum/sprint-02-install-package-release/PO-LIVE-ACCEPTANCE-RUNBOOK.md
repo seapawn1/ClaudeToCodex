@@ -18,10 +18,10 @@ cd D:\ClaudeToCodex-Accept
 $env:CTC_BRIDGE_DIR = "$env:LOCALAPPDATA\ClaudeToCodex\bridge-accept-c2"
 codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref sprint-02-install-package-release
 codex plugin add claudetocodex@claudetocodex-dev
-# 绑定核对：安装目录与候选 2 ZIP 逐文件一致（SHA256 185da0bf…6cb5e6b）
+# 绑定核对：安装目录与候选 2 ZIP 逐文件一致（SHA256 185da0bf…6cb5e6b，固定 commit b6286c0）
 ```
 
-保持该终端打开（继承隔离数据目录），交 PO 使用。
+**PO 的启动入口**：运行 `scrum\sprint-02-install-package-release\po-acceptance-c2\Start-AcceptCodex.ps1`——它校验插件已装、进入隔离项目目录、仅在该窗口设定验收数据目录并启动 Codex（提示可选 `codex resume` 会话选择器继续上次验收会话）；PO 无需手配任何环境变量或 ID。
 
 ## PO 的最少人工步骤（仅登录/授权/自然语言）
 
@@ -35,7 +35,8 @@ PO 全程不执行 register/pair、不复制任何 ID、不设置环境变量。
 
 ## 证据采集与绑定（操作员）
 
-- **AC-08-01c hook 执行**：Claude→Codex 方向的回复会触发 Codex 会话内插件 hooks；证据 = `%LOCALAPPDATA%\ClaudeToCodex\bridge-accept-c2\events.jsonl` 中的 `context-prepared` 记录（核对 pairId=本次新 pair、时间在本轮内）。
+- **AC-08-01c hook 执行**：Claude→Codex 方向的回复会触发 Codex 会话内插件 hooks；`%LOCALAPPDATA%\ClaudeToCodex\bridge-accept-c2\events.jsonl` 中的 `context-prepared` 记录是线索起点，但**不能仅凭该文件**：须与真实宿主执行事件、原始收信会话记录、消息内唯一标记三方绑定核对（pairId=本次新 pair、时间在本轮内、标记与往返内容对应）。
+- **隔离范围的限定**：本轮桥数据目录由操作员显式指定，属验收隔离；它用于验证真实 hook 执行与对话，**不单独作为默认数据目录零配置行为的证据**（该行为另有 defaultRoot 单测与无预设环境用例覆盖）。
 - **AC-08-01d skill 可用**：Codex 会话记录中 claudetocodex skill 被发现/触发连接的片段。
 - **候选绑定**：安装缓存目录（用户 CODEX_HOME 下 `plugins\cache\claudetocodex-dev\claudetocodex\1.0.0`）与候选 2 ZIP 的逐文件一致性 + ZIP SHA256。
 - 复判（仓库运行）：`powershell -NoProfile -File bridge\release\Test-Acceptance.ps1 -HookEvidence <bridge-accept-c2\events.jsonl> -SkillEvidence <会话记录文件>`，两证齐全预期 10/0/0、退出 0。
@@ -43,6 +44,6 @@ PO 全程不执行 register/pair、不复制任何 ID、不设置环境变量。
 
 ## 回答 PO 的三个问题（口径）
 
-1. **为何 hook 项未通过**：不是产品缺陷——上轮隔离宿主未登录模型账户且 hooks 未信任，真实执行证据尚未取得；产品按设计保留人工信任，SM 未代信任、未绕过。
+1. **为何 hook 项未通过**：当前未取得真实执行证据——上轮隔离宿主未登录模型账户且 hooks 未信任，尚未观察到这一项实际运行后的结果，不能据此断言存在或不存在缺陷；产品按设计保留人工信任，SM 未代信任、未绕过。
 2. **PO 能否参与**：能，且这正是下一步——同一轮真实使用同时产出技术证据与体验反馈。
 3. **如何继续发布**：本轮 → AC 复判（SM 定稿技术验收）→ PO 确认 DoD → Sprint Review → Retro → 正式发布同一份候选 2 资产（不重建）。
