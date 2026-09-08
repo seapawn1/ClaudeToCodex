@@ -12,7 +12,7 @@ Sprint Goal：
 
 本 Sprint 最终聚焦 PBI-05 与经 PO 明确追加的 PBI-08。PBI-08 把已验证的双向 bridge 封装为 Codex CLI 插件，提供连接与通信 skill、必要 hooks、按名称发现 Claude 会话及自动建联。用户保留必要授权，无需手动登记端点、复制会话 ID 或管理桥数据目录；Claude 侧无需安装插件或手动配置桥。
 
-PBI-05 提供公开 GitHub 仓库中的版本化分发：marketplace 安装入口、插件 ZIP、manifest、SHA256 和版本说明。正式发布采用通过验收的同一份 ZIP；主分支与 v1.0.0 标签同时包含本次 Review、Retro 和记忆更新。
+PBI-05 提供公开 GitHub 仓库中的版本化分发：marketplace 安装入口、插件 ZIP、manifest、SHA256 和版本说明。正式发布采用通过验收的同一份 ZIP；v1.0.0 固定已发布版本，另以 Sprint 标签标记包含 README 最终收尾的冲刺结束提交。两个标签均包含本次 Review、Retro 和记忆更新。
 
 | 完成标准 | 检视结果 |
 |---|---|
@@ -73,14 +73,15 @@ Retro 的结果落实为 [.claude/CLAUDE.md](../../.claude/CLAUDE.md)、[memory 
 
 | 对象 | 对应关系 |
 |---|---|
-| 正式版本 | v1.0.0；标签指向包含本 Review、Retro、记忆及资料清理的最终 main 提交 |
+| 正式版本标签 | v1.0.0；固定已发布提交 48edef8478260b4ba4b2b442b969924c328f8aac，包含本次 Review、Retro、记忆及资料清理 |
+| Sprint 收口标签 | sprint-02-install-package-release-review-retro；标记 main 上包含 README 最终收尾及双标签说明的冲刺结束提交 |
 | 产品构建来源 | b6286c0b6756ac418a295521fbde1072fc89671f；保留包内 manifest.sourceCommit |
 | 插件 Git tree | 8aa897b41ecf3022e08202e7e070d10890e88f67；用于证明最终收口未改变已验收产品 |
 | 发布 ZIP | claude-to-codex-plugin-1.0.0.zip |
 | ZIP SHA256 | 185da0bfc6e5c656a38e4c60567485a626566bf741925e69101362e5d6cb5e6b |
 | 关键验收提交 | b20d0a3：独立现场证据与技术通过结论；4502fde：PO 验收结论与 Review 输入 |
 
-v1.0.0 的最终收口提交与包内产品来源提交承担不同追溯职责：前者包含最终文档、Retro 和记忆，后者固定已验收产品来源。二者通过相同插件 tree 与同一 ZIP 校验值对应；不为修改文档而重建已验收资产。
+按 PO 最后补充，本次保留版本与 Sprint 两个标签。v1.0.0 保持已发布指向，Sprint 标签覆盖 README 与标签说明的最后整理；二者产品 tree 相同。包内产品来源提交固定已验收源码，版本标签与该来源通过相同插件 tree 和同一 ZIP 校验值对应；不为整理文档而重建已验收资产。
 
 从活跃树删除 scrum/sprint-02-install-package-release 下的 SprintBacklog、会议中间稿、候选验收报告、JSON 证据与现场启动脚本。产品实现、通用测试、使用说明、ProductBacklog 和长期记忆继续保留。GitHub 的过期候选草稿及一次性过程附件在正式发布收口时清理。
 
