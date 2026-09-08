@@ -4,6 +4,7 @@ This directory keeps durable project knowledge. Process-heavy records are distil
 
 ## Current documents
 
+- [scrum-sprint/sprint-02-install-package-release-review.md](scrum-sprint/sprint-02-install-package-release-review.md): Sprint 02 product/value review, PO acceptance, backlog adaptation, retrospective actions, and 1.0.0 release provenance. This is the sole retained Sprint 02 summary.
 - [scrum-sprint/sprint-01-bridge-review-retro.md](scrum-sprint/sprint-01-bridge-review-retro.md): Sprint 01 Increment review, value inspection, backlog adaptation, and retrospective.
 - [DeepResearchSynthesis.md](DeepResearchSynthesis.md): cross-tool messaging research conclusions, evidence boundaries, rejected risks, and Scrum handoff.
 - [ideo-design/cross-session-agent-messaging.md](ideo-design/cross-session-agent-messaging.md): closed Design Sprint target, selected architecture, T01–T05 evidence, and engineering boundary.
