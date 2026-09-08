@@ -63,7 +63,22 @@ PBI-02、03、06、07 继续留在 Product Backlog，本次不整体纳入。范
 
 ## 3. Developer 施工计划
 
-PO 已新增 PBI-08 并调整 PBI-05 的交付形式。以下为前一 ZIP 候选施工记录，Developer 审阅第一、二节后更新本节；旧完成状态不表示新增插件工作已完成。
+PO 依首用反馈新增 PBI-08（Codex CLI 插件化与免手动配置连接），当前按 WI-07..12 插件路线施工。每个工作项不超过一天；除标注需 SM/PO 参与外由 Developer 独立完成。
+
+### 3.1 当前计划（插件路线）
+
+| # | 工作项 | 内容 | 验证 | 状态 |
+|---|---|---|---|---|
+| WI-07 | 插件格式与自动发现核验 + 骨架 | 依官方文档核实 Codex CLI 插件格式（`.codex-plugin/plugin.json`、`.agents/skills/`、`hooks/hooks.json`）与隔离加载机制；核实 `~/.claude/sessions` 可发现字段（会话名、id、管道、peer key）。产出最小插件骨架与事实清单。 | 骨架在隔离配置下被真实 Codex CLI 加载（skill/hooks 可见）；事实清单记入本节 | 进行中 |
+| WI-08 | 插件封装与免手动连接 | bridge 封装进插件结构；连接 skill 枚举运行中 Claude 会话、按名选择、自动发现端点并建联；处理唯一匹配/找不到/重名/端点失效/已有不同配对五类行为；回复指引携带安装位置与数据位置（扩展 renderPeer）。 | 五类建联行为自动测试通过；Planning 桥不受影响 | 待开始 |
+| WI-09 | AC-08-01..05 技术检查与证据 | 一条可重复技术验收入口，逐 AC 报告（通过/失败/受阻），失败/受阻非零退出；扩展 store/pipe/hook 回归；真实宿主加载证据与模拟测试分开记录。 | 全部 AC 有报告；模拟/真实证据齐备 | 待开始 |
+| WI-10 | 插件候选分发（PBI-05） | Build-Release 产插件包（含 manifest）；README/INSTALL 重写为「安装插件 → 必要授权 → 选择会话 → 交流」；上传 GitHub 草稿 Release 新候选并回读核对。 | GitHub 下载资产与本地构建哈希一致；包内无凭据 | 待开始 |
+| WI-11 | SM 技术验收与 PO 亲身验收（需 SM/PO 参与） | SM 运行技术验收入口并独立审查实现与候选；通过后通知 PO，PO 从 GitHub 安装同一插件候选，完成真实请求/回复/追问/再答并记录结论。 | SM 验收记录 + PO DoD 结论；技术通过不代替 PO DoD | 待开始 |
+| WI-12 | 正式发布（PO 验收、Review、Retro 均结束后经 SM 交接） | 在验收通过的 commit 打 tag `v1.0.0`；同一份插件资产转正式 Release；tag/manifest/资产三者可核对。 | 正式资产与验收资产校验值一致 | 待开始 |
+
+顺序：Developer 自检（WI-07～09）→ 插件候选分发（WI-10）→ SM 技术验收 → PO 亲身验收（WI-11）→ Sprint Review → Sprint Retrospective → 正式发布（WI-12）。前 ZIP 候选（SHA256 `c5d448d4…`）保留为历史证据，其验收状态与哈希不指代新插件候选。
+
+### 3.2 历史：前 ZIP 候选施工记录（保留为证据；完成状态不表示插件工作已完成）
 
 按「先定包内容与说明，再自检候选包，候选就位后 PO 验收，通过后正式定版发布」推进。除 WI-05 需 PO 参与外，其余由 Developer 独立完成；每个工作项不超过一天。
 
@@ -88,3 +103,4 @@ PO 已新增 PBI-08 并调整 PBI-05 的交付形式。以下为前一 ZIP 候�
 - 2026-09-09：依 GITHUB-DISTRIBUTION-R（PO 纠正分发渠道为 GitHub Release）：INSTALL.md 步骤 1 改为「从 GitHub Release 获取（验收阶段用草稿 Release 同一份资产）」；RELEASE-NOTES.md 分发与使用范围改为 GitHub Release、可见性与许可以发布仓库设置及声明为准；第三节 WI-04/05/06 改为「本地候选暂存 → 草稿 Release 资产 → PO 下载验收 → 验收通过后同一资产转正式 Release」。本地 `releases\candidates\1.0.0\` 降级为构建暂存。核查：本仓库当前无 origin remote；本机 gh 2.97.0 已登录 `seapawn1`——草稿 Release 技术可行，待 SM/PO 确认目标仓库与可见性后执行上传；Developer 不自行选择可见性、不创建仓库、不正式发布。
 - 2026-09-09：依 TARGET-HANDOFF-T（PO 授权公开仓库 seapawn1/ClaudeToCodex）：文档落定具体仓库与许可事实（commit `f2d12c9`——仓库公开、尚未附开源许可证、作者保留权利）；最终候选构建并校验（16 文件，SHA256 `c5d448d4…5c563`）；`main` 已推送 origin（仅 main，无 force）；草稿 Release 已建：标签名 `v1.0.0-candidate.1`（**草稿不产生 tag ref，已实测远端 tags 为空**；发布时才会在目标 commit 创建 tag）、target `f2d12c9`、三项资产（ZIP、`.sha256`、`RELEASE-NOTES.md`）。GitHub 服务端资产 digest 与本地构建一致；从 GitHub 重新下载回读校验：ZIP SHA256 一致、`Verify-Release` 全文件 `VERIFY=OK`。**WI-04 完成，WI-05 就绪**——PO 从草稿 Release（https://github.com/seapawn1/ClaudeToCodex/releases/tag/untagged-1bcb0f216620d4e96ccf，需仓库权限）下载同一份 ZIP 验收；验收通过后 WI-06 在 `f2d12c9` 打正式 tag `v1.0.0` 并发布同一份资产。
 - 2026-09-09：依 RELEASE-AFTER-EVENTS-W（PO 决定）：正式发布顺延至 Sprint Review 与 Retrospective 均结束后由 SM 交接执行（新顺序：PO 验收 → Review → Retro → 正式发布同一份 GitHub 资产）。技术准备（WI-01～04）已就绪，WI-05 等 PO 亲身验收；候选包字节与 GitHub 草稿保持原样，未重跑已通过的验证，未改 DoD/PBI 原文，PBI-05 未标记 Done。
+- 2026-09-09：依 PLUGIN-PBI-REVIEW-X：审阅 PBI-08 与第一、二节无阻塞（插件机制已核实存在：.codex-plugin/plugin.json + .agents/skills/ + hooks/hooks.json，官方文档，Codex v0.117.0+）；第三节改为插件路线 WI-07..12，旧 WI-01..06 移入 3.2 历史记录。WI-07 开工。
