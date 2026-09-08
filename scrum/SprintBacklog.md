@@ -97,8 +97,8 @@ Increment 已集成到产品中，可通过标准产品入口使用，并通过�
 | WI-06 现场首验 M1 | 完成 | 第一轮 smoke T01CX 现场闭环：正文+标记进入 Codex 原会话（rollout L891）并 reply 回到 Claude 原会话（2026-09-08 09:15Z）；证据见 `bridge/docs/evidence/smoke-20260908-1/` |
 | WI-07 Codex→Claude 投递链 | 完成 | pipe.test：auth→消息帧序、priority=next、中文/换行/引号保真、身份不符拒绝、死端点留证 |
 | WI-08 离线回归 | 完成 | `node --test` 16/16 通过（2026-09-08，bridge/test/ 三文件；不引用任何历史路径） |
-| WI-09 smoke 定义与首次执行 | 首次运行完成（**10/10 通过，待 PO 签署**） | `bridge/docs/SMOKE.md`；第一轮证据 `bridge/docs/evidence/smoke-20260908-1/`（MATRIX.md 十格全判定，2026-09-08 09:14–09:32Z；含单槽拒绝与 wake-suppressed 现场实证） |
-| WI-10 说明/边界/第二次运行 | 文档完成，第二次运行与 3.7 收口待首次运行后 | `bridge/docs/USAGE.md`（四类任务+§5 边界对照设计文档清单+版本基线）、`README.md` 产品入口 |
+| WI-09 smoke 定义与首次执行 | **完成** | `bridge/docs/SMOKE.md`；第一轮 10/10 + PO 签署（`f253dc0` / `b44d595`），含单槽拒绝与 wake-suppressed 现场实证 |
+| WI-10 说明/边界/第二次运行 | **完成** | USAGE/README（`fa170bb`）；第二轮独立运行 10/10 + 三方签署（`840e91f` / `65ade56`，含 T04CX 重测与端点轮换显式恢复实录）；3.7 收口核对 7/7 通过、终版回归 16/16（2026-09-08 10:44Z） |
 
 **WI-00 环境与版本基线确认**（0.5d，无依赖）→ PBI-01.4 AC3 前置
 记录 codex / claude CLI 当前版本，与记录基线（codex 0.153.4、claude 2.1.263）比对；逐项确认契约仍在：`codex queue --thread --message`、hooks.json 三事件 schema 与 `trusted_hash`、Claude 会话三环境变量、`crossSessionInbound` 设置项。不写产品代码；结论写入 3.6；任一不符登记为障碍并通知 SM/PO。约定：CLI 版本变化 ⇒ 重跑对应通道验证。
@@ -195,10 +195,12 @@ install 子命令：生成/更新三条 hook 注册（PostToolUse 无 matcher、
 
 | # | 核对项 | 状态 | 证据位置 |
 |---|---|---|---|
-| 1 | PBI-01.1 全部 AC（标准安装/配置入口、会话标识、不依赖历史目录、Windows-only 声明） | 待检 | |
-| 2 | PBI-01.2 全部 AC（双向发送、原会话收信并继续对话、不抢占、trim 后 1..2000 字符上限） | 待检 | |
-| 3 | PBI-01.3 全部 AC（逻辑层自动化回归；T01–T05 现场判定归 PBI-01.4 smoke matrix） | 待检 | |
-| 4 | PBI-01.4 全部 AC（smoke matrix 十格证据、两次独立运行、使用说明、边界声明） | 待检 | |
-| 5 | 自动化回归 `node --test` 全部通过且结果留档 | 待检 | |
-| 6 | smoke 现场证据（原会话事件时序 + 唯一标记）齐备并留存于声明位置 | 待检 | |
-| 7 | 干净环境复验：按使用说明可复现安装与配置，不引用历史原型路径 | 待检 | |
+| 1 | PBI-01.1 全部 AC（标准安装/配置入口、会话标识、不依赖历史目录、Windows-only 声明） | **通过** | 两轮 REG（[smoke-20260908-1/REG.md](../bridge/docs/evidence/smoke-20260908-1/REG.md)：默认目录 install→信任→resume→register→pair；[smoke-20260908-2/REG.md](../bridge/docs/evidence/smoke-20260908-2/REG.md)：隔离目录重走配置）；安装入口与幂等/残留替换由 `bridge/test/install.test.mjs` 保护；Windows-only 声明在 AC 与 USAGE §5 |
+| 2 | PBI-01.2 全部 AC（双向发送、原会话收信并继续对话、不抢占、trim 后 1..2000 字符上限） | **通过** | 两轮 MATRIX 的 T01CX/T01XC（双向首联与往返）、T05（连续对话）、T03XC（priority=next 不抢占，输出完整无截断）；上限由 store.test `x2001 拒绝` 正例与 USAGE §3 声明覆盖 |
+| 3 | PBI-01.3 全部 AC（逻辑层自动化回归；T01–T05 现场判定归 PBI-01.4 smoke matrix） | **通过** | 离线回归 16/16（身份核对/消费记录/防重复唤醒各含正例+负例；priority=next 直接断言）；现场层由两轮 smoke matrix 承载（PO 决策 Q2 口径） |
+| 4 | PBI-01.4 全部 AC（smoke matrix 十格证据、两次独立运行、使用说明、边界声明） | **通过** | 两轮 MATRIX 各 10/10 且 PO 签署（`b44d595`、`65ade56`）；SMOKE.md 定义五要素；USAGE 四类任务 + §5 边界逐条对照设计文档 §4 并点名平台与版本基线 |
+| 5 | 自动化回归 `node --test` 全部通过且结果留档 | **通过** | 16/16（2026-09-08 10:44Z 终版留档于本表；此前多轮全绿，SM 亦独立复跑 16/16） |
+| 6 | smoke 现场证据（原会话事件时序 + 唯一标记）齐备并留存于声明位置 | **通过** | `bridge/docs/evidence/smoke-20260908-1/`（`f253dc0`）与 `smoke-20260908-2/`（`840e91f`、`65ade56`）：双方会话事件路径/行号/时间戳、messageId/conversationId、唯一标记命中；发送方输出仅作过程记录 |
+| 7 | 干净环境复验：按使用说明可复现安装与配置，不引用历史原型路径 | **通过** | 第二轮隔离数据目录（全新 register/pair/pair.json，与第一轮零状态共享）= 干净数据环境复验；安装产物复现由 install.test（干净 hooks 文件恰生成三条注册、无 IDEO 路径）+ 两轮 REG 全程无历史路径引用佐证。范围口径：同一 Windows 用户与已验证版本基线内（USAGE §5）；全新机器/用户属未验证边界 |
+
+**结论**：7/7 通过。Increment 满足全局 Definition of Output Done（第 1 节）：已集成到产品中（`bridge/`，main @ 本提交），可通过标准产品入口使用（USAGE §1–§3 四类任务），并通过与其声明范围相适应的质量验证（离线回归 + 两轮现场 smoke + 边界声明）。Sprint Goal 三要素（可安装、可配置、可重复验证）全部达成在案。
