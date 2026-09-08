@@ -1,8 +1,8 @@
 # 插件候选 2：SM 复验
 
-当前结论（2026-09-09，Asia/Shanghai）：**候选 2 技术验收 PASS。F01/F02/F03 修复、真实宿主 hook 执行及原始会话完整往返均已核实；复跑技术入口为 10 PASS / 0 FAIL / 0 BLOCKED，退出 0。** PO 已参与本轮真实使用，这一轮同时支撑技术 AC 与 PO DoD 体验；PO 是否接受体验和 Increment，仍待本人表达，不能由技术成功推定。
+当前结论（2026-09-09，Asia/Shanghai）：**候选 2 技术验收 PASS，PO 负责的 DoD 亦已明确通过。F01/F02/F03 修复、真实宿主 hook 执行及原始会话完整往返均已核实；复跑技术入口为 10 PASS / 0 FAIL / 0 BLOCKED，退出 0。** 同一轮真实使用同时支撑技术 AC 与 PO DoD，PO 随后明确表示“满意，通过我负责的DoD，开始review吧，根据scrum方法论进行”。体验场景与结论记录于 [Sprint Review](../SprintReview.md)，当前 Review 进行中。
 
-PBI-08 的技术 AC 已满足；PBI-05 的候选分发、安装与技术验证已有证据。两项尚不整体标为 Done，Sprint Goal 中的正式发布也尚未发生。按 PO 决定，取得验收结论后进行 Sprint Review、Retrospective，再发布已验收的同一份资产。
+PBI-08 的技术 AC 与 PO DoD 均已满足，记为完成；PBI-05 的候选分发、安装与验收已有证据，但正式发布尚未发生，继续保留未完成状态。按 PO 决定，进行 Sprint Review、Retrospective 后，再发布已验收的同一份资产；Sprint Goal 中的正式发布动作届时核对。
 
 ## 验收对象
 
@@ -64,4 +64,4 @@ Developer 在 19:52:09 UTC 的进度消息仍把最后回复写为 pending，这
 
 ## 交接与发布状态
 
-Developer 已收到 SM 技术复验结论及冲刺文档对齐请求。候选 1 失败证据与候选 2 早期受阻证据保留；候选 2 产品代码和 ZIP 不变。当前需要 PO 表达本轮使用体验与是否验收接受，无需重复技术轮次。确认后按约进行 Sprint Review、Retrospective，再正式发布同一份已验收资产；不提前声称 PBI 全部 Done 或版本已经发布。
+Developer 已收到技术及 PO 验收结论，并参加当前 Sprint Review。候选 1 失败证据与候选 2 早期受阻证据保留；候选 2 产品代码和 ZIP 不变。PO 已接受本轮增量，无需重复验收。Review 和 Retrospective 完成后按约正式发布同一份已验收资产；PBI-05 与正式发布的完成状态届时核对。
