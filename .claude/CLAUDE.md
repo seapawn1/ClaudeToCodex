@@ -30,3 +30,9 @@ Important empirical rules:
 - Sprint process artifacts live under the sprint folder during the sprint; at close they are distilled into the single review document in `docs/scrum-sprint/` and removed from the worktree (git history is the archive).
 - A Claude endpoint can disappear when its session restarts; preserve the old data directory and explicitly re-register/re-pair rather than expecting automatic recovery.
 - Keep cross-session business content flowing through the bridge during validation; do not ask the PO to relay it.
+
+## Background Claude sessions
+
+When a task calls for a Claude peer and startup is authorized, Codex should handle routine launch, discovery and connection rather than default to asking the PO to open a terminal or copy IDs. The PO regards this as an important future plugin capability candidate, not an already shipped feature or a selected Sprint item.
+
+For the verified procedure, identity handling and lifecycle/trust boundaries, read `.claude/memory/background-claude-session-startup.md`.
