@@ -6,7 +6,7 @@
 
 | # | 前置项 | 确认方式 |
 |---|---|---|
-| 1 | Windows（已验证 Windows 10 Pro 10.0.19045）；Node ≥18.3；codex `0.153.4`、claude `2.1.263`（见 Sprint Backlog 3.6 基线） | `node --version`、`codex --version`、`claude --version` |
+| 1 | Windows（已验证 Windows 10 Pro 10.0.19045）；Node ≥18.3；codex `0.153.4`/`0.154.0`、claude `2.1.263`/`2.1.268`（见 USAGE §5 基线） | `node --version`、`codex --version`、`claude --version` |
 | 2 | 已运行 `node bridge/cli.mjs install`，生成的 `.codex/hooks.json` 三条注册指向当前安装位置 | 查看安装输出或 hooks 文件 |
 | 3 | Codex 原始会话中 `/hooks` 已审阅并**信任**三条 bridge hook 定义 | 信任界面确认；定义变更会使 trust hash 失效、须重新信任 |
 | 4 | 安装后 Codex 原始会话经历过**完全退出并 `codex resume <threadId>` 重载**（运行中的会话不热加载 hook） | resume 后的会话为当前原始会话 |
@@ -44,6 +44,18 @@
 | REG | 安装与配置实证 | — | 现场 | 干净数据目录下完成 install→信任→resume→register→pair→首次通信全程，无历史路径引用 | _待填_ |
 
 辅助证据（过程记录，不单独构成通过）：`bridge` 数据目录中 `events.jsonl`、`receipts/`、`wire/*.send.json`、`pair.json`。
+
+## 4b. 多目标附加格（MT 系，Sprint 04 起；判据同第 3 节）
+
+| 格号 | 场景 | 验证方式 | 判据要点 | 证据位置（填写） |
+|---|---|---|---|---|
+| MT1 | 双配对共存 | 现场 | 同一 Codex 原会话连接两个 Claude 原会话（connect 两次），status 列两对；连接 B 后 A 仍可通信 | _待填_ |
+| MT2 | 名称路由 | 现场 | `send --name <A名>` 仅 A 原会话入站；B 同时间窗无该消息入站事件；恰一目标时免 `--name` 与 1.0.0 形态一致 | _待填_ |
+| MT3 | 回复归属 | 现场 | 与 B 往来后 `reply --to <A 的旧消息>`：投给 A（conversationId 与 A 首轮一致） | _待填_ |
+| MT4 | 重叠来信 | 现场 | 两目标相近时间回复：各落各槽、逐事件注入（实际记录两条发布与各自上下文准备时间，不声称并存时长）；重复唤醒被抑制；另一目标无误投 | _待填_ |
+| MT5 | 退役隔离 | 现场 | 停 A 后 B 全链路可用；旧端点发送/旧消息回复如实 send-error 无误投；`retire --pairId` 后同身份重建得新 pairId；旧消息回复被拒 | _待填_ |
+
+多目标轮的数据根建议用隔离 `CTC_BRIDGE_DIR`；`send --name` 歧义时报错列完整 pairId 与 retire 入口，按提示操作即可，不手写记忆 ID。
 
 ## 5. 重复运行约定
 

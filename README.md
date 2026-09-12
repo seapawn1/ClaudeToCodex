@@ -22,7 +22,7 @@
 
 ## 已验证环境与范围
 
-Windows 10 Pro 19045；Node.js v24.14.0；Codex CLI 0.153.4（更早版本未验证）。范围：本机、单对原始会话、短文本（1..2000 字符）、串行投递；回执恒 `unverified`，送达以接收方原始会话事件与关联核对判定。完整限制见 [RELEASE-NOTES.md](RELEASE-NOTES.md) 与 [bridge/docs/USAGE.md](bridge/docs/USAGE.md) §5。
+Windows 10 Pro 19045；Node.js v24.14.0；Codex CLI 0.153.4（更早版本未验证；0.154.0 亦经实测）。范围：本机、一个 Codex 原始会话对一个或多个 Claude 原始会话（多配对按名共存）、短文本（1..2000 字符）、串行投递；回执恒 `unverified`，送达以接收方原始会话事件与关联核对判定。完整限制见 [RELEASE-NOTES.md](RELEASE-NOTES.md) 与 [bridge/docs/USAGE.md](bridge/docs/USAGE.md) §5。
 
 ## 文档
 
