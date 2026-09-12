@@ -1,5 +1,6 @@
 # Memory Index
 
+- [Codex↔Claude test pair harness](codex-claude-test-pair-harness.md) — PO-requested methodology for self-building real conversation pairs (launch, isolation, pairing, evidence discipline) for future bug fixing
 - [Background Claude session startup](background-claude-session-startup.md) — verified Codex-managed launch/discover/connect workflow and the PO's important future plugin capability intent
 - [Bridge reconnect after session restart](bridge-reconnect-after-restart.md) — restart kills pipe + breaks pair; archive dir, re-register, re-pair recipe
 - [Sprint 01 retrospective](sprint-01-retrospective.md) — two-layer validation, receiver-event evidence rule, environment consistency, and Sprint 02 process candidates
