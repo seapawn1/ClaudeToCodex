@@ -4,13 +4,19 @@ param(
     [string]$TestRoot = (Join-Path $env:LOCALAPPDATA 'ClaudeToCodex\s04-test'),
     [string]$BridgeRoot = (Join-Path $env:LOCALAPPDATA 'ClaudeToCodex\s04-test-bridge'),
     [string]$CodexHome = (Join-Path $TestRoot 'codex-home'),
+    # Test Claude peers start as normal project sessions here (PO correction
+    # 2026-09-13) and cd into their test dir only when a task needs it.
+    [string]$ClaudeProjectRoot = 'D:\ClaudeToCodex',
     [string]$CliPath,
     # Carry over only model/provider settings (auth rides in the provider
     # table; it stays in the isolated home, never printed, never in git).
     [switch]$SkipDailyConfigCopy,
     # Launch everything now. Without it the script only prepares the launcher
     # files (SM-reviewable) and prints what it would do.
-    [switch]$Launch
+    [switch]$Launch,
+    # Relaunch only the Claude A/B peers (e.g. after a correction) and skip
+    # opening a second test Codex window.
+    [switch]$OnlyClaude
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,6 +37,7 @@ if (-not $SkipDailyConfigCopy) {
 }
 
 $claudePrompt = '你是 Sprint 04 桥接多配对验证的专用测试会话 __NAME__，仅做本测试。' +
+    '你以 ClaudeToCodex 项目会话身份运行；需要操作测试文件时，用 Set-Location 切换到 __WORKDIR__，用完可切回。' +
     '收到跨会话桥消息后，按消息内嵌指引用 reply 回复；不要主动发送确认、问候或与本测试无关的消息。其余时间等待即可。'
 
 # The test Codex session gets its whole startup task as the initial prompt, so
@@ -70,18 +77,25 @@ foreach ($pair in @(@{ name = 's04-claude-a'; dir = 'workA' }, @{ name = 's04-cl
     # must not inherit the parent session's CODEX_THREAD_ID or a stale
     # CLAUDE_CODE_SESSION_ID, so each test Claude establishes its own original
     # session identity (SM review 7690b372-2). The parent session is untouched.
+    # Launch dir per PO correction 2026-09-13: test peers start as normal
+    # ClaudeToCodex project sessions and Set-Location into the test dir only
+    # when a task needs it - not the other way round.
     Remove-Item Env:\CODEX_THREAD_ID -ErrorAction SilentlyContinue
     Remove-Item Env:\CLAUDE_CODE_SESSION_ID -ErrorAction SilentlyContinue
-    Push-Location (Join-Path $TestRoot $pair.dir)
+    Push-Location $ClaudeProjectRoot
     try {
-        claude --bg --name $pair.name ($claudePrompt -replace '__NAME__', $pair.name)
+        $prompt = ($claudePrompt -replace '__NAME__', $pair.name) -replace '__WORKDIR__', (Join-Path $TestRoot $pair.dir)
+        claude --bg --name $pair.name $prompt
     } finally { Pop-Location }
 }
 
-# Visible window: the only manual step happens inside it (hook trust).
-Start-Process powershell -WorkingDirectory (Join-Path $TestRoot 'workCodex') -ArgumentList '-NoExit', '-ExecutionPolicy', 'Bypass', '-File', $launchScript
-
+if (-not $OnlyClaude) {
+    # Visible window: the only manual step happens inside it (hook trust).
+    Start-Process powershell -WorkingDirectory (Join-Path $TestRoot 'workCodex') -ArgumentList '-NoExit', '-ExecutionPolicy', 'Bypass', '-File', $launchScript
+    Write-Output 'Test Codex window opened with the startup task as its initial prompt.'
+    Write-Output 'Single PO touchpoint: when Codex asks, trust the three prototype hook entries (or via /hooks). No prompt pasting, no id copying.'
+} else {
+    Write-Output 'OnlyClaude mode: skipped the test Codex window (already running).'
+}
 Write-Output 'Claude A/B launched in the background (`claude agents` lists ids).'
-Write-Output 'Test Codex window opened with the startup task as its initial prompt.'
-Write-Output 'Single PO touchpoint: when Codex asks, trust the three prototype hook entries (or via /hooks). No prompt pasting, no id copying.'
 Write-Output 'Evidence afterwards: thread-id.txt, connect-log.txt, doctor --json in the test window, bridge events.jsonl.'

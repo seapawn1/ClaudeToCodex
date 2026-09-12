@@ -99,7 +99,7 @@ Sprint 04 以 1.0.0 为基线，完成多配对所必需的目标辨识、基本
 | W1 | 基线复读 + Developer 工作区填写 | 0.25d | 2026-09-13 完成 |
 | W2 | 预研：多配对数据模型与路由设计笔记（`prototype/DESIGN.md`） | 0.5d | 2026-09-13 完成（含 SM 澄清后的 D4/D5 修订） |
 | W3 | 原型骨架：隔离副本扩展多配对 + fixture 级测试（共存、回复归属、重叠三态、唤醒去重） | 1d | 2026-09-13 完成：`prototype/bridge/`（store/cli 改多配对，entry/sessions/delivery 沿用 1.0.0）+ `prototype/test/multi.test.mjs` 10/10 通过 |
-| W4 | 真实闭环 harness：专用测试 Codex + Claude A/B（隔离桥数据），原会话收信与空闲唤醒验证 | 1d | 进行中：harness 已可检视（`prototype/harness/`：Set-Up-TestEnv + Start-TestSessions 干跑通过，自动初始提示/身份清理/隔离 CODEX_HOME 就绪），待 SM 检视后真启动 |
+| W4 | 真实闭环 harness：专用测试 Codex + Claude A/B（隔离桥数据），原会话收信与空闲唤醒验证 | 1d | 进行中（2026-09-13 真启动）：测试 Codex 窗口（线程 01a096c3-d48d-72c3-bc7e-d1feae215aab，隔离 CODEX_HOME）自登记并完成 run1 双配对连接；PO 纠正 Claude A/B 启动目录（改 D:\ClaudeToCodex 项目根，A=90cdb961、B=438a61f5）；run1 配对指向重启前旧会话，桥数据已归档（s04-test-bridge.run1-archived）留证，已下发 run2 重连任务。发现同名替换的名称路由歧义缺口，记入 DESIGN.md §6，归 S04-11-6 |
 | W5 | 首个检查点自查并向 SM 报告 | 0.25d | 未开始 |
 
 检查点后另排：单目标失效隔离（S04-11-6）、单目标兼容与旧数据路径（S04-11-7）、产品树整合与安装候选验收（S04-11-8）。

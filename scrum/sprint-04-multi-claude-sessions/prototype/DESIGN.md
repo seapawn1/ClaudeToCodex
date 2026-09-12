@@ -97,3 +97,9 @@
 - 专用测试 Codex 会话启动方式（W4 前需明确）。
 - 旧 `pair.json` 单配对数据的实测迁移与"继续使用/重建"路径放到 S04-11-7 阶段，原型仅设计。
 - `claudeName` 在配对文件内快照化（连接时的名称）；会话改名后名称与身份的关系如何呈现，待 S04-11-2 真实场景定。
+
+## 6. 实测暴露的新缺口（run1，2026-09-13）
+
+- **同名会话替换导致名称路由歧义且无恢复路径**：run1 中测试 Codex 连接了 s04-claude-a/b（旧会话 735205d4/8f1b1e4a）；按 PO 纠正重启 A/B 后（新会话 90cdb961/438a61f5），若再 connect 同名新会话，注册表将出现两条 claudeName 相同的配对，`resolveTarget` 按名称必然歧义，而原型刻意不含生命周期操作（归 PBI-10/13），无法显式退役旧配对。产品必须在 S04-11-6 定义：目标死亡的呈现（状态入口可见 endpoint/alive）、同名重建的显式路径、以及歧义时以 sessionId 尾号等身份信息辅助选择。run1 桥数据已归档（s04-test-bridge.run1-archived）留证。
+- **隔离 home 下的 queue 需要 CODEX_HOME 指向**：跨环境向测试 Codex queue 消息时，调用方必须设隔离 CODEX_HOME，否则报 no rollout found——已记入 runbook。
+- **测试 Claude 的启动目录按 PO 纠正**：测试对端以 ClaudeToCodex 项目会话身份在 D:\ClaudeToCodex 启动（获得正常项目上下文），需要操作测试文件时再 Set-Location 过去；不再以 AppData 空目录为 cwd。

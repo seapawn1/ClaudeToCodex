@@ -26,7 +26,7 @@ powershell -File "...\prototype\harness\Start-TestSessions.ps1"            # 干
 powershell -File "...\prototype\harness\Start-TestSessions.ps1" -Launch    # 真启动
 ```
 
-- **Claude A/B**：脚本在自身一次性进程内先 `Remove-Item Env:\CODEX_THREAD_ID / Env:\CLAUDE_CODE_SESSION_ID` 再 `claude --bg --name s04-claude-a|b <待命提示>`——子进程拿不到继承身份，自建原会话身份；父（本 Developer）会话身份不动。保留用户模型与 provider 配置。
+- **Claude A/B**：脚本在自身一次性进程内先 `Remove-Item Env:\CODEX_THREAD_ID / Env:\CLAUDE_CODE_SESSION_ID` 再 `claude --bg --name s04-claude-a|b <待命提示>`——子进程拿不到继承身份，自建原会话身份；父（本 Developer）会话身份不动。保留用户模型与 provider 配置。**启动目录按 PO 纠正（2026-09-13）**：在 `D:\ClaudeToCodex` 项目根启动为正常项目会话，待命提示内注明需要操作测试文件时再 `Set-Location` 到 workA/workB。
 - **测试 Codex**：独立 `CODEX_HOME=s04-test\codex-home`（隔离已装插件、信任与状态，杜绝日常插件参与）；日常 `config.toml` 仅作设置复制（无凭据、无信任态，可用 `-SkipDailyConfigCopy` 关掉）；`CTC_BRIDGE_DIR` 指测试桥。初始提示由脚本写入 `_initial-prompt.txt`，`_launch-codex.ps1` 读入后作为 `codex <prompt>` 启动——自登记 thread-id.txt、自查 sessions、自动 connect A/B、结果落 connect-log.txt。
 - **登录**：~~隔离 CODEX_HOME 无凭据~~ 已按 SM e1f9350c 撤回——认证随 provider 表内嵌（`requires_openai_auth=false` + bearer token）。实测：`codex doctor` 报 `auth.credentials: ok`（OpenAI auth 不需要），隔离 home 下 `codex exec` 真实调用返回正常。**无需 PO 登录**；若后续真实认证失败再报具体原因。
 - **配置提取**：不整份复制日常 config（它会带入 hooks/插件/marketplace/MCP/项目与信任态，且含认证字段）。`extract_model_config.py` 用真 TOML 解析（tomllib 读、toml 写，SM f0dc8475 指正后替换逐行正则版）：仅顶层模型参数（model、model_provider、reasoning effort、上下文窗口等）+ 引用的 `[model_providers.<provider>]` 表（bearer token 只落在隔离 home 的临时配置里，不打印、不进 Git）；写出后重解析校验值未变、排除节未回流。`approval_policy` 与 `sandbox_mode` 按用户日常值带入以保持会话行为一致——如 SM 认为不该带可去掉改用默认。
@@ -35,7 +35,7 @@ powershell -File "...\prototype\harness\Start-TestSessions.ps1" -Launch    # 真
 
 ## 3. 建立两个配对（已并入初始提示，自动执行）
 
-初始提示让测试 Codex 自己跑 `sessions` + `connect --name s04-claude-a/b`，输出全量落 `connect-log.txt`。Developer 在外部核对：thread-id.txt 存在、connect-log 两条 pairId、`status` 列两配对、B 连接后 A 完好（S04-11-1 实测起点）。此后对测试 Codex 的指令一律走 `codex queue --thread <thread-id> --message ...`，保持同一原始会话。
+初始提示让测试 Codex 自己跑 `sessions` + `connect --name s04-claude-a/b`，输出全量落 `connect-log.txt`。Developer 在外部核对：thread-id.txt 存在、connect-log 两条 pairId、`status` 列两配对、B 连接后 A 完好（S04-11-1 实测起点）。此后对测试 Codex 的指令一律走 `codex queue --thread <thread-id> --message ...`，**且调用方必须先 `$env:CODEX_HOME` 指向隔离 home**（否则 no rollout found，run1 实测）——保持同一原始会话。
 
 ## 4. 首个检查点场景
 
