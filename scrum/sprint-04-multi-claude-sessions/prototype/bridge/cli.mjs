@@ -184,8 +184,21 @@ async function main() {
     pair = store.pairById(store.message(values.to).pairId);
     if (!pair) throw new Error('The referenced message does not belong to any registered pair.');
   } else if (who.tool === 'codex') {
-    if (!values.name) throw new Error('send from Codex requires --name <connected target>. Run status to list targets.');
-    pair = store.resolveTarget(values.name);
+    // 1.0.0 compatibility (S04-11-7): with exactly one connected target, send
+    // works without --name exactly as before. No guessing: zero or several
+    // targets without a name is an explicit error listing the options.
+    if (!values.name) {
+      const pairs = store.pairs();
+      if (pairs.length === 1) {
+        pair = pairs[0];
+      } else if (pairs.length === 0) {
+        throw new Error('No connected target. Run connect first, or pass --name.');
+      } else {
+        throw new Error(`send from Codex requires --name <connected target>: ${pairs.length} targets are connected. Run status to list them.`);
+      }
+    } else {
+      pair = store.resolveTarget(values.name);
+    }
   } else {
     pair = store.findPairByClaude(who.sessionId);
   }

@@ -281,6 +281,29 @@ test('retiring one target is explicit, evidenced, and leaves the other intact (S
   assert.ok(events.some((e) => e.type === 'retired' && e.pairId === pairA.id));
 });
 
+test('single-target send keeps the 1.0.0 shape without --name; several targets refuse (S04-11-7, SM 01f3554d)', (t) => {
+  const { store, pairA, pairB, root } = setup(t);
+  const base = { ...process.env, CODEX_THREAD_ID: codexId };
+  delete base.CLAUDE_CODE_SESSION_ID;
+  // Several targets without a name: explicit refusal with the count.
+  const several = spawnSync(process.execPath, [cli, 'send', '--body', 'which pair?'], { env: { ...base, CTC_BRIDGE_DIR: root }, encoding: 'utf8' });
+  assert.equal(several.status, 1);
+  assert.match(several.stderr, /requires --name .*: 2 targets are connected/);
+  // Retire down to exactly one pair: the 1.0.0 command shape works again.
+  store.retire(pairA.id);
+  const single = spawnSync(process.execPath, [cli, 'send', '--body', 'single target works'], { env: { ...base, CTC_BRIDGE_DIR: root }, encoding: 'utf8' });
+  assert.equal(single.status, 1); // delivery fails on the fake endpoint, but pairing and staging succeeded
+  assert.match(single.stderr, /Message [0-9a-f-]{36}: /);
+  const id = /Message ([0-9a-f-]{36}):/.exec(single.stderr)[1];
+  const message = JSON.parse(readFileSync(join(root, 'messages', `${id}.json`), 'utf8'));
+  assert.equal(message.pairId, pairB.id);
+  // Zero targets: explicit next step, no guessing.
+  store.retire(pairB.id);
+  const empty = spawnSync(process.execPath, [cli, 'send', '--body', 'anyone?'], { env: { ...base, CTC_BRIDGE_DIR: root }, encoding: 'utf8' });
+  assert.equal(empty.status, 1);
+  assert.match(empty.stderr, /No connected target\. Run connect first/);
+});
+
 test('the retire CLI entry accepts --pairId and --name (run 4 real-loop finding)', (t) => {
   const { store, pairA, pairB } = setup(t);
   const env = { ...process.env, CTC_BRIDGE_DIR: store.root };

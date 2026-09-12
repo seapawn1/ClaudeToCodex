@@ -65,7 +65,15 @@ export class BridgeStore {
     const dir = join(this.root, 'pairs');
     if (existsSync(dir)) {
       for (const file of readdirSync(dir).sort()) {
-        if (file.endsWith('.json')) out.push(readJson(join(dir, file)));
+        if (!file.endsWith('.json')) continue;
+        // A concurrent retire (or any registry move) can remove a file between
+        // readdir and read; a vanishing entry is a skip, not an error (SM
+        // review 01f3554d: the retire/scan boundary must stay safe).
+        try {
+          out.push(readJson(join(dir, file)));
+        } catch (error) {
+          if (error.code !== 'ENOENT') throw error;
+        }
       }
     }
     return out;
