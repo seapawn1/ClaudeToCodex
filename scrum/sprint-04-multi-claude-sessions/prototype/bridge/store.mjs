@@ -138,6 +138,31 @@ export class BridgeStore {
     return pair;
   }
 
+  // Explicit lifecycle boundary for S04-11-6 (prototype scope): retiring moves
+  // one registry pair into pairs-retired/ - evidence kept, never deleted, never
+  // overwriting - and leaves every other pair untouched. It refuses while the
+  // pair still has an unconsumed pending message, and refuses legacy pair.json
+  // entries (their path is the S04-11-7 decision, not a silent migration).
+  retire(pairId) {
+    this.initialize();
+    const pair = this.pairById(pairId);
+    if (!pair) throw new Error('No registered pair matches that id.');
+    if (this.legacyPair()?.id === pair.id) {
+      throw new Error('Legacy single-pair data is not migrated by this prototype; the S04-11-7 path decides continue/migrate/rebuild.');
+    }
+    if (existsSync(join(this.root, 'pending', pair.id, 'message.json'))) {
+      throw new Error(`Target ${pair.claudeName ?? pair.id.slice(0, 8)} still has a pending message for Codex; wait for it to be consumed before retiring.`);
+    }
+    const retiredDir = join(this.root, 'pairs-retired');
+    mkdirSync(retiredDir, { recursive: true });
+    let target = join(retiredDir, `${pair.id}.json`);
+    let suffix = 0;
+    while (existsSync(target)) target = join(retiredDir, `${pair.id}-${++suffix}.json`);
+    renameSync(join(this.root, 'pairs', `${pair.id}.json`), target);
+    this.event('retired', { pairId: pair.id, claudeName: pair.claudeName ?? null, archivedTo: target });
+    return { pair, archivedTo: target };
+  }
+
   caller(env = process.env) {
     const candidates = [
       { tool: 'codex', sessionId: env.CODEX_THREAD_ID },

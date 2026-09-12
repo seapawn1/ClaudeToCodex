@@ -259,3 +259,24 @@ test('reply guidance carries the isolated CODEX_HOME when the sender runs under 
   assert.match(isolated, /\$env:CODEX_HOME='C:\\isolated\\codex-home'; /);
   assert.match(isolated, new RegExp(`reply --to ${letter.id}`));
 });
+
+test('retiring one target is explicit, evidenced, and leaves the other intact (S04-11-6)', (t) => {
+  const { store, pairA, pairB, root } = setup(t);
+  // A pending letter blocks retirement: honest refusal, nothing moved.
+  incoming(store, pairA, 'pending while retiring');
+  assert.throws(() => store.retire(pairA.id), /still has a pending message/);
+  assert.equal(store.pairs().length, 2);
+  const delivered = store.take(hookEvent('PostToolUse'));
+  assert.equal(delivered.pairId, pairA.id);
+  const result = store.retire(pairA.id);
+  assert.equal(store.pairs().length, 1);
+  assert.equal(store.pairs()[0].id, pairB.id);
+  assert.ok(result.archivedTo.startsWith(join(root, 'pairs-retired')));
+  assert.ok(existsSync(result.archivedTo), 'retired evidence is kept on disk');
+  assert.throws(() => store.retire(pairA.id), /No registered pair/);
+  // The surviving pair still works end to end.
+  const letter = incoming(store, pairB, 'B works after A retired');
+  assert.equal(store.take(hookEvent('PostToolUse')).id, letter.id);
+  const events = readFileSync(join(store.root, 'events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.ok(events.some((e) => e.type === 'retired' && e.pairId === pairA.id));
+});

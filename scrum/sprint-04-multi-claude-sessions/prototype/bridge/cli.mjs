@@ -57,7 +57,7 @@ async function main() {
     options: {
       codex: { type: 'string' }, 'claude-endpoint': { type: 'string' },
       body: { type: 'string' }, 'body-file': { type: 'string' }, to: { type: 'string' },
-      'hooks-file': { type: 'string' }, name: { type: 'string' }, 'sessions-dir': { type: 'string' },
+      'hooks-file': { type: 'string' }, name: { type: 'string' }, 'sessions-dir': { type: 'string' }, pairid: { type: 'string' },
     },
   });
   const [command] = positionals;
@@ -142,6 +142,13 @@ async function main() {
     const pair = store.pair(codexId, endpointPath, session.name);
     store.event('connect', { pairId: pair.id, claudeSession: session.sessionId, claudeName: session.name, codexId: pair.codexId, endpoint: endpointPath });
     console.log(JSON.stringify({ pair, claudeSession: { sessionId: session.sessionId, name: session.name, status: session.status }, hint: `Send with: node "${cliPath()}" send --name <target> --body "..."` }, null, 2));
+    return;
+  }
+  if (command === 'retire') {
+    if (!values.pairid && !values.name) throw new Error('retire requires --pairId <uuid> or a unique --name.');
+    const pair = values.pairid ? store.pairById(values.pairid) : store.resolveTarget(values.name);
+    if (!pair) throw new Error('No registered pair matches.');
+    console.log(JSON.stringify(store.retire(pair.id), null, 2));
     return;
   }
   if (command === 'status') {
