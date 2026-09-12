@@ -96,7 +96,7 @@ flowchart TD
 
 ### 已交付能力
 
-- PBI-11（Sprint 04）：交付一个 Codex 原始会话与多个可命名 Claude Code 原始会话的并行桥接。配对共存、按名路由、回复归属、每配对待收槽、相近来信、重复抑制、显式退役/重建、单目标与 legacy 兼容、产品双树和隔离安装候选均通过验收。最低验证规模为一 Codex + 两 Claude；不承诺任意规模、广播或并发吞吐。技术 AC 与 PO DoD 均通过，证据与边界见 [Sprint 04 Review](../docs/scrum-sprint/sprint-04-multi-claude-sessions-review-retro.md)。
+- PBI-11（Sprint 04）：交付一个 Codex 原始会话与多个可命名 Claude Code 原始会话的并行桥接。配对共存、按名路由、回复归属、每配对待收槽、相近来信、重复抑制、显式退役/重建、单目标与 legacy 兼容、产品双树和隔离安装候选均通过验收。最低验证规模为一 Codex + 两 Claude；不承诺任意规模、广播或并发吞吐。技术 AC 与 PO DoD 均通过，正式发布版本为 v1.1.0；证据与边界见 [Sprint 04 Review](../docs/scrum-sprint/sprint-04-multi-claude-sessions-review-retro.md)。
 
 - PBI-08（Sprint 02）：已交付 Codex CLI 插件，封装双向 bridge、连接 skill 与必要 hooks；用户指定正在运行的 Claude 会话即可自动建联，用户无需手动登记端点、复制会话 ID 或管理桥数据目录，Claude 侧无需安装插件或手动配置桥。保留宿主必要授权，沿用 Windows 本机、单对原始会话、短文本串行通信。候选 2 技术 AC 与 PO DoD 均已通过，PO 明确表示“满意，通过我负责的DoD”。版本、场景与证据见 [Sprint 02 Review](../docs/scrum-sprint/sprint-02-install-package-release-review.md)。
 - PBI-05（Sprint 02）：交付公开 GitHub 仓库的 1.0.0 版本分发，提供 marketplace 安装入口、插件 ZIP、manifest、校验值和版本说明。产品增量经技术与 PO 验收通过，Review/Retro 收口后按 PO 授权正式发布；v1.0.0 标签包含最终总结与长期记忆，发布包与已验收候选一致。版本与证据追溯见 [Sprint 02 Review](../docs/scrum-sprint/sprint-02-install-package-release-review.md)。

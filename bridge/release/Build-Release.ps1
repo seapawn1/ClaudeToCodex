@@ -1,5 +1,5 @@
 # Build a ClaudeToCodex release ZIP from a Git ref.
-# Usage: powershell -NoProfile -File bridge\release\Build-Release.ps1 [-Ref HEAD] [-Version 1.0.0] [-OutDir <dir>] [-Mode plugin|bridge]
+# Usage: powershell -NoProfile -File bridge\release\Build-Release.ps1 [-Ref HEAD] [-Version 1.1.0] [-OutDir <dir>] [-Mode plugin|bridge]
 # plugin mode (default): the ZIP root IS the plugin tree (extract anywhere and it is a valid
 #   plugin root) plus RELEASE-NOTES.md; the install entry is the GitHub marketplace.
 # bridge mode (legacy, kept for the superseded ZIP candidate): INSTALL.md + RELEASE-NOTES.md + bridge/.

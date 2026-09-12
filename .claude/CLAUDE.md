@@ -1,42 +1,20 @@
 # Project Context
 
-ClaudeToCodex ships as a Windows-only Codex CLI plugin. It lets one running Codex session exchange short work messages, replies, and follow-ups with one or more named running Claude Code sessions without the Product Owner relaying text. The standard user path is installation, necessary host trust, choosing a running Claude session by name, then normal conversation.
+ClaudeToCodex is a Windows-only Codex CLI plugin. One running Codex original session can exchange short work messages, replies, and follow-ups with one or more named running Claude Code original sessions without the Product Owner relaying text. The normal user path is install, complete required host trust, choose Claude session(s) by name, then converse.
 
-Primary documents:
+Primary documents are `README.md`, `INSTALL.md`, `RELEASE-NOTES.md`, `bridge/docs/USAGE.md`, `bridge/docs/SMOKE.md`, `scrum/ProductBacklog.md`, and the distilled Sprint reviews under `docs/scrum-sprint/`.
 
-- `README.md`
-- `INSTALL.md`
-- `RELEASE-NOTES.md`
-- `bridge/docs/USAGE.md`
-- `bridge/docs/SMOKE.md`
-- `scrum/ProductBacklog.md`
-- `docs/scrum-sprint/sprint-04-multi-claude-sessions-review-retro.md`
-- `docs/scrum-sprint/sprint-02-install-package-release-review.md`
-- `docs/scrum-sprint/sprint-01-bridge-review-retro.md`
-- `docs/ideo-design/cross-session-agent-messaging.md`
-- `docs/DeepResearchSynthesis.md`
+Sprint 04 delivered and accepted the multi-pair Increment: pair coexistence, named routing, reply affiliation, per-pair pending slots, overlap handling, explicit retire/rebuild, single-target and legacy compatibility, and installed-candidate validation. Its sole active summary is `docs/scrum-sprint/sprint-04-multi-claude-sessions-review-retro.md`. Earlier Sprint reviews remain historical summaries.
 
-Sprint 04's multi-pair Increment passed all eight technical acceptance criteria and the PO's DoD; its single distilled review/retro document records the accepted source, evidence and boundaries. Sprint 02's plugin Increment passed technical acceptance and the PO's DoD. Its review, value inspection, release decision, and retrospective are distilled in the single Sprint 02 review document. The v1.0.0 tag includes the final review, memory updates, and cleanup; its unchanged product ZIP remains traceable to the accepted product source commit. Sprint 01 history remains in its own review document.
+## Durable working rules
 
-Important empirical rules:
-
-- Select the smallest PBI set required for the Sprint Goal and the Developers' capacity. The PO decides value ordering; the SM facilitates, removes obstacles, and checks acceptance; the Developer owns implementation.
-- The SM independently checks the Sprint Backlog acceptance criteria against the final candidate and its evidence before recommending acceptance. Developer completion reports and test counts do not replace this check. See `.claude/memory/sprint-acceptance-responsibility.md` for responsibilities and PO participation.
-- Treat `submitted:true` as attempted delivery, not proof of receipt.
-- Judge delivery by the receiving original session's actual inbound event, matching full body, and automatic message/pair/conversation/reply linkage. Do not require the PO to type a marker.
-- Evidence is layered and never conflated: simulated fixture → host load → actual execution → original-session receipt. A lone `context-prepared` record is still unverified; each layer is checked at its own level.
-- Validate feature freezes through an isolated installed candidate, including the complete file manifest, metadata, effective hooks and reply-entry provenance; source or prototype-path checks alone do not establish installed-plugin acceptance.
-- Boundary claims use original publish/wake/context and receiver-session events. Model self-reports, file-write times, wrapper returns and task labels are clues, not receipt or busy-boundary proof. Escalate scope-depth mismatch before absorbing engineering hardening beyond the AC.
-- Verify one real data record (masked) before coding against any registry/file format; fixtures invented from assumptions have hidden real-format bugs.
-- Acceptance rounds are joint: one real usage supports technical AC checks (SM) and PO DoD separately. The PO never hand-writes test markers, session IDs, or bridge env vars — correlation uses auto fields (messageId/pairId/conversationId/replyTo + data dir + time window).
-- Record who did what truthfully: operator-prepared steps (install, env, evidence collection) stay attributed to the operator; PO steps stay attributed to the PO.
-- When several actors write the same repo, stage by explicit file list (never `git add -A`) and keep per-actor file ownership.
-- Sprint process artifacts live under the sprint folder during the sprint; at close they are distilled into the single review document in `docs/scrum-sprint/` and removed from the worktree (git history is the archive).
-- A Claude endpoint can disappear when its session restarts; preserve the old data directory and explicitly re-register/re-pair rather than expecting automatic recovery.
-- Keep cross-session business content flowing through the bridge during validation; do not ask the PO to relay it.
-
-## Background Claude sessions
-
-When a task calls for a Claude peer and startup is authorized, Codex should handle routine launch, discovery and connection rather than default to asking the PO to open a terminal or copy IDs. The PO regards this as an important future plugin capability candidate, not an already shipped feature or a selected Sprint item.
-
-For the verified procedure, identity handling and lifecycle/trust boundaries, read `.claude/memory/background-claude-session-startup.md`.
+- Scrum boundaries: the PO orders value and makes acceptance/release decisions; Developers own implementation and the Sprint Backlog plan; the SM independently verifies acceptance evidence and removes impediments.
+- Acceptance evidence: check every AC and applicable DoD against the final installed candidate. Developer reports and test counts are inputs, not acceptance substitutes.
+- Delivery evidence: `submitted:true`, pipe writes, message files, and a lone `context-prepared` are process evidence. Receipt requires the receiving original session's full inbound frame plus automatic message/pair/conversation/reply linkage.
+- Evidence layers stay separate: fixture → host load → actual execution → original-session receipt. Do not promote historical evidence to a new candidate unless code is unchanged or applicability is explicit.
+- Validate feature freezes through an isolated installed plugin candidate, including full manifest, metadata, effective hooks, and reply-entry provenance. Source or prototype-path checks alone do not prove installed-plugin acceptance.
+- Boundary claims use original publish/wake/context/receiver events. Model self-reports, file-write times, wrapper returns, and task labels are clues, not proof. Escalate engineering depth that outgrows the AC instead of absorbing it.
+- Read one real record before coding against a registry or file format; invented fixtures can pass while real integration fails.
+- Record actor attribution honestly. Operators prepare install/env/evidence; only the PO performs PO experience and required host trust. POs never hand-write test markers, IDs, or bridge environment variables.
+- In a shared repository, stage by explicit file paths and respect actor ownership. One-off Sprint materials live under the Sprint folder during the Sprint, then distill into one docs review and leave the active tree.
+- A Claude restart can kill its endpoint. Reconnect explicitly; never silently replace a pair. Preserve old evidence and use `retire --pairId` only for a pair confirmed unused. Keep business content flowing through the bridge during validation rather than asking the PO to relay it.
