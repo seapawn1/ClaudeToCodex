@@ -5,8 +5,8 @@ param(
     [string]$BridgeRoot = (Join-Path $env:LOCALAPPDATA 'ClaudeToCodex\s04-test-bridge'),
     [string]$CodexHome = (Join-Path $TestRoot 'codex-home'),
     [string]$CliPath,
-    # Copy the daily config.toml (model/provider settings only, no credentials,
-    # no trust state) so the test Codex keeps the user's model configuration.
+    # Carry over only model/provider settings (auth rides in the provider
+    # table; it stays in the isolated home, never printed, never in git).
     [switch]$SkipDailyConfigCopy,
     # Launch everything now. Without it the script only prepares the launcher
     # files (SM-reviewable) and prints what it would do.
@@ -20,14 +20,14 @@ $hooksFile = Join-Path $TestRoot 'workCodex\.codex\hooks.json'
 if (-not (Test-Path $hooksFile)) { throw "Test environment missing ($hooksFile). Run Set-Up-TestEnv.ps1 first." }
 if (-not (Test-Path $CodexHome)) { New-Item -ItemType Directory -Force -Path $CodexHome | Out-Null }
 if (-not $SkipDailyConfigCopy) {
-    # Structured extraction, never a whole-file copy: the daily config also
-    # carries hooks, plugins, marketplaces, mcp_servers, projects and inline
-    # auth fields (SM review e1f9350c). Only the model/provider keys and the
-    # referenced provider table land in the isolated CODEX_HOME; the bearer
+    # Real TOML parsing, never a whole-file copy: the daily config also carries
+    # hooks, plugins, marketplaces, mcp_servers, projects and inline auth
+    # fields (SM review e1f9350c/f0dc8475). Only the top-level model keys and
+    # the referenced provider table land in the isolated CODEX_HOME; the bearer
     # token rides in that table, is never printed, and never enters git.
-    # Verified in this isolated home: doctor auth.credentials ok, no MCP, and
-    # a real codex exec call answered (no login needed).
-    powershell -NoProfile -File (Join-Path $PSScriptRoot 'Copy-ModelConfig.ps1') -TargetConfig (Join-Path $CodexHome 'config.toml')
+    # Verified in this isolated home: doctor auth ok, no MCP, real call ok.
+    python (Join-Path $PSScriptRoot 'extract_model_config.py') --source (Join-Path $env:USERPROFILE '.codex\config.toml') --target (Join-Path $CodexHome 'config.toml')
+    if ($LASTEXITCODE -ne 0) { throw 'Model config extraction failed.' }
 }
 
 $claudePrompt = '你是 Sprint 04 桥接多配对验证的专用测试会话 __NAME__，仅做本测试。' +
@@ -48,6 +48,7 @@ $promptFile = Join-Path $TestRoot 'workCodex\_initial-prompt.txt'
 Set-Content -Encoding UTF8 -LiteralPath $promptFile -Value $codexPrompt
 $launchScript = Join-Path $TestRoot 'workCodex\_launch-codex.ps1'
 @(
+    "`$Host.UI.RawUI.WindowTitle = 'S04-TEST-CODEX (isolated)'",
     "`$env:CTC_BRIDGE_DIR = '$BridgeRoot'",
     "`$env:CODEX_HOME = '$CodexHome'",
     "`$prompt = Get-Content -Raw -Encoding UTF8 '$promptFile'",
