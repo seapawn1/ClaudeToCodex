@@ -23,11 +23,13 @@ Verify with `Test-Path (Join-Path $PLUGIN_ROOT 'bridge\cli.mjs')` before use; if
 
 1. `node "$PLUGIN_ROOT\bridge\cli.mjs" sessions` — list running Claude sessions (name/status/alive).
 2. `node "$PLUGIN_ROOT\bridge\cli.mjs" connect --name <unique part of the Claude session name>`
-   - Ambiguous names fail with a candidate list including full pairIds; retry with a longer, unique part.
+   - Ambiguous session names fail with a candidate list of running sessions (sessionId/pid); retry with a longer, unique part of the name.
    - Must run inside the selected Codex session (uses `CODEX_THREAD_ID`).
    - No register, no ID copying, no `CTC_BRIDGE_DIR`; the Claude side needs nothing installed.
    - Connecting another Claude session adds a second pair; existing pairs are never disturbed.
 3. If the host asks, the user must trust the plugin hooks (user review required by design; never bypassed).
+
+Note: `connect` ambiguity lists RUNNING SESSIONS (sessionId/pid). Full pairIds appear in `status` and in `send --name` ambiguity errors for CONNECTED pairs — that is where the retire guidance with full pairIds applies.
 
 ## Send and reply
 
