@@ -83,6 +83,28 @@ export class BridgeStore {
     return this.pairs().find((pair) => pair.id === id(pairId)) ?? null;
   }
 
+  // Retired pairs stay queryable from their archived evidence: an accepted
+  // letter keeps its original recipient attribution and claim eligibility
+  // after retirement, verified against BOTH recorded identities (SM 8a03ed6b).
+  retiredPairs() {
+    const dir = join(this.root, 'pairs-retired');
+    if (!existsSync(dir)) return [];
+    const out = [];
+    for (const file of readdirSync(dir).sort()) {
+      if (!file.endsWith('.json')) continue;
+      try {
+        out.push(readJson(join(dir, file)));
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+    }
+    return out;
+  }
+
+  retiredPairById(pairId) {
+    return this.retiredPairs().find((pair) => pair.id === id(pairId)) ?? null;
+  }
+
   findPairByClaude(claudeSessionId) {
     const sessionId = id(claudeSessionId);
     const match = this.pairs().filter((pair) => pair.claudeId === sessionId);
@@ -107,12 +129,12 @@ export class BridgeStore {
     }
     if (matches.length > 1) {
       const candidates = matches
-        .map((pair) => `- ${pair.claudeName} (pair ${pair.id.slice(0, 8)}, claude ${pair.claudeId.slice(0, 8)}, since ${pair.createdAt ?? '?'})`)
+        .map((pair) => `- ${pair.claudeName} (pairId ${pair.id}, claude ${pair.claudeId.slice(0, 8)}, since ${pair.createdAt ?? '?'})`)
         .join('\n');
-      // When the names are fully identical a longer name cannot help; the
-      // retire entry with the listed ids is the precise way through (SM
-      // review 5a2d818c-3), so the error itself carries the actionable path.
-      throw new Error(`Target "${name}" matches ${matches.length} connected pairs; pass a longer, unique part of the name, or retire the stale one (ids above):\n${candidates}\nRetire with: ${commandString()} retire --pairId <full pair id from above>`);
+      // The full pairId is printed so the suggested command is executable as
+      // shown, and the wording never presumes which target is disposable
+      // (SM review 8a03ed6b-1: identical names do not imply one is stale).
+      throw new Error(`Target "${name}" matches ${matches.length} connected pairs. Retire only a pair you are certain is no longer in use, or keep both by reconnecting under distinct session names, or pass a longer unique name:\n${candidates}\nRetire with: ${commandString()} retire --pairId <full pairId listed above>`);
     }
     return matches[0];
   }
@@ -129,6 +151,14 @@ export class BridgeStore {
     const current = this.pairs();
     if (current.some((pair) => pair.codexId !== selected.codexId)) {
       throw new Error('This bridge data root already serves a different Codex session. Do not silently replace it.');
+    }
+    // The root's identity is also anchored by its retired history: rebinding a
+    // root that still holds another Codex's archived pairs (and possibly their
+    // pending letters) would strand those letters behind the new registry's
+    // hook gate (SM 8a03ed6b-3 / fixture 1685348c). Same-Codex rebuilding after
+    // retiring stale pairs stays allowed - that is the W6 flow.
+    if (this.retiredPairs().some((pair) => pair.codexId !== selected.codexId)) {
+      throw new Error('This bridge root still holds retired pairs of a different Codex session; use a fresh root instead of rebinding. Archived evidence stays untouched.');
     }
     const existing = current.find((pair) => pair.codexId === selected.codexId && pair.claudeId === selected.claudeId);
     if (existing) {
@@ -301,17 +331,26 @@ export class BridgeStore {
   // message across slots wins. Serial injection per model-call opportunity is
   // intentional — no concurrency throughput or global ordering is promised,
   // only per-pair FIFO plus oldest-first across pairs.
-  // Deliverability is judged on the letter's own addressing (to.tool=codex and
-  // the destination session match): a letter accepted before its pair was
-  // retired is still delivered - retirement stops NEW routing, never an
-  // already-accepted delivery (SM review 478e4529: the retire/publish window
-  // must not strand letters), and its receipt notes pairRetired.
+  // Deliverability (SM 8a03ed6b-2): a letter with a REGISTERED pair is checked
+  // by the strict pair validation; a letter whose pair was RETIRED mid-flight
+  // is checked structurally AND against the archived pair's both-sides
+  // identities - retirement does not revoke the original recipient attribution
+  // or the claim eligibility of an already-accepted letter. A pairId known
+  // nowhere (neither registry nor archive) is an honest unknown: never
+  // injected, evidence kept in the slot, one event per attempt records it.
   take(event, wakePairId = null) {
     const deliverable = this.pendingSlots()
-      .filter(({ message }) => {
+      .filter(({ message, slot }) => {
         if (message?.to?.tool !== 'codex' || message.to.sessionId !== event.session_id) return false;
         const pair = this.pairById(message.pairId);
-        return pair ? this.validMessage(message, pair) : this.structurallyValid(message);
+        if (pair) return this.validMessage(message, pair);
+        const retired = this.retiredPairById(message.pairId);
+        if (retired) {
+          return this.structurallyValid(message) &&
+            message.from.sessionId === retired.claudeId && message.to.sessionId === retired.codexId;
+        }
+        this.event('unknown-pair-letter', { slot, pairId: message.pairId, messageId: message.id });
+        return false;
       })
       .sort((a, b) => (a.message.createdAt < b.message.createdAt ? -1 : a.message.createdAt > b.message.createdAt ? 1 : a.slot.localeCompare(b.slot)));
     if (deliverable.length === 0) return null;
@@ -323,14 +362,14 @@ export class BridgeStore {
       const claim = this.claimSlot(slot);
       if (!claim) continue;
       const message = readJson(join(claim, 'message.json'));
-      const pair = this.pairById(message.pairId);
+      const active = this.pairById(message.pairId);
       const receipt = join(this.root, 'receipts', `${id(message.id)}.json`);
       if (existsSync(receipt)) return null; // already supplied once; wake-suppression explains repeat wakes
       const context = {
         messageId: message.id, pairId: message.pairId, hook: event.hook_event_name,
         turnId: event.turn_id ?? null, toolUseId: event.tool_use_id ?? null,
         at: new Date().toISOString(), modelReceipt: 'unverified', claim,
-        ...(pair ? {} : { pairRetired: true }),
+        ...(active ? {} : { pairRetired: true }),
       };
       writeFileSync(receipt, JSON.stringify(context), { flag: 'wx' });
       this.event('context-prepared', context);
@@ -385,7 +424,10 @@ export function handleHook(store, event) {
       : { hookSpecificOutput: { hookEventName: event.hook_event_name, additionalContext: body } };
   }
   if (wake) {
-    const pair = store.pairById(wake[1]);
+    // Suppression works for retired pairs too: a consumed letter of a retired
+    // pair still gets its repeat wakes blocked instead of a missing-pending
+    // notice (SM review 8a03ed6b-3 - no regression from the 1.0.0 behaviour).
+    const pair = store.pairById(wake[1]) ?? store.retiredPairById(wake[1]);
     let original;
     try { original = store.message(wake[2]); } catch (error) { if (error.code === 'ENOENT') return {}; throw error; }
     if (pair && original.pairId === pair.id && original.to.sessionId === event.session_id && store.consumed(original.id)) {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -310,21 +310,68 @@ test('retiring one target is explicit, evidenced, and leaves the other intact (S
   assert.ok(events.some((e) => e.type === 'retired' && e.pairId === pairA.id));
 });
 
-test('the retire/publish window cannot strand or misroute letters (SM 478e4529)', (t) => {
+test('the real retire/publish window is reproduced and cannot strand or misroute (SM 8a03ed6b-4)', (t) => {
   const { store, pairA } = setup(t, { withB: false });
-  // Interleaving A: publish read the pair, then retire completes, then the
-  // slot lands - the letter is still delivered, receipt marked pairRetired.
+  // The exact race points: publish() has read the pair and staged the letter,
+  // retire() then completes the registry move, and only afterwards does the
+  // staged slot land in pending/ - the late-landing letter must still deliver.
   const staged = store.prepare(pairA, 'claude', 'raced into the slot', null, claudeA);
-  store.publish(staged);
+  const staging = mkdtempSync(join(store.root, 'staging', 'race-'));
+  writeFileSync(join(staging, 'message.json'), JSON.stringify(staged));
   store.retire(pairA.id);
+  renameSync(staging, join(store.root, 'pending', pairA.id));
+  // A foreign recipient is skipped WHILE the letter is still pending.
+  assert.equal(store.take(hookEvent('PostToolUse', { session_id: '55555555-5555-4555-8555-555555555555' })), null);
+  assert.ok(existsSync(join(store.root, 'pending', pairA.id, 'message.json')), 'letter still pending after the foreign check');
+  // The right recipient gets it, receipt noting the archived pair.
   const delivered = store.take(hookEvent('PostToolUse'));
   assert.equal(delivered.id, staged.id);
-  // Interleaving B: retire first, then a new letter for the retired pair is
-  // honestly rejected at prepare time - nothing silently routes to a dead registry.
+  const receipt = JSON.parse(readFileSync(join(store.root, 'receipts', `${staged.id}.json`), 'utf8'));
+  assert.equal(receipt.pairRetired, true);
+  // A repeat wake for the consumed retired letter is still suppressed.
+  const repeat = handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, staged.id) }));
+  assert.equal(repeat.decision, 'block');
+  assert.match(repeat.reason, /already supplied/);
+  // Post-retirement, a NEW letter for the retired pair is refused at prepare.
   assert.equal(store.pairs().length, 0);
   assert.throws(() => store.prepare(pairA, 'claude', 'should be refused', null, claudeA), /not registered/);
-  // A foreign destination never gets another session's letters.
-  assert.equal(store.take(hookEvent('PostToolUse', { session_id: '55555555-5555-4555-8555-555555555555' })), null);
+});
+
+test('unknown pairIds and mismatched senders never inject (SM 8a03ed6b-2)', (t) => {
+  const { store, pairA } = setup(t, { withB: false });
+  store.retire(pairA.id);
+  // A slot letter claiming the retired pair but sent by the wrong session.
+  const mismatched = {
+    id: '123e4567-e89b-4212-a456-426614174009', pairId: pairA.id,
+    conversationId: '223e4567-e89b-4212-a456-426614174009', replyTo: null,
+    from: { tool: 'claude', sessionId: '55555555-5555-4555-8555-555555555555' },
+    to: { tool: 'codex', sessionId: codexId },
+    body: 'wrong sender for the archived pair', createdAt: new Date().toISOString(),
+  };
+  mkdirSync(join(store.root, 'pending', pairA.id), { recursive: true });
+  writeFileSync(join(store.root, 'pending', pairA.id, 'message.json'), JSON.stringify(mismatched));
+  // A slot letter with a pairId nobody ever registered.
+  const ghost = {
+    ...mismatched, id: '323e4567-e89b-4212-a456-426614174009', pairId: '423e4567-e89b-4212-a456-426614174009',
+    from: { tool: 'claude', sessionId: claudeA },
+  };
+  mkdirSync(join(store.root, 'pending', ghost.pairId), { recursive: true });
+  writeFileSync(join(store.root, 'pending', ghost.pairId, 'message.json'), JSON.stringify(ghost));
+  assert.equal(store.take(hookEvent('PostToolUse')), null);
+  // Evidence stays in place and the unknown is recorded, never silently dropped.
+  assert.ok(existsSync(join(store.root, 'pending', ghost.pairId, 'message.json')));
+  const events = readFileSync(join(store.root, 'events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.ok(events.some((e) => e.type === 'unknown-pair-letter' && e.pairId === ghost.pairId));
+});
+
+test('a root with another Codex retired history refuses rebinding; same-Codex rebuild still works (SM 1685348c)', (t) => {
+  const { store, pairA, epA } = setup(t, { withB: false });
+  store.retire(pairA.id);
+  assert.throws(() => store.pair(otherCodex, epA, 'alpha'), /retired pairs of a different Codex session/);
+  // Rebuilding under the SAME Codex after retiring a stale pair stays allowed.
+  const rebuilt = store.pair(codexId, epA, 'alpha');
+  assert.equal(rebuilt.codexId, codexId);
+  assert.equal(store.pairs().length, 1);
 });
 
 test('single-target send keeps the 1.0.0 shape without --name; several targets refuse (S04-11-7, SM 01f3554d)', (t) => {
@@ -377,9 +424,18 @@ test('ambiguous same-name targets and unknown replies carry actionable next step
   delete env.CLAUDE_CODE_SESSION_ID;
   const ambiguous = spawnSync(process.execPath, [cli, 'send', '--name', 'alpha', '--body', 'x'], { env, encoding: 'utf8' });
   assert.equal(ambiguous.status, 1);
-  assert.match(ambiguous.stderr, /retire --pairId <full pair id from above>/);
-  assert.match(ambiguous.stderr, /claude 22222222/);
-  assert.match(ambiguous.stderr, /claude 55555555/);
+  // The candidates list carries FULL pairIds and the wording does not presume
+  // which target is disposable (SM 8a03ed6b-1).
+  assert.match(ambiguous.stderr, /matches 2 connected pairs/);
+  assert.match(ambiguous.stderr, /Retire only a pair you are certain is no longer in use/);
+  const listedIds = [...ambiguous.stderr.matchAll(/pairId ([0-9a-f-]{36})/g)].map((m) => m[1]);
+  assert.equal(listedIds.length, 2);
+  // The suggested command is executable exactly as shown: extract one listed
+  // id and retire it, resolving the ambiguity without hand-copying anything.
+  const retire = spawnSync(process.execPath, [cli, 'retire', '--pairId', listedIds[1]], { env, encoding: 'utf8' });
+  assert.equal(retire.status, 0, retire.stderr);
+  const resolved = spawnSync(process.execPath, [cli, 'send', '--name', 'alpha', '--body', 'x'], { env, encoding: 'utf8' });
+  assert.doesNotMatch(resolved.stderr, /matches 2/);
   // An unknown reply id gets a next step, not a bare ENOENT.
   const unknown = spawnSync(process.execPath, [cli, 'reply', '--to', '00000000-0000-4000-8000-000000000000', '--body', 'x'], { env, encoding: 'utf8' });
   assert.equal(unknown.status, 1);

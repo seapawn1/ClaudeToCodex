@@ -37,7 +37,7 @@
 - 共存上限：原型不设硬上限，但不承诺任意规模（验收最低 2 个）。
 - `connect` upsert 语义：同 `{codexId, claudeId}` → 沿用配对、端点路径变化时更新 `endpointPath` 并记 `endpoint-updated` 事件；不同 claudeId → 新配对（事件 `paired`）；不影响其他配对（S04-11-1 连接 B 不拆 A）。
 - legacy 继续使用（SM 5a2d818c-2 修订）：同身份重连时对旧 `pair.json` 做**端点显式刷新**——仅更新 endpointPath，id/createdAt 不变，记 `legacy-endpoint-updated` 事件；不新写注册项、不静默替换。
-- 退役（retire，S04-11-6 边界）：显式操作，注册文件移入 `pairs-retired/`（留证、不覆盖），事件留痕；**在途约定**：已接纳进槽的信按自身收件地址仍投递（收据标注 pairRetired），退役只停新路由（新发/新回复在 prepare 即拒）；retire 不因有待收而拒绝。retire/publish 竞态按此约定关闭，两种交错有 fixture 复现（SM 478e4529）。
+- 退役（retire，S04-11-6 边界）：显式操作，注册文件移入 `pairs-retired/`（留证、不覆盖），事件留痕；**在途约定（SM 8a03ed6b 表述）**：退役不撤销已接纳消息的原收件归属与后续领取资格——take 对在册配对做严格双方校验，对已退役配对按存档身份（双侧 sessionId）校验后仍投递并在收据标注 pairRetired；pairId 无处可查（既不在册也无存档）为诚实未知：不注入、槽内留证、逐次记 unknown-pair-letter 事件；失败保留证据并如实报未知，不承诺"必达"。retire 不因有待收而拒绝；退役后新发/新回复在 prepare 即拒；重复唤醒对已消费的退役信保持抑制。retire/publish 真实交错（staging→retire→迟落槽）有 fixture 复现。
 - 迁移：数据根存在旧 `pair.json` 且无 `pairs/` 时只读识别；跨身份新配对可共存。
 
 ### D2 目标确定（S04-11-2）
