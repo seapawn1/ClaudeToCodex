@@ -36,7 +36,9 @@
 - 不变量：同一数据根内所有配对 `codexId` 必须一致——本桥目录服务一个 Codex 原始会话；违反即抛错，不猜测。
 - 共存上限：原型不设硬上限，但不承诺任意规模（验收最低 2 个）。
 - `connect` upsert 语义：同 `{codexId, claudeId}` → 沿用配对、端点路径变化时更新 `endpointPath` 并记 `endpoint-updated` 事件；不同 claudeId → 新配对（事件 `paired`）；不影响其他配对（S04-11-1 连接 B 不拆 A）。
-- 迁移：数据根存在旧 `pair.json` 且无 `pairs/` 时，只读识别为单配对注册表项（原型阶段只设计、不实测迁移；S04-11-7 阶段再验）。
+- legacy 继续使用（SM 5a2d818c-2 修订）：同身份重连时对旧 `pair.json` 做**端点显式刷新**——仅更新 endpointPath，id/createdAt 不变，记 `legacy-endpoint-updated` 事件；不新写注册项、不静默替换。
+- 退役（retire，S04-11-6 边界）：显式操作，注册文件移入 `pairs-retired/`（留证、不覆盖），事件留痕；**在途约定**：已接纳进槽的信按自身收件地址仍投递（收据标注 pairRetired），退役只停新路由（新发/新回复在 prepare 即拒）；retire 不因有待收而拒绝。retire/publish 竞态按此约定关闭，两种交错有 fixture 复现（SM 478e4529）。
+- 迁移：数据根存在旧 `pair.json` 且无 `pairs/` 时只读识别；跨身份新配对可共存。
 
 ### D2 目标确定（S04-11-2）
 

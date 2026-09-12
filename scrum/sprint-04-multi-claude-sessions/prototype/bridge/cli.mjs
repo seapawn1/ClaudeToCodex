@@ -181,7 +181,16 @@ async function main() {
   const who = store.caller();
   let pair;
   if (command === 'reply') {
-    pair = store.pairById(store.message(values.to).pairId);
+    let previous;
+    try {
+      previous = store.message(values.to);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error('No bridge message with that id exists in this data root. Use the reply entry embedded in the message you received (it carries the exact id); run status to inspect recent messages.');
+      }
+      throw error;
+    }
+    pair = store.pairById(previous.pairId);
     if (!pair) throw new Error('The referenced message does not belong to any registered pair.');
   } else if (who.tool === 'codex') {
     // 1.0.0 compatibility (S04-11-7): with exactly one connected target, send

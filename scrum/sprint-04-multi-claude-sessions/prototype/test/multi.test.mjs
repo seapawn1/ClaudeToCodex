@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -78,6 +78,33 @@ test('legacy single-pair data stays visible and can coexist with new pairs', (t)
   assert.equal(store.pairById(legacy.id).claudeId, claudeA);
   assert.notEqual(pairB.id, legacy.id);
   assert.throws(() => store.pair(otherCodex, epB, 'beta'), /different Codex session/);
+});
+
+test('reconnecting a legacy identity refreshes its endpoint in place (SM 5a2d818c-2)', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'ctc-multi-legacy2-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const oldEndpoint = join(root, 'old-endpoint.json');
+  writeFileSync(oldEndpoint, JSON.stringify({ sessionId: claudeA }));
+  const legacy = {
+    id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeee01', codexId, claudeId: claudeA,
+    endpointPath: resolve(oldEndpoint), createdAt: '2026-09-01T00:00:00.000Z',
+  };
+  writeFileSync(join(root, 'pair.json'), `${JSON.stringify(legacy, null, 2)}\n`);
+  const store = new BridgeStore(root);
+  // The connect flow synthesizes a fresh endpoint inside this root; same
+  // identity must reuse the legacy pair and refresh the endpoint, not reject.
+  const freshEndpoint = join(root, 'endpoints', `claude-${claudeA}.json`);
+  mkdirSync(join(root, 'endpoints'), { recursive: true });
+  writeFileSync(freshEndpoint, JSON.stringify({ sessionId: claudeA }));
+  const reused = store.pair(codexId, freshEndpoint);
+  assert.equal(reused.id, legacy.id, 'identity preserved');
+  assert.equal(reused.createdAt, legacy.createdAt, 'createdAt preserved');
+  assert.equal(reused.endpointPath, resolve(freshEndpoint), 'endpoint refreshed');
+  assert.equal(store.pairs().length, 1, 'no new registry entry');
+  const onDisk = JSON.parse(readFileSync(join(root, 'pair.json'), 'utf8'));
+  assert.equal(onDisk.endpointPath, resolve(freshEndpoint));
+  const events = readFileSync(join(store.root, 'events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.ok(events.some((e) => e.type === 'legacy-endpoint-updated' && e.pairId === legacy.id));
 });
 
 test('target names resolve uniquely, never by guessing (S04-11-2)', (t) => {
@@ -262,23 +289,42 @@ test('reply guidance carries the isolated CODEX_HOME when the sender runs under 
 
 test('retiring one target is explicit, evidenced, and leaves the other intact (S04-11-6)', (t) => {
   const { store, pairA, pairB, root } = setup(t);
-  // A pending letter blocks retirement: honest refusal, nothing moved.
+  // An already-accepted letter does NOT block retirement: acceptance is
+  // honored and the letter stays deliverable on its own addressing.
   incoming(store, pairA, 'pending while retiring');
-  assert.throws(() => store.retire(pairA.id), /still has a pending message/);
-  assert.equal(store.pairs().length, 2);
-  const delivered = store.take(hookEvent('PostToolUse'));
-  assert.equal(delivered.pairId, pairA.id);
   const result = store.retire(pairA.id);
   assert.equal(store.pairs().length, 1);
   assert.equal(store.pairs()[0].id, pairB.id);
   assert.ok(result.archivedTo.startsWith(join(root, 'pairs-retired')));
   assert.ok(existsSync(result.archivedTo), 'retired evidence is kept on disk');
   assert.throws(() => store.retire(pairA.id), /No registered pair/);
+  // The stranded-window letter still delivers, with the receipt noting it.
+  const delivered = store.take(hookEvent('PostToolUse'));
+  assert.equal(delivered.id !== null && delivered.pairId, pairA.id);
+  const receipt = JSON.parse(readFileSync(join(root, 'receipts', `${delivered.id}.json`), 'utf8'));
+  assert.equal(receipt.pairRetired, true);
   // The surviving pair still works end to end.
   const letter = incoming(store, pairB, 'B works after A retired');
   assert.equal(store.take(hookEvent('PostToolUse')).id, letter.id);
   const events = readFileSync(join(store.root, 'events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
   assert.ok(events.some((e) => e.type === 'retired' && e.pairId === pairA.id));
+});
+
+test('the retire/publish window cannot strand or misroute letters (SM 478e4529)', (t) => {
+  const { store, pairA } = setup(t, { withB: false });
+  // Interleaving A: publish read the pair, then retire completes, then the
+  // slot lands - the letter is still delivered, receipt marked pairRetired.
+  const staged = store.prepare(pairA, 'claude', 'raced into the slot', null, claudeA);
+  store.publish(staged);
+  store.retire(pairA.id);
+  const delivered = store.take(hookEvent('PostToolUse'));
+  assert.equal(delivered.id, staged.id);
+  // Interleaving B: retire first, then a new letter for the retired pair is
+  // honestly rejected at prepare time - nothing silently routes to a dead registry.
+  assert.equal(store.pairs().length, 0);
+  assert.throws(() => store.prepare(pairA, 'claude', 'should be refused', null, claudeA), /not registered/);
+  // A foreign destination never gets another session's letters.
+  assert.equal(store.take(hookEvent('PostToolUse', { session_id: '55555555-5555-4555-8555-555555555555' })), null);
 });
 
 test('single-target send keeps the 1.0.0 shape without --name; several targets refuse (S04-11-7, SM 01f3554d)', (t) => {
@@ -319,4 +365,24 @@ test('the retire CLI entry accepts --pairId and --name (run 4 real-loop finding)
   assert.equal(byName.status, 0, byName.stderr);
   assert.equal(JSON.parse(byName.stdout).pair.id, pairB.id);
   assert.equal(store.pairs().length, 0);
+});
+
+test('ambiguous same-name targets and unknown replies carry actionable next steps (SM 5a2d818c-3)', (t) => {
+  const { store, root } = setup(t);
+  // A third pair sharing the name 'alpha': the error must include the retire entry.
+  const endpointA2 = join(root, 'endpoint-a2.json');
+  writeFileSync(endpointA2, JSON.stringify({ sessionId: '55555555-5555-4555-8555-555555555555' }));
+  store.pair(codexId, endpointA2, 'alpha');
+  const env = { ...process.env, CTC_BRIDGE_DIR: root, CODEX_THREAD_ID: codexId };
+  delete env.CLAUDE_CODE_SESSION_ID;
+  const ambiguous = spawnSync(process.execPath, [cli, 'send', '--name', 'alpha', '--body', 'x'], { env, encoding: 'utf8' });
+  assert.equal(ambiguous.status, 1);
+  assert.match(ambiguous.stderr, /retire --pairId <full pair id from above>/);
+  assert.match(ambiguous.stderr, /claude 22222222/);
+  assert.match(ambiguous.stderr, /claude 55555555/);
+  // An unknown reply id gets a next step, not a bare ENOENT.
+  const unknown = spawnSync(process.execPath, [cli, 'reply', '--to', '00000000-0000-4000-8000-000000000000', '--body', 'x'], { env, encoding: 'utf8' });
+  assert.equal(unknown.status, 1);
+  assert.match(unknown.stderr, /No bridge message with that id exists/);
+  assert.match(unknown.stderr, /reply entry embedded in the message you received/);
 });

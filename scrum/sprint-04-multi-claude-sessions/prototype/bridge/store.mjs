@@ -109,7 +109,10 @@ export class BridgeStore {
       const candidates = matches
         .map((pair) => `- ${pair.claudeName} (pair ${pair.id.slice(0, 8)}, claude ${pair.claudeId.slice(0, 8)}, since ${pair.createdAt ?? '?'})`)
         .join('\n');
-      throw new Error(`Target "${name}" matches ${matches.length} connected pairs; pass a longer, unique part of the name:\n${candidates}`);
+      // When the names are fully identical a longer name cannot help; the
+      // retire entry with the listed ids is the precise way through (SM
+      // review 5a2d818c-3), so the error itself carries the actionable path.
+      throw new Error(`Target "${name}" matches ${matches.length} connected pairs; pass a longer, unique part of the name, or retire the stale one (ids above):\n${candidates}\nRetire with: ${commandString()} retire --pairId <full pair id from above>`);
     }
     return matches[0];
   }
@@ -132,11 +135,18 @@ export class BridgeStore {
       const isLegacy = this.legacyPair()?.id === existing.id;
       if (existing.endpointPath !== selected.endpointPath) {
         if (isLegacy) {
-          throw new Error('Legacy single-pair data with a changed endpoint is not migrated by this prototype; the S04-11-7 path decides continue/migrate/rebuild.');
+          // S04-11-7 continue-using path (SM review 5a2d818c): reconnecting the
+          // same identity refreshes the legacy endpoint in place - same id and
+          // createdAt, only endpointPath moves to this root, event recorded.
+          // No new pair is created and nothing is silently replaced.
+          writeFileSync(join(this.root, 'pair.json'),
+            `${JSON.stringify({ ...existing, endpointPath: selected.endpointPath }, null, 2)}\n`);
+          this.event('legacy-endpoint-updated', { pairId: existing.id, endpointPath: selected.endpointPath });
+        } else {
+          writeFileSync(join(this.root, 'pairs', `${existing.id}.json`),
+            `${JSON.stringify({ ...existing, endpointPath: selected.endpointPath }, null, 2)}\n`);
+          this.event('endpoint-updated', { pairId: existing.id, endpointPath: selected.endpointPath });
         }
-        writeFileSync(join(this.root, 'pairs', `${existing.id}.json`),
-          `${JSON.stringify({ ...existing, endpointPath: selected.endpointPath }, null, 2)}\n`);
-        this.event('endpoint-updated', { pairId: existing.id, endpointPath: selected.endpointPath });
       }
       return this.pairById(existing.id);
     }
@@ -148,18 +158,17 @@ export class BridgeStore {
 
   // Explicit lifecycle boundary for S04-11-6 (prototype scope): retiring moves
   // one registry pair into pairs-retired/ - evidence kept, never deleted, never
-  // overwriting - and leaves every other pair untouched. It refuses while the
-  // pair still has an unconsumed pending message, and refuses legacy pair.json
-  // entries (their path is the S04-11-7 decision, not a silent migration).
+  // overwriting - and leaves every other pair untouched. In-flight disposition:
+  // a letter already accepted into the pair's slot stays deliverable on its own
+  // addressing (take() delivers retired-pair letters and marks the receipt),
+  // so retire does NOT refuse on a pending letter. Legacy pair.json entries are
+  // refused (their rebuild path is the S04-11-7 decision, not a silent move).
   retire(pairId) {
     this.initialize();
     const pair = this.pairById(pairId);
     if (!pair) throw new Error('No registered pair matches that id.');
     if (this.legacyPair()?.id === pair.id) {
       throw new Error('Legacy single-pair data is not migrated by this prototype; the S04-11-7 path decides continue/migrate/rebuild.');
-    }
-    if (existsSync(join(this.root, 'pending', pair.id, 'message.json'))) {
-      throw new Error(`Target ${pair.claudeName ?? pair.id.slice(0, 8)} still has a pending message for Codex; wait for it to be consumed before retiring.`);
     }
     const retiredDir = join(this.root, 'pairs-retired');
     mkdirSync(retiredDir, { recursive: true });
@@ -264,6 +273,18 @@ export class BridgeStore {
     }).filter(Boolean);
   }
 
+  // Structural check for a letter whose pair was retired mid-flight: it is
+  // still delivered on its own addressing (S04-11-6 disposition - acceptance
+  // is honored, retirement only stops new routing), so the receipt records
+  // that the registry no longer knows the pair.
+  structurallyValid(message) {
+    return UUID.test(message?.id) && UUID.test(message?.pairId) && UUID.test(message?.conversationId) &&
+      ['codex', 'claude'].includes(message.from?.tool) && ['codex', 'claude'].includes(message.to?.tool) &&
+      message.from.tool !== message.to.tool && UUID.test(message.from.sessionId) && UUID.test(message.to.sessionId) &&
+      (message.replyTo === null || UUID.test(message.replyTo)) &&
+      typeof message.body === 'string' && message.body.trim().length > 0 && message.body.length <= 2000;
+  }
+
   claimSlot(slot) {
     const claim = join(this.root, 'claims', randomUUID());
     try {
@@ -280,29 +301,36 @@ export class BridgeStore {
   // message across slots wins. Serial injection per model-call opportunity is
   // intentional — no concurrency throughput or global ordering is promised,
   // only per-pair FIFO plus oldest-first across pairs.
+  // Deliverability is judged on the letter's own addressing (to.tool=codex and
+  // the destination session match): a letter accepted before its pair was
+  // retired is still delivered - retirement stops NEW routing, never an
+  // already-accepted delivery (SM review 478e4529: the retire/publish window
+  // must not strand letters), and its receipt notes pairRetired.
   take(event, wakePairId = null) {
-    if (!this.pairs().some((pair) => pair.codexId === event.session_id)) return null;
-    const slots = this.pendingSlots()
-      .filter(({ message }) => this.pairById(message.pairId)?.codexId === event.session_id)
+    const deliverable = this.pendingSlots()
+      .filter(({ message }) => {
+        if (message?.to?.tool !== 'codex' || message.to.sessionId !== event.session_id) return false;
+        const pair = this.pairById(message.pairId);
+        return pair ? this.validMessage(message, pair) : this.structurallyValid(message);
+      })
       .sort((a, b) => (a.message.createdAt < b.message.createdAt ? -1 : a.message.createdAt > b.message.createdAt ? 1 : a.slot.localeCompare(b.slot)));
+    if (deliverable.length === 0) return null;
     const order = [];
     if (wakePairId) order.push(id(wakePairId));
-    order.push(...slots.map((entry) => entry.slot));
+    order.push(...deliverable.map((entry) => entry.slot));
     for (const slot of order) {
+      if (!deliverable.some((entry) => entry.slot === slot)) continue;
       const claim = this.claimSlot(slot);
       if (!claim) continue;
       const message = readJson(join(claim, 'message.json'));
       const pair = this.pairById(message.pairId);
-      if (!pair || !this.validMessage(message, pair) || message.to.tool !== 'codex') {
-        this.event('invalid-claim', { claim });
-        throw new Error('Claimed message does not match its registered pair. Evidence retained for inspection.');
-      }
       const receipt = join(this.root, 'receipts', `${id(message.id)}.json`);
       if (existsSync(receipt)) return null; // already supplied once; wake-suppression explains repeat wakes
       const context = {
-        messageId: message.id, pairId: pair.id, hook: event.hook_event_name,
+        messageId: message.id, pairId: message.pairId, hook: event.hook_event_name,
         turnId: event.turn_id ?? null, toolUseId: event.tool_use_id ?? null,
         at: new Date().toISOString(), modelReceipt: 'unverified', claim,
+        ...(pair ? {} : { pairRetired: true }),
       };
       writeFileSync(receipt, JSON.stringify(context), { flag: 'wx' });
       this.event('context-prepared', context);
@@ -335,11 +363,13 @@ export function wakeText(pairId, messageId) {
 
 export function handleHook(store, event) {
   if (!['UserPromptSubmit', 'PostToolUse', 'Stop'].includes(event.hook_event_name)) return {};
+  if (event.agent_id) return {};
   let pairs;
   try { pairs = store.pairs(); } catch (error) { if (error.code === 'ENOENT') return {}; throw error; }
-  if (pairs.length === 0 || event.agent_id) return {};
-  // One bridge root serves one Codex original session; every pair shares its codexId.
-  if (!pairs.some((pair) => pair.codexId === event.session_id)) return {};
+  // One bridge root serves one Codex original session; every pair shares its
+  // codexId. An empty registry still lets stranded letters of retired pairs
+  // through (their addressing, not the registry, decides delivery).
+  if (pairs.length > 0 && !pairs.some((pair) => pair.codexId === event.session_id)) return {};
   let wake = null;
   if (event.hook_event_name === 'UserPromptSubmit') {
     const match = /^\[CTC-WAKE ([0-9a-f-]{36}) ([0-9a-f-]{36})\]$/i.exec((event.prompt ?? '').trim());
