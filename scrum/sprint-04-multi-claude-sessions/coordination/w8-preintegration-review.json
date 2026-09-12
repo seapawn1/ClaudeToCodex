@@ -1,0 +1,113 @@
+{
+  "reviewedOn": "2026-09-13",
+  "reviewer": "SM / Codex",
+  "candidateCommit": "44c1119e90cad46ab24102f6c8f82f7ff9dd2cf5",
+  "candidateBranch": "worktree-s04-pbi-11",
+  "scope": "W8 pre-integration review of lifecycle changes and candidate validation plan",
+  "result": "continue_isolated_work_with_open_findings",
+  "offlineRegression": {
+    "command": "node --test scrum/sprint-04-multi-claude-sessions/prototype/test/multi.test.mjs",
+    "passed": 20,
+    "failed": 0,
+    "durationMs": 2417.812
+  },
+  "supplementalBoundaryChecks": {
+    "layer": "isolated fixture; not host or original-session receipt evidence",
+    "sourceSha256": "4d3a71c451e94790d86417333a914b32bc3b68f503cab069452acd4c2e6aeaa2",
+    "sourceMatchesCommittedBlob": true,
+    "method": "Generated temporary fixture data; exercised the actual BridgeStore and handleHook functions. For the publish/retire interleaving, retired the pair after the publishing operation read it and before publishing continued. Removed only the generated fixtures after validating cleanup paths.",
+    "observations": [
+      {
+        "case": "ambiguous_recovery_entry",
+        "fullCandidateIdsListed": false,
+        "requiresFullId": true,
+        "error": "Target \"same-name\" matches 2 connected pairs; pass a longer, unique part of the name, or retire the stale one (ids above):\n- same-name (pair 60d6fa12, claude 44444444, since 2026-09-12T19:30:40.443Z)\n- same-name (pair 79c99666, claude 22222222, since 2026-09-12T19:30:40.437Z)\nRetire with: node \"D:\\ClaudeToCodex\\.claude\\worktrees\\s04-pbi-11\\scrum\\sprint-04-multi-claude-sessions\\prototype\\bridge\\cli.mjs\" retire --pairId <full pair id from above>"
+      },
+      {
+        "case": "unknown_pair_pending_fixture",
+        "unknownPairInjected": true,
+        "retiredRecordExists": false
+      },
+      {
+        "case": "retired_pair_mismatched_sender_fixture",
+        "mismatchedSenderInjected": true
+      },
+      {
+        "case": "retired_pair_duplicate_wake",
+        "firstInjected": true,
+        "secondInjected": false,
+        "duplicateSuppressed": false,
+        "duplicateOutput": {
+          "systemMessage": "Bridge wake has no pending body or completed consumption record. Inspect bridge status."
+        }
+      },
+      {
+        "case": "new_codex_after_last_pair_retired",
+        "newCodexAccepted": true,
+        "oldCodexBodyInjected": false,
+        "oldPendingPreserved": true,
+        "hookOutput": {}
+      },
+      {
+        "case": "publish_lookup_then_retire_then_slot_publish",
+        "bodyInjected": true,
+        "retiredBeforePublication": true
+      }
+    ]
+  },
+  "findings": [
+    {
+      "ac": "S04-11-2",
+      "location": "prototype/bridge/store.mjs:109",
+      "result": "reproduced",
+      "finding": "The ambiguity error lists eight-character pair prefixes but requires a full pair id from that list; its suggested action is not executable as printed. Identical names alone do not establish that one live target is stale."
+    },
+    {
+      "ac": "S04-11-6 / S04-11-7",
+      "location": "prototype/bridge/store.mjs:309",
+      "result": "reproduced_in_invalid_pending_fixtures",
+      "finding": "An absent active registry entry is treated as a retired pair without checking retirement evidence. Unknown pair ids and sender identities inconsistent with archived pairs were injected. Retired-message handling must preserve the original pair identity checks."
+    },
+    {
+      "ac": "S04-11-7",
+      "location": "prototype/bridge/store.mjs:391",
+      "result": "reproduced",
+      "finding": "After a retired message is consumed, its repeated wake is not suppressed because the branch requires an active pair. No duplicate body was injected, but the hook incorrectly reports missing pending/consumption evidence."
+    },
+    {
+      "ac": "S04-11-6",
+      "location": "prototype/bridge/store.mjs:372",
+      "result": "reproduced",
+      "finding": "After the last pair is retired with an accepted message pending, a different Codex identity can be paired in the same root. The hook then rejects the original Codex session and leaves its old message pending. The chosen lifecycle policy must prevent or handle this transition explicitly."
+    },
+    {
+      "ac": "S04-11-6",
+      "location": "prototype/test/multi.test.mjs:313",
+      "result": "test_gap",
+      "finding": "The committed test completes publish before retiring, despite describing retirement between lookup and publication. Its foreign-recipient check also runs after the pending message has already been consumed. The independent interleaving check does deliver correctly; committed regression should reproduce the actual boundary."
+    }
+  ],
+  "acceptedPlanningDirection": [
+    "Continue isolated W8 preparation and complete the identified lifecycle and compatibility checks before candidate acceptance.",
+    "Resume the dedicated Codex original thread with the legacy data root in the same isolated CODEX_HOME and cwd. Current hook commands do not hard-code the data root; effective execution must still be verified after resume.",
+    "Keep recovery of pending legacy reply de5319b9 distinct from a new automatic full round trip; preserve the receiving original-session frame evidence.",
+    "Do not claim guaranteed receipt from the in-flight policy. Retirement preserves original recipient affiliation and subsequent consumption eligibility, with failures and unknown delivery still reported honestly."
+  ],
+  "requiredPlanCorrections": [
+    "A 30-40 second tool task verifies a tool boundary, not an active model-generation boundary. Distinguish Claude-to-Codex queue/hooks from Codex-to-Claude priority=next and verify the corresponding SMOKE T03CX, T03XC and T04CX scenarios.",
+    "Include the product skill and current README/INSTALL capability statements in W8 documentation work; preserve historical release facts.",
+    "Keep the product standard default data-root entry usable. Prototype-only isolation guards are not a product requirement for users.",
+    "Installed-candidate evidence must identify source, package hashes, installation paths and host versions. Test project hooks that still point to the prototype must not perform candidate receipt work or duplicate candidate hooks.",
+    "Correct the Developer backlog table formatting, obsolete pending-retirement refusal, reversed sample labels and premature S04-11-6 pass status."
+  ],
+  "coordination": {
+    "codeFeedbackMessageId": "8a03ed6b-3739-4357-bde6-c59f9cb22bac",
+    "planFeedbackMessageId": "10ba7f65-1658-4d19-a102-5b2991f4f3c6",
+    "developerAcknowledgmentAt": "2026-09-12T19:30:14.110Z",
+    "developerState": "Acknowledged both feedback batches and started backlog and code corrections; those uncommitted revisions are outside this reviewed commit."
+  },
+  "dailyEnvironmentChangedByReviewer": false,
+  "pluginIncrementDone": false,
+  "poDod": "not_assessed",
+  "poActionRequiredNow": false
+}

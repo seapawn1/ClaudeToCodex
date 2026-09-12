@@ -1,0 +1,1459 @@
+{
+  "reviewedOn": "2026-09-13",
+  "reviewer": "SM / Codex",
+  "sourceCommit": "ee73808cc9e5a2324f4a6900f404cf364af65ace",
+  "result": "technical_acceptance_passed_po_review_pending",
+  "installation": {
+    "reviewedAt": "2026-09-12T21:52:30.116Z",
+    "commit": "ee73808cc9e5a2324f4a6900f404cf364af65ace",
+    "installationPath": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test/codex-home/plugins/cache/claudetocodex-dev/claudetocodex/1.0.0",
+    "tracked": [
+      {
+        "path": ".codex-plugin/plugin.json",
+        "sha256": "e7b4d718b7be7ac0bef9d2c3ae8ab6dc842f993ffc7042d66ace673ed57ce88a",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/cli.mjs",
+        "sha256": "5bef8402d892405ba6901ecb7c6a38ee081329b0a6530de106d41a8cbe70839c",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/delivery/BridgeQueue.ps1",
+        "sha256": "fddb7c533e489be0fc6b4d0ec7fa8d541148c36521aef7a5df448c31f0a7f718",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/delivery/Register-ClaudeEndpoint.ps1",
+        "sha256": "c5d993a4fd691d381ca91fe88a2f6e52f7c70d7a826af12799ba4c119a8e0bc2",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/delivery/Send-ClaudePipe.ps1",
+        "sha256": "03859daa8d8b0c5bba2c5aaf1f8bd14c91009d5b178fa075bd347a512d15a40d",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/docs/SMOKE.md",
+        "sha256": "b2fab975b755da249d540c8e6f0ee83a1210b16d6645f78a8484c23a02a7994f",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/docs/USAGE.md",
+        "sha256": "14910f2bef05215d7169ea401d121df9f67b5f7dd3a40d8493b17ec0b65a2756",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/entry.mjs",
+        "sha256": "c44b66c6ebc25fc2395ac25223d84ba1b25d0e4d33523bd360cdb494ecc1457e",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/release/Build-Release.ps1",
+        "sha256": "497615b8211ba560334e797b9e9610a29d4b154bfb9b1b023106130f0c808b15",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/release/Test-Acceptance.ps1",
+        "sha256": "f79e8b7d060d9442a7887b4e3f16f21620da15d8744bf72db719ef8123601032",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/release/Verify-Release.ps1",
+        "sha256": "4bcf3e61e17cec0ddbb833a8ccf9352809e879fed49460aeb938729e73437987",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/sessions.mjs",
+        "sha256": "6ed02c51007ba99c4a1b18cb517191033dec9dc169d0e717ffb4a876d4778e9d",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/store.mjs",
+        "sha256": "60642abd763dba2613dc0979ee2f222bc76109b3f7b2a5028086ad365b6622dd",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/test/connect.test.mjs",
+        "sha256": "31bd739f6e7be3ba8d3927134dab6b5d168837d964f1ba6335d3b5b0e3fb64ed",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/test/install.test.mjs",
+        "sha256": "9e7e59ce1e102fa5f01be5baf6c13a093f8403c27ba4a6d3bc57996b96bcfe1e",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/test/pipe.test.mjs",
+        "sha256": "8b325bcc6f0507d4655d1f934c3388ff9304f2e03a42e991caafa5d5812b7da0",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "bridge/test/store.test.mjs",
+        "sha256": "6f53ebed1b4b11b258ef23d9b664d530888b571b77246459b5730dd9d4754390",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "hooks/hooks.json",
+        "sha256": "6ae7237705e7b17ec286adc671c2de131eb90aaeda46b9a1f11ebfe974a296b4",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      },
+      {
+        "path": "skills/claudetocodex/SKILL.md",
+        "sha256": "c140a14964edd1993b456e3c438af975998022ac988cc4dbb5be3b0e0daae878",
+        "matchesWorktreeBytes": true,
+        "matchesCommitAfterGitFilters": true
+      }
+    ],
+    "installedFileCount": 19,
+    "extraFiles": [],
+    "installedContentManifestSha256": "37750c3756370fb2282a61d4b6e341306fbe46c7edd34d761592bb1f056c3374",
+    "bridgeCodeChangesSinceB8": "",
+    "mirrors": {
+      "count": 16,
+      "mismatches": []
+    },
+    "pluginDescription": "ClaudeToCodex - cross-session bridge between Codex and Claude Code original sessions (Windows, one Codex with one or more Claude pairs by name, short text).",
+    "developerManifestHashLengths": [
+      16
+    ],
+    "prototypeHooksAbsent": true
+  },
+  "originalSessionVerification": {
+    "reviewedAt": "2026-09-12T21:59:01.358Z",
+    "sourceFiles": {
+      "01a096d0-cc3a-7262-81b1-7402f8c7d942": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test/codex-home/sessions/2026/09/13/rollout-2026-09-13T02-11-01-01a096d0-cc3a-7262-81b1-7402f8c7d942.jsonl",
+      "482892af-646d-484a-9d32-198ab07db9f6": "C:/Users/DELL/.claude/projects/D--ClaudeToCodex/482892af-646d-484a-9d32-198ab07db9f6.jsonl",
+      "ade0d2dc-0383-431b-8f24-a01caadb5e86": "C:/Users/DELL/.claude/projects/D--ClaudeToCodex/ade0d2dc-0383-431b-8f24-a01caadb5e86.jsonl",
+      "438a61f5-e69e-4eab-8983-2cee719ab926": "C:/Users/DELL/.claude/projects/D--ClaudeToCodex/438a61f5-e69e-4eab-8983-2cee719ab926.jsonl"
+    },
+    "messageWindow": {
+      "start": "2026-09-12T21:03:00Z",
+      "endExclusive": "2026-09-12T21:41:00Z"
+    },
+    "messages": [
+      {
+        "messageId": "a9bb75b0-32c8-4d87-b4cb-086c00181692",
+        "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+        "conversationId": "f108b4ca-0c8a-4f7d-8db1-dfadbdf47fdb",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "438a61f5-e69e-4eab-8983-2cee719ab926"
+        },
+        "bodySha256": "17bbced21e4a0a03cbd46361b14e619c7e38152d6ca4ce78a172452bce6fdb6b",
+        "receipts": [],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:08:12.423Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:08:17.943Z",
+            "type": "send-error"
+          }
+        ]
+      },
+      {
+        "messageId": "767e9059-ccb0-431f-a5c7-b48c761b5965",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "d46b3c19-50af-45db-9f01-24f57385c2a5",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "bodySha256": "05aae876c3e3c11cebc1e0927a2482100117d3a78022497d7e9b0ae406183144",
+        "receipts": [
+          {
+            "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+            "recordTimestamp": "2026-09-12T21:18:53.452Z",
+            "contextConsumedAt": null,
+            "lineNumber": 42,
+            "deliveryKind": "user_message",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:18:52.513Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:18:53.474Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "1e1c06f8-0c70-4c3c-b3fe-cabcfcab7ce0",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "d46b3c19-50af-45db-9f01-24f57385c2a5",
+        "replyTo": "767e9059-ccb0-431f-a5c7-b48c761b5965",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "5cc9e34ce9cc6fc5bedeb5a49b1062a07e9fee783c13047e5163952ff10c4cdc",
+        "receipts": [
+          {
+            "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "recordTimestamp": "2026-09-12T21:19:39.163Z",
+            "contextConsumedAt": null,
+            "lineNumber": 786,
+            "deliveryKind": "hooks.additional_context",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:19:30.928Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:19:30.932Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T21:19:32.615Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T21:19:39.103Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit",
+            "turnId": "01a0977d-7d47-71e0-9859-1002f40aa33a"
+          }
+        ]
+      },
+      {
+        "messageId": "a01e5a32-81d2-43b7-bc2e-a1e02d311cd0",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "50571db7-a213-447d-84de-170d64675d67",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "bodySha256": "239d2b751264e183f48eeb162fa3d395bbe03492f257d5073c24aa69f1d5174e",
+        "receipts": [
+          {
+            "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+            "recordTimestamp": "2026-09-12T21:23:28.640Z",
+            "contextConsumedAt": null,
+            "lineNumber": 75,
+            "deliveryKind": "user_message",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:23:27.565Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:23:28.656Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "020fd495-9f89-4fe0-9695-f78821a1aeeb",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "50571db7-a213-447d-84de-170d64675d67",
+        "replyTo": "a01e5a32-81d2-43b7-bc2e-a1e02d311cd0",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "820091ec6d68adc0b8c98e0514d59c918cb7f872adfb46295832dccc3a25b48c",
+        "receipts": [
+          {
+            "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "recordTimestamp": "2026-09-12T21:24:37.407Z",
+            "contextConsumedAt": null,
+            "lineNumber": 827,
+            "deliveryKind": "hooks.additional_context",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:23:46.674Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:23:46.679Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T21:23:48.502Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T21:24:37.360Z",
+            "type": "context-prepared",
+            "hook": "PostToolUse",
+            "turnId": "01a09780-b1a1-7321-8b01-27618c048972"
+          },
+          {
+            "at": "2026-09-12T21:24:54.031Z",
+            "type": "wake-suppressed",
+            "turnId": "01a09782-4b5e-7531-acf4-bb7782f7d037"
+          }
+        ]
+      },
+      {
+        "messageId": "74004657-e9dc-44c1-b441-47f4419b3234",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "9809ab78-a02f-4a55-94ce-a7a938c8e83c",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "bodySha256": "56e984726d0723d9ca2134b8012bebbc881d16ce68cf53bc5e44adc8193d42e6",
+        "receipts": [
+          {
+            "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+            "recordTimestamp": "2026-09-12T21:29:14.814Z",
+            "contextConsumedAt": null,
+            "lineNumber": 104,
+            "deliveryKind": "user_message",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:29:13.781Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:29:14.841Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "75f03c1d-0015-4c80-86f6-ab2bf6df8586",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "9809ab78-a02f-4a55-94ce-a7a938c8e83c",
+        "replyTo": "74004657-e9dc-44c1-b441-47f4419b3234",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "ec35c1792be8cef1c5b2cf330643324cb0d9e05a5c508df60eac0e557e3db036",
+        "receipts": [
+          {
+            "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "recordTimestamp": "2026-09-12T21:29:58.006Z",
+            "contextConsumedAt": null,
+            "lineNumber": 889,
+            "deliveryKind": "hooks.additional_context",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:29:53.408Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:29:53.411Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T21:29:55.195Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T21:29:57.960Z",
+            "type": "context-prepared",
+            "hook": "PostToolUse",
+            "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd"
+          },
+          {
+            "at": "2026-09-12T21:33:28.447Z",
+            "type": "wake-suppressed",
+            "turnId": "01a0978a-24e2-7663-a053-4c8ea5e487df"
+          }
+        ]
+      },
+      {
+        "messageId": "d17168c6-e04a-4900-848a-3dd34dee934f",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "00fcd1e0-fdb3-4c5b-9da0-89520dc53b10",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "bodySha256": "b3ddff08e31236fe20019338bf423af656679346cd6ae6c4f028a693f6deaa87",
+        "receipts": [
+          {
+            "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+            "recordTimestamp": "2026-09-12T21:33:21.306Z",
+            "contextConsumedAt": null,
+            "lineNumber": 128,
+            "deliveryKind": "user_message",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:33:20.350Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:33:21.312Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "ca1b602f-2d6b-4f9f-a075-633a771075e1",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "00fcd1e0-fdb3-4c5b-9da0-89520dc53b10",
+        "replyTo": "d17168c6-e04a-4900-848a-3dd34dee934f",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "a7eb24a1ab457d9697c6f9de9c76bf255141128f90dd18bb32782fc34e22e204",
+        "receipts": [
+          {
+            "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "recordTimestamp": "2026-09-12T21:34:19.247Z",
+            "contextConsumedAt": null,
+            "lineNumber": 1029,
+            "deliveryKind": "hooks.additional_context",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:34:15.444Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:34:15.448Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T21:34:15.898Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T21:34:19.201Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit",
+            "turnId": "01a0978a-eac7-7d32-a24a-0ba8c72450fc"
+          }
+        ]
+      },
+      {
+        "messageId": "10bb3c63-2c79-4f47-8a32-6cd02a49ce3e",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "cf70fb71-9583-439a-9093-4d0b9535e523",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "bodySha256": "9e1b08af2c8972a32667b1ce5911d91951e5a7a4884e4bbbfc9e9d66819603d4",
+        "receipts": [
+          {
+            "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+            "recordTimestamp": "2026-09-12T21:38:06.744Z",
+            "contextConsumedAt": null,
+            "lineNumber": 157,
+            "deliveryKind": "user_message",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:38:05.792Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:38:06.757Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "60516319-945c-42b4-beab-677895698422",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "fe4137b4-cde9-435e-bd55-40d46404c5f1",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "bodySha256": "13e4815e063efa25c2c822ab9a72a4fdcc6a4636d71214df4b6786edb2568944",
+        "receipts": [
+          {
+            "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+            "recordTimestamp": "2026-09-12T21:38:23.423Z",
+            "contextConsumedAt": "2026-09-12T21:38:36.367Z",
+            "lineNumber": 173,
+            "deliveryKind": "queued_command_attachment",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:38:22.519Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:38:23.466Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "25cb72b3-e444-4714-833e-74a9bb163a4d",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "cf70fb71-9583-439a-9093-4d0b9535e523",
+        "replyTo": "10bb3c63-2c79-4f47-8a32-6cd02a49ce3e",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "04a42a0b4f8e5ef53c457b8c0bc3de6b4a22ebccda0143cb35f1794ea5c7436c",
+        "receipts": [
+          {
+            "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "recordTimestamp": "2026-09-12T21:39:09.148Z",
+            "contextConsumedAt": null,
+            "lineNumber": 1068,
+            "deliveryKind": "hooks.additional_context",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:39:02.186Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:39:02.191Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T21:39:04.791Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T21:39:09.099Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit",
+            "turnId": "01a0978f-579e-7c81-bb8e-1dd4f3a857cd"
+          }
+        ]
+      },
+      {
+        "messageId": "c353669a-d09e-4dde-aa30-9dcb7e83063d",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "fe4137b4-cde9-435e-bd55-40d46404c5f1",
+        "replyTo": "60516319-945c-42b4-beab-677895698422",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "cb383ce6720505774c35ef3cb158b37d460bf3ec9f3bd98af71560a8675528b0",
+        "receipts": [],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:39:04.926Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:39:04.934Z",
+            "type": "send-error"
+          }
+        ]
+      },
+      {
+        "messageId": "e44a695a-7f85-4e82-8cc5-e079973db896",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "fe4137b4-cde9-435e-bd55-40d46404c5f1",
+        "replyTo": "60516319-945c-42b4-beab-677895698422",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "cb383ce6720505774c35ef3cb158b37d460bf3ec9f3bd98af71560a8675528b0",
+        "receipts": [
+          {
+            "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "recordTimestamp": "2026-09-12T21:39:59.210Z",
+            "contextConsumedAt": null,
+            "lineNumber": 1087,
+            "deliveryKind": "hooks.additional_context",
+            "fullFrameMatches": true,
+            "replyEntryUsesCandidate": true
+          }
+        ],
+        "wrongRecipientFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T21:39:53.985Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:39:53.989Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T21:39:55.657Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T21:39:59.161Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit",
+            "turnId": "01a09790-1af0-7d62-8707-8b1cff82d00b"
+          }
+        ]
+      }
+    ],
+    "candidateAMessageCount": 0,
+    "t03cx": {
+      "agentMessageOrdinal": 817,
+      "startedAt": "2026-09-12T21:23:34.888Z",
+      "completedAt": "2026-09-12T21:24:03.791Z",
+      "essayMatchesSaved": true,
+      "nonemptyLines": 13
+    },
+    "t04cx": {
+      "loop": [
+        {
+          "at": "2026-09-12T21:29:23.693Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:29:23.539Z",
+          "completedAt": "2026-09-12T21:29:23.693Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:29:31.264Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:29:31.163Z",
+          "completedAt": "2026-09-12T21:29:31.264Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:29:38.242Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:29:38.116Z",
+          "completedAt": "2026-09-12T21:29:38.242Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:29:47.246Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:29:47.163Z",
+          "completedAt": "2026-09-12T21:29:47.246Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:29:57.728Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:29:57.650Z",
+          "completedAt": "2026-09-12T21:29:57.728Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:30:07.706Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:30:07.596Z",
+          "completedAt": "2026-09-12T21:30:07.706Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:30:19.525Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:30:19.421Z",
+          "completedAt": "2026-09-12T21:30:19.525Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:30:27.961Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:30:27.879Z",
+          "completedAt": "2026-09-12T21:30:27.961Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:30:35.164Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:30:35.085Z",
+          "completedAt": "2026-09-12T21:30:35.164Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:30:41.810Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:30:41.732Z",
+          "completedAt": "2026-09-12T21:30:41.810Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:30:49.136Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:30:49.061Z",
+          "completedAt": "2026-09-12T21:30:49.136Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:30:57.575Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:30:57.465Z",
+          "completedAt": "2026-09-12T21:30:57.575Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:31:07.870Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:31:07.775Z",
+          "completedAt": "2026-09-12T21:31:07.870Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:31:14.694Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:31:14.617Z",
+          "completedAt": "2026-09-12T21:31:14.694Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:31:21.618Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:31:21.542Z",
+          "completedAt": "2026-09-12T21:31:21.618Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:31:28.580Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:31:28.508Z",
+          "completedAt": "2026-09-12T21:31:28.580Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:31:40.636Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:31:40.525Z",
+          "completedAt": "2026-09-12T21:31:40.636Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:31:49.501Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:31:49.415Z",
+          "completedAt": "2026-09-12T21:31:49.501Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:32:06.622Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:32:06.530Z",
+          "completedAt": "2026-09-12T21:32:06.622Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:32:13.855Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:32:13.772Z",
+          "completedAt": "2026-09-12T21:32:13.855Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:32:22.971Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:32:22.859Z",
+          "completedAt": "2026-09-12T21:32:22.971Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:32:31.192Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:32:31.099Z",
+          "completedAt": "2026-09-12T21:32:31.192Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:32:38.138Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:32:38.061Z",
+          "completedAt": "2026-09-12T21:32:38.138Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:32:45.760Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:32:45.677Z",
+          "completedAt": "2026-09-12T21:32:45.760Z",
+          "status": "completed",
+          "exitCode": 0
+        },
+        {
+          "at": "2026-09-12T21:33:02.121Z",
+          "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+          "startedAt": "2026-09-12T21:33:02.034Z",
+          "completedAt": "2026-09-12T21:33:02.121Z",
+          "status": "completed",
+          "exitCode": 0
+        }
+      ],
+      "allCompleted": true,
+      "distinctTurns": [
+        "01a09785-e1c0-7852-9314-32cabc6dd3bd"
+      ]
+    },
+    "candidateAOriginalBridgeInboundCountAtInspection": 1,
+    "candidateAOriginalBridgeInboundCountQualification": "The message window ends at 21:41. A later supplemental inbound appeared while this read-only inspection was running; it is outside the original report's message window."
+  },
+  "workBoundaries": {
+    "T03CX": {
+      "result": "passed",
+      "messageId": "020fd495-9f89-4fe0-9695-f78821a1aeeb",
+      "generationStartedAt": "2026-09-12T21:23:34.888Z",
+      "generationCompletedAt": "2026-09-12T21:24:03.791Z",
+      "basis": "Original Codex AgentMessage item ordinal 817 has explicit started_at_ms and completed_at_ms. Its full text matches the saved essay after BOM and line-ending normalization.",
+      "publishedAt": "2026-09-12T21:23:46.679Z",
+      "wakeSubmittedAt": "2026-09-12T21:23:48.502Z",
+      "saveToolCompletedAt": "2026-09-12T21:24:37.125Z",
+      "contextPreparedAt": "2026-09-12T21:24:37.360Z",
+      "originalInboundAt": "2026-09-12T21:24:37.407Z",
+      "duplicateSuppressedAt": "2026-09-12T21:24:54.031Z",
+      "correction": "21:24:37 is the save/hook boundary, not text-generation completion. The three-minute harness target was unnecessary once actual overlap was established; no repeat is required."
+    },
+    "T04CX": {
+      "result": "passed",
+      "messageId": "75f03c1d-0015-4c80-86f6-ab2bf6df8586",
+      "turnId": "01a09785-e1c0-7852-9314-32cabc6dd3bd",
+      "independentToolCalls": 25,
+      "allCompletedSuccessfully": true,
+      "publishedAt": "2026-09-12T21:29:53.411Z",
+      "fifthToolCompletedAt": "2026-09-12T21:29:57.728Z",
+      "contextPreparedAt": "2026-09-12T21:29:57.960Z",
+      "originalInboundAt": "2026-09-12T21:29:58.006Z",
+      "sixthToolCompletedAt": "2026-09-12T21:30:07.706Z",
+      "lastToolCompletedAt": "2026-09-12T21:33:02.121Z",
+      "qualification": "Twenty-five short command executions complete within the same actual turn. This is not an external sleep process continuing after its model turn ended."
+    },
+    "T03XC": {
+      "result": "passed",
+      "messageId": "60516319-945c-42b4-beab-677895698422",
+      "claudeSessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+      "modelResponseId": "msg_20260913053811b2e0065521ff4540",
+      "firstObservedModelOutputAt": "2026-09-12T21:38:19.911Z",
+      "longTextCompletedAt": "2026-09-12T21:38:34.788Z",
+      "nextToolCalledAt": "2026-09-12T21:38:35.408Z",
+      "queueEnqueuedAt": "2026-09-12T21:38:23.424Z",
+      "pipeWrittenAt": "2026-09-12T21:38:23.466Z",
+      "absorbedMidTurnAt": "2026-09-12T21:38:36.367Z",
+      "attachmentLine": 173,
+      "attachmentKind": "queued_command",
+      "correction": "21:39:02 is the later completion reply publication. The queued attachment retains its earlier ingress timestamp; queue removal and original file order establish when it was incorporated after text generation."
+    }
+  },
+  "retryClassification": {
+    "rejectedMessageId": "c353669a-d09e-4dde-aa30-9dcb7e83063d",
+    "rejectedAt": "2026-09-12T21:39:04.934Z",
+    "acceptedFirstMessageId": "25cb72b3-e444-4714-833e-74a9bb163a4d",
+    "firstContextPreparedAt": "2026-09-12T21:39:09.099Z",
+    "statusCommandAt": "2026-09-12T21:39:43.368Z",
+    "explicitRetryCommandAt": "2026-09-12T21:39:52.963Z",
+    "newMessageId": "e44a695a-7f85-4e82-8cc5-e079973db896",
+    "actor": "Claude B",
+    "classification": "The peer checked status, then explicitly invoked reply again. The plugin did not automatically retry or later deliver the rejected message. This demonstrates same-target rejection and recovery, not two-target overlap."
+  },
+  "evidenceReuse": [
+    {
+      "criteria": [
+        "S04-11-2"
+      ],
+      "evidence": [
+        "w6-w7-review.json",
+        "acceptance-review.json targetIdentityFollowUp",
+        "candidate-partial-review.json",
+        "b8e392e product regression"
+      ],
+      "rationale": "Previously verified real name/error paths and the corrected executable recovery path are covered by the migrated product regressions. The installed candidate independently exercises named routing, stale-endpoint failure and same-name recovery."
+    },
+    {
+      "criteria": [
+        "S04-11-6"
+      ],
+      "evidence": [
+        "w6-w7-review.json",
+        "acceptance-review.json postRetirementOldReply",
+        "acceptance-review.json independentBoundaryReview",
+        "b8e392e product regression",
+        "candidate-partial-review.json"
+      ],
+      "rationale": "Real stop/restart and old-reply rejection are combined with corrected product identity/in-flight regressions and candidate lifecycle/retirement evidence. The PO-approved concurrency scope remains unchanged."
+    },
+    {
+      "criteria": [
+        "S04-11-7"
+      ],
+      "evidence": [
+        "w6-w7-review.json",
+        "acceptance-review.json legacyRealVerification",
+        "b8e392e product regression",
+        "this review's candidate frames and three work boundaries"
+      ],
+      "rationale": "Verified single-target/legacy behavior and its migrated product regressions are combined with actual installed-plugin receiving, waking and work-boundary execution. Historical tests are not relabeled as fresh installed-candidate runs."
+    }
+  ],
+  "operationalQualifications": {
+    "trustState": "Three candidate plugin-source trusted hashes remain present and actual candidate hooks execute. Attribution of who established them is unknown; the Developer has asked the PO. No repeat trust action is requested.",
+    "authPolicyQualification": "ON_INSTALL is not taken as evidence identifying who granted hook trust.",
+    "restartTargets": {
+      "source": "Developer report, not an independently reconstructed process history",
+      "reportedlyStoppedPids": [
+        30668,
+        21684
+      ],
+      "reportedlyUnchangedDailyPids": [
+        4084,
+        9708
+      ],
+      "adaptation": "Future restarts are restricted to the identified test window's process tree. The broad age/path filter is no longer the intended procedure."
+    }
+  },
+  "supplementalBusinessRound": {
+    "status": "passed",
+    "criteria": [
+      "S04-11-3",
+      "S04-11-4",
+      "S04-11-5"
+    ],
+    "originalRequestMessageId": "1c22ef2e-b590-47ab-b53c-b687d84a3a05",
+    "contentSummary": "A discussed body-first presentation for PBI-09; B discussed ambiguous peer identification for PBI-12. Both answered follow-ups. These are suggestions for the PO, not Product Backlog priority changes.",
+    "reviewedAt": "2026-09-12T22:07:49.382Z",
+    "messages": [
+      {
+        "messageId": "a1db2b9e-283c-41e6-9936-dc37c65eef4b",
+        "at": "2026-09-12T21:58:05.293Z",
+        "pairId": "e4d1b071-460a-4952-ad02-4aa3e2feb90c",
+        "conversationId": "1a41d709-b47d-4dc2-bff2-108b1c1f9363",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "482892af-646d-484a-9d32-198ab07db9f6"
+        },
+        "bodySha256": "c053d32009d373d79da92d62180948b552ac767a91f0f730e9d982377aab523b",
+        "expectedRecipientCount": 1,
+        "wrongRecipientCount": 0,
+        "receipts": [
+          {
+            "session": "482892af-646d-484a-9d32-198ab07db9f6",
+            "at": "2026-09-12T21:58:06.311Z",
+            "line": 40,
+            "kind": "user_message",
+            "fullFrameMatches": true
+          }
+        ],
+        "events": [
+          {
+            "at": "2026-09-12T21:58:05.295Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:58:06.269Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "aeb4e5ab-367d-4d64-8931-d4233a3a8d7c",
+        "at": "2026-09-12T21:58:06.438Z",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "3a9b0a27-12ab-4a4b-86df-3a052ad35ed6",
+        "replyTo": null,
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "bodySha256": "3c0f0327ff3ce7a7f737d0887b827351a905256b6b329eee8eb21fe794a8e751",
+        "expectedRecipientCount": 1,
+        "wrongRecipientCount": 0,
+        "receipts": [
+          {
+            "session": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+            "at": "2026-09-12T21:58:07.410Z",
+            "line": 241,
+            "kind": "user_message",
+            "fullFrameMatches": true
+          }
+        ],
+        "events": [
+          {
+            "at": "2026-09-12T21:58:06.441Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:58:07.417Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "08ed3efa-a179-4adc-b3bf-7fd4755532ea",
+        "at": "2026-09-12T21:58:38.773Z",
+        "pairId": "e4d1b071-460a-4952-ad02-4aa3e2feb90c",
+        "conversationId": "1a41d709-b47d-4dc2-bff2-108b1c1f9363",
+        "replyTo": "a1db2b9e-283c-41e6-9936-dc37c65eef4b",
+        "from": {
+          "tool": "claude",
+          "sessionId": "482892af-646d-484a-9d32-198ab07db9f6"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "b1cbb9165ec21f9e5d481d4850f146cfbb662cb13d99c0119744cfc1e2cbbb71",
+        "expectedRecipientCount": 1,
+        "wrongRecipientCount": 0,
+        "receipts": [
+          {
+            "session": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "at": "2026-09-12T21:58:49.191Z",
+            "line": 1126,
+            "kind": "hooks.additional_context",
+            "fullFrameMatches": true
+          }
+        ],
+        "events": [
+          {
+            "at": "2026-09-12T21:58:38.775Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:58:38.780Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T21:58:40.735Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T21:58:49.114Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit",
+            "turnId": "01a097a1-58fb-7de0-9dfc-e93203550557"
+          }
+        ]
+      },
+      {
+        "messageId": "474900e4-96cd-46aa-ae5c-b57cf5c925df",
+        "at": "2026-09-12T21:58:39.436Z",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "3a9b0a27-12ab-4a4b-86df-3a052ad35ed6",
+        "replyTo": "aeb4e5ab-367d-4d64-8931-d4233a3a8d7c",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "ed5594bedc9bc8d2c185446848f098eeb0e92270122a1e3836495ef46d559843",
+        "expectedRecipientCount": 1,
+        "wrongRecipientCount": 0,
+        "receipts": [
+          {
+            "session": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "at": "2026-09-12T21:59:06.457Z",
+            "line": 1134,
+            "kind": "hooks.additional_context",
+            "fullFrameMatches": true
+          }
+        ],
+        "events": [
+          {
+            "at": "2026-09-12T21:58:39.438Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T21:58:39.443Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T21:58:41.897Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T21:59:06.411Z",
+            "type": "context-prepared",
+            "hook": "PostToolUse",
+            "turnId": "01a097a1-58fb-7de0-9dfc-e93203550557"
+          },
+          {
+            "at": "2026-09-12T21:59:26.048Z",
+            "type": "wake-suppressed",
+            "turnId": "01a097a1-e950-7332-aff1-d9b9738055a2"
+          }
+        ]
+      },
+      {
+        "messageId": "2313b1cd-e75b-427b-91eb-c72ad8b87008",
+        "at": "2026-09-12T22:03:56.066Z",
+        "pairId": "e4d1b071-460a-4952-ad02-4aa3e2feb90c",
+        "conversationId": "1a41d709-b47d-4dc2-bff2-108b1c1f9363",
+        "replyTo": "08ed3efa-a179-4adc-b3bf-7fd4755532ea",
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "482892af-646d-484a-9d32-198ab07db9f6"
+        },
+        "bodySha256": "0373395a685cb68f6c45f3d2cf321792dbdb5824afd73e1ce73260ed2475e814",
+        "expectedRecipientCount": 1,
+        "wrongRecipientCount": 0,
+        "receipts": [
+          {
+            "session": "482892af-646d-484a-9d32-198ab07db9f6",
+            "at": "2026-09-12T22:03:57.247Z",
+            "line": 71,
+            "kind": "user_message",
+            "fullFrameMatches": true
+          }
+        ],
+        "events": [
+          {
+            "at": "2026-09-12T22:03:56.069Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T22:03:57.192Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "d85a0ad5-ee72-45fc-92c8-fe9a7de6f748",
+        "at": "2026-09-12T22:03:57.405Z",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "3a9b0a27-12ab-4a4b-86df-3a052ad35ed6",
+        "replyTo": "474900e4-96cd-46aa-ae5c-b57cf5c925df",
+        "from": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "to": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "bodySha256": "c77c464e85f5847bc81484427e26ee85917952f0e2dfcafb9980dc972199f3b6",
+        "expectedRecipientCount": 1,
+        "wrongRecipientCount": 0,
+        "receipts": [
+          {
+            "session": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+            "at": "2026-09-12T22:03:58.376Z",
+            "line": 271,
+            "kind": "user_message",
+            "fullFrameMatches": true
+          }
+        ],
+        "events": [
+          {
+            "at": "2026-09-12T22:03:57.407Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T22:03:58.428Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "edba7a4b-0be2-46f2-a3e5-7af5211b22b2",
+        "at": "2026-09-12T22:04:16.681Z",
+        "pairId": "e4d1b071-460a-4952-ad02-4aa3e2feb90c",
+        "conversationId": "1a41d709-b47d-4dc2-bff2-108b1c1f9363",
+        "replyTo": "2313b1cd-e75b-427b-91eb-c72ad8b87008",
+        "from": {
+          "tool": "claude",
+          "sessionId": "482892af-646d-484a-9d32-198ab07db9f6"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "2b8b973b2375f390474f8f84d63041a4095699ae4ee58bd2f390767501bbd652",
+        "expectedRecipientCount": 1,
+        "wrongRecipientCount": 0,
+        "receipts": [
+          {
+            "session": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "at": "2026-09-12T22:04:19.235Z",
+            "line": 1187,
+            "kind": "hooks.additional_context",
+            "fullFrameMatches": true
+          }
+        ],
+        "events": [
+          {
+            "at": "2026-09-12T22:04:16.683Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T22:04:16.687Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T22:04:18.502Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T22:04:19.157Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit",
+            "turnId": "01a097a6-620b-7562-a91c-6fbd37a1f359"
+          }
+        ]
+      },
+      {
+        "messageId": "f75689a8-a647-4979-b873-ed304878f69d",
+        "at": "2026-09-12T22:04:21.284Z",
+        "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+        "conversationId": "3a9b0a27-12ab-4a4b-86df-3a052ad35ed6",
+        "replyTo": "d85a0ad5-ee72-45fc-92c8-fe9a7de6f748",
+        "from": {
+          "tool": "claude",
+          "sessionId": "ade0d2dc-0383-431b-8f24-a01caadb5e86"
+        },
+        "to": {
+          "tool": "codex",
+          "sessionId": "01a096d0-cc3a-7262-81b1-7402f8c7d942"
+        },
+        "bodySha256": "bdd9c902e0634ecf1a7ed926a88864cc1f57f88fa0197737aed99a7ae65c71ca",
+        "expectedRecipientCount": 1,
+        "wrongRecipientCount": 0,
+        "receipts": [
+          {
+            "session": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+            "at": "2026-09-12T22:04:29.718Z",
+            "line": 1195,
+            "kind": "hooks.additional_context",
+            "fullFrameMatches": true
+          }
+        ],
+        "events": [
+          {
+            "at": "2026-09-12T22:04:21.288Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T22:04:21.293Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T22:04:21.811Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T22:04:29.675Z",
+            "type": "context-prepared",
+            "hook": "PostToolUse",
+            "turnId": "01a097a6-620b-7562-a91c-6fbd37a1f359"
+          },
+          {
+            "at": "2026-09-12T22:04:48.125Z",
+            "type": "wake-suppressed",
+            "turnId": "01a097a6-d310-7641-8939-16434a26122c"
+          }
+        ]
+      }
+    ],
+    "oldAReplyAfterB": {
+      "bReplyOriginalInboundAt": "2026-09-12T21:59:06.457Z",
+      "aFollowupCreatedAt": "2026-09-12T22:03:56.066Z",
+      "bReceivedBeforeAFollowup": true,
+      "correctReplyTo": true,
+      "correctPair": true,
+      "correctConversation": true,
+      "followupResponseCorrect": true
+    },
+    "bFollowup": {
+      "correctReplyTo": true,
+      "followupResponseCorrect": true
+    },
+    "overlap": {
+      "aPublishedAt": "2026-09-12T21:58:38.780Z",
+      "bPublishedAt": "2026-09-12T21:58:39.443Z",
+      "aWakeAt": "2026-09-12T21:58:40.735Z",
+      "bWakeAt": "2026-09-12T21:58:41.897Z",
+      "firstContextPreparedAt": "2026-09-12T21:58:49.114Z",
+      "bothPublishedBeforeFirstContextPrepared": true,
+      "bothWakesBeforeFirstContextPrepared": true,
+      "qualification": "These are event and original-session observations, not a measured lower bound on simultaneous physical slot occupancy."
+    },
+    "allEightOriginalFramesMatch": true
+  },
+  "poParticipation": {
+    "status": "ready_for_po_experience",
+    "approach": "Reuse the isolated Codex original thread and its currently valid A/B peers; operators prepare and check evidence, PO conducts a short ordinary product discussion.",
+    "doNotInferFirsthandExperienceFromReports": true,
+    "arrangement": "po-review-arrangement.md"
+  },
+  "technicalAcceptance": {
+    "result": "passed",
+    "verifiedAt": "2026-09-12T22:07:49.382Z",
+    "criteria": [
+      "S04-11-1",
+      "S04-11-2",
+      "S04-11-3",
+      "S04-11-4",
+      "S04-11-5",
+      "S04-11-6",
+      "S04-11-7",
+      "S04-11-8"
+    ],
+    "qualification": "Technical acceptance combines current installed-candidate execution with explicitly documented applicable earlier evidence and the independently verified final-code regression. PO experience and acceptance remain pending.",
+    "feedbackMessageId": "6f64b1fc-b2ec-436e-974a-1ea5ac54551c"
+  },
+  "pluginIncrementDone": false,
+  "poDod": "awaiting_PO_experience_and_acceptance"
+}

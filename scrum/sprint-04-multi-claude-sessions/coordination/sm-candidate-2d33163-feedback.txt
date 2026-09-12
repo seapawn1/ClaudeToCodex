@@ -1,0 +1,9 @@
+S04 SM 候选中间核验（2d33163）：已确认候选入口与 B 的原会话往返，继续既定候选轮；以下收尾项并入现有 W8。
+
+1. 全量核对：19 个已跟踪插件文件全部与 worktree 原始字节一致，按 Git clean 规则也全部匹配固定提交 2d33163。bridge 代码较已独立通过 50/50 的 b8e392e 未变，复用该回归证据。原型项目 hooks.json 已不存在，备份在。
+2. 767e9059 在新 B 原会话 21:18:53.452Z 入站；1e1c06f8 在同一测试 Codex 21:19:39.163Z 以 hooks.additional_context 入站。两帧完整对象与存信一致，回复入口均指向候选，所核会话无误投。a9bb75b0 的 send-error 及无对应入站亦已核。这轮是入口确认，完整业务请求、追问及交错仍按 AC 继续补齐。
+3. 缓存实际有 21 个文件，额外包含未跟踪的 bridge/connect.test.mjs 与 bridge/store.test.mjs（后者还是旧副本）；最终候选请清理这类源外夹带，并记录完整文件清单/内容哈希，不能只用四文件哈希代表整个安装。另 .codex-plugin/plugin.json description 仍声明 single pair，请与已完成的多配对文档同步。仅这些收尾修改时，已有运行证据可按实际执行代码一致性评估复用，不要求重跑整套。
+4. 信任事实：隔离 config 现有 3 条原型来源和 3 条 claudetocodex@claudetocodex-dev:hooks/hooks.json 来源的 trusted_hash。现有记录支持候选获信，但不说明谁/何操作建立了信任。请补述候选这三条的来源与时间依据；不把“无新提示”写成“安装自动信任”。官方当前文档：https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks 。目前不要求 PO 重做已有效的信任动作。
+5. 重启操作有隔离范围问题：21:04:13 的进程选择按 npm 路径，或所有近 3 小时 codex-code-mode-host.exe，未限定测试进程关系。请按现有记录补述实际停止对象；后续重启须限定测试窗口及其父子 PID。当前三会话保持，继续测试即可。
+
+我会将已核部分写入逐项验收表；三边界继续以原始事件判定。另本次 SM 非交互 doctor 只有 TERM=dumb 检查失败，配置/身份/状态路径正常，不将这项终端环境结果当候选功能失败。需 PO 实际动作时再报具体入口。

@@ -20,6 +20,7 @@ Sprint 02's plugin Increment passed technical acceptance and the PO's DoD. Its r
 Important empirical rules:
 
 - Select the smallest PBI set required for the Sprint Goal and the Developers' capacity. The PO decides value ordering; the SM facilitates, removes obstacles, and checks acceptance; the Developer owns implementation.
+- The SM independently checks the Sprint Backlog acceptance criteria against the final candidate and its evidence before recommending acceptance. Developer completion reports and test counts do not replace this check. See `.claude/memory/sprint-acceptance-responsibility.md` for responsibilities and PO participation.
 - Treat `submitted:true` as attempted delivery, not proof of receipt.
 - Judge delivery by the receiving original session's actual inbound event, matching full body, and automatic message/pair/conversation/reply linkage. Do not require the PO to type a marker.
 - Evidence is layered and never conflated: simulated fixture → host load → actual execution → original-session receipt. A lone `context-prepared` record is still unverified; each layer is checked at its own level.

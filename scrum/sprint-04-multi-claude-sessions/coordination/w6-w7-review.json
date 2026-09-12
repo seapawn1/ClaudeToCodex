@@ -1,0 +1,336 @@
+{
+  "reviewedOn": "2026-09-13",
+  "reviewer": "SM / Codex",
+  "candidateCommit": "a2ff7208cdd8ef717a7eb8b9a741a25872a075ea",
+  "candidateBranch": "worktree-s04-pbi-11",
+  "scope": "W6/W6b and partial W7 review before product integration",
+  "result": "core_lifecycle_samples_verified_compatibility_and_inflight_gaps_open",
+  "testCommand": "node --test scrum/sprint-04-multi-claude-sessions/prototype/test/multi.test.mjs",
+  "offlineTests": {
+    "passed": 17,
+    "failed": 0,
+    "durationMs": 1853.9491
+  },
+  "receiptMethod": "Parsed JSON frames from original Claude peer user records and Codex inbound developer context; compared the full frame with the stored message using deep equality. Checked original-session identity and absence of matching frames in the other inspected test sessions. Model output and hook events are supporting evidence.",
+  "evidenceRoots": {
+    "bridge": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test-bridge",
+    "legacyBridge": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test-bridge-legacy",
+    "codexSession": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test/codex-home/sessions/2026/09/13/rollout-2026-09-13T02-11-01-01a096d0-cc3a-7262-81b1-7402f8c7d942.jsonl",
+    "claudeProject": "C:/Users/DELL/.claude/projects/D--ClaudeToCodex",
+    "lifecycleLog": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test/workCodex/lifecycle-log.txt"
+  },
+  "verifiedReceipts": [
+    {
+      "messageId": "c941d9b7-80b8-48ce-944a-ee3068c11b64",
+      "recipient": "438a61f5-e69e-4eab-8983-2cee719ab926",
+      "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+      "conversationId": "6a5b661e-d24c-4d5a-833b-11abf5ba5d10",
+      "replyTo": null,
+      "correctSessionFrameCount": 1,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": true,
+      "receivedAt": "2026-09-12T18:46:19.342Z",
+      "events": [
+        {
+          "at": "2026-09-12T18:46:18.192Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T18:46:19.364Z",
+          "type": "pipe-written"
+        }
+      ],
+      "originalUserWakeAt": null,
+      "subsequentModelOutputAt": null
+    },
+    {
+      "messageId": "6ea2c2f1-fc09-4d04-a99b-ef3b0c4e9f30",
+      "recipient": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+      "conversationId": "6a5b661e-d24c-4d5a-833b-11abf5ba5d10",
+      "replyTo": "c941d9b7-80b8-48ce-944a-ee3068c11b64",
+      "correctSessionFrameCount": 1,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": true,
+      "receivedAt": "2026-09-12T18:46:52.333Z",
+      "events": [
+        {
+          "at": "2026-09-12T18:46:40.290Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T18:46:40.293Z",
+          "type": "published"
+        },
+        {
+          "at": "2026-09-12T18:46:42.061Z",
+          "type": "wake-submitted"
+        },
+        {
+          "at": "2026-09-12T18:46:52.283Z",
+          "type": "context-prepared",
+          "hook": "UserPromptSubmit"
+        }
+      ],
+      "originalUserWakeAt": "2026-09-12T18:46:52.328Z",
+      "subsequentModelOutputAt": "2026-09-12T18:46:57.267Z"
+    },
+    {
+      "messageId": "ed46f072-f43e-4997-9b7e-025191064ab3",
+      "recipient": "10e98182-0d3a-4e9e-8167-1967dac4c81d",
+      "pairId": "1cec6785-43f7-4d2a-8311-4ccafb6934f6",
+      "conversationId": "5e6744f3-2467-49b0-92fb-c4836ec5a7a9",
+      "replyTo": null,
+      "correctSessionFrameCount": 1,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": true,
+      "receivedAt": "2026-09-12T18:55:05.248Z",
+      "events": [
+        {
+          "at": "2026-09-12T18:55:04.284Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T18:55:05.252Z",
+          "type": "pipe-written"
+        }
+      ],
+      "originalUserWakeAt": null,
+      "subsequentModelOutputAt": null
+    },
+    {
+      "messageId": "e9aced4d-6f95-4b6c-bddd-3534e80b954b",
+      "recipient": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "pairId": "1cec6785-43f7-4d2a-8311-4ccafb6934f6",
+      "conversationId": "5e6744f3-2467-49b0-92fb-c4836ec5a7a9",
+      "replyTo": "ed46f072-f43e-4997-9b7e-025191064ab3",
+      "correctSessionFrameCount": 1,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": true,
+      "receivedAt": "2026-09-12T18:55:31.769Z",
+      "events": [
+        {
+          "at": "2026-09-12T18:55:29.137Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T18:55:29.141Z",
+          "type": "published"
+        },
+        {
+          "at": "2026-09-12T18:55:30.956Z",
+          "type": "wake-submitted"
+        },
+        {
+          "at": "2026-09-12T18:55:31.718Z",
+          "type": "context-prepared",
+          "hook": "UserPromptSubmit"
+        }
+      ],
+      "originalUserWakeAt": "2026-09-12T18:55:31.763Z",
+      "subsequentModelOutputAt": "2026-09-12T18:55:36.548Z"
+    },
+    {
+      "messageId": "77b5fb5d-095f-4e2a-9b62-472dcfc97da7",
+      "recipient": "438a61f5-e69e-4eab-8983-2cee719ab926",
+      "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+      "conversationId": "a561dc92-e9d3-4ebc-9524-3b0e9a144091",
+      "replyTo": null,
+      "correctSessionFrameCount": 1,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": true,
+      "receivedAt": "2026-09-12T19:01:47.195Z",
+      "events": [
+        {
+          "at": "2026-09-12T19:01:46.225Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T19:01:47.211Z",
+          "type": "pipe-written"
+        }
+      ],
+      "originalUserWakeAt": null,
+      "subsequentModelOutputAt": null
+    },
+    {
+      "messageId": "d7392a3a-7a1f-4eee-9515-46fcc1d718ae",
+      "recipient": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+      "conversationId": "a561dc92-e9d3-4ebc-9524-3b0e9a144091",
+      "replyTo": "77b5fb5d-095f-4e2a-9b62-472dcfc97da7",
+      "correctSessionFrameCount": 1,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": true,
+      "receivedAt": "2026-09-12T19:02:11.749Z",
+      "events": [
+        {
+          "at": "2026-09-12T19:02:05.913Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T19:02:05.916Z",
+          "type": "published"
+        },
+        {
+          "at": "2026-09-12T19:02:07.665Z",
+          "type": "wake-submitted"
+        },
+        {
+          "at": "2026-09-12T19:02:11.697Z",
+          "type": "context-prepared",
+          "hook": "UserPromptSubmit"
+        }
+      ],
+      "originalUserWakeAt": "2026-09-12T19:02:11.743Z",
+      "subsequentModelOutputAt": "2026-09-12T19:02:18.483Z"
+    },
+    {
+      "messageId": "5fc9bbb0-80b8-477b-968c-20cdcf3bf9c8",
+      "recipient": "438a61f5-e69e-4eab-8983-2cee719ab926",
+      "pairId": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+      "conversationId": "20e17f99-9235-43f6-9458-ff509bd4d89a",
+      "replyTo": null,
+      "correctSessionFrameCount": 1,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": true,
+      "receivedAt": "2026-09-12T19:06:50.404Z",
+      "events": [
+        {
+          "at": "2026-09-12T19:06:49.407Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T19:06:50.413Z",
+          "type": "pipe-written"
+        }
+      ],
+      "originalUserWakeAt": null,
+      "subsequentModelOutputAt": null
+    }
+  ],
+  "failedEndpointSamples": [
+    {
+      "messageId": "7b13c457-14d0-41b6-83ea-4e31adb5840a",
+      "recipient": "90cdb961-c2f6-4993-8f8c-324b1327191a",
+      "pairId": "25784c0a-d75f-4964-b5d7-2b892ab616d5",
+      "conversationId": "ac6eb570-e66d-4dd7-b4a2-b2e6b3724e54",
+      "replyTo": null,
+      "correctSessionFrameCount": 0,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": null,
+      "receivedAt": null,
+      "events": [
+        {
+          "at": "2026-09-12T18:46:19.497Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T18:46:25.194Z",
+          "type": "send-error"
+        }
+      ],
+      "originalUserWakeAt": null,
+      "subsequentModelOutputAt": null
+    },
+    {
+      "messageId": "a6fd3f8a-d1ec-4c83-aed6-21c2a5eaccca",
+      "recipient": "90cdb961-c2f6-4993-8f8c-324b1327191a",
+      "pairId": "25784c0a-d75f-4964-b5d7-2b892ab616d5",
+      "conversationId": "fa4bd398-6dd3-4207-9152-5b2b4250d6d9",
+      "replyTo": "d65bd878-4966-4c35-8228-340e6ad8752e",
+      "correctSessionFrameCount": 0,
+      "wrongSessionFrameCount": 0,
+      "completeFrameMatches": null,
+      "receivedAt": null,
+      "events": [
+        {
+          "at": "2026-09-12T18:46:25.333Z",
+          "type": "created"
+        },
+        {
+          "at": "2026-09-12T18:46:30.951Z",
+          "type": "send-error"
+        }
+      ],
+      "originalUserWakeAt": null,
+      "subsequentModelOutputAt": null
+    }
+  ],
+  "activePairs": [
+    {
+      "pairId": "13cd259d-f951-4ee7-92e8-81853229eeab",
+      "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "claudeId": "10e98182-0d3a-4e9e-8167-1967dac4c81d"
+    },
+    {
+      "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+      "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "claudeId": "438a61f5-e69e-4eab-8983-2cee719ab926"
+    }
+  ],
+  "retiredPairs": [
+    {
+      "pairId": "1cec6785-43f7-4d2a-8311-4ccafb6934f6",
+      "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "claudeId": "10e98182-0d3a-4e9e-8167-1967dac4c81d"
+    },
+    {
+      "pairId": "25784c0a-d75f-4964-b5d7-2b892ab616d5",
+      "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "claudeId": "90cdb961-c2f6-4993-8f8c-324b1327191a"
+    }
+  ],
+  "openFindings": [
+    {
+      "ac": "S04-11-7",
+      "status": "partial",
+      "finding": "Legacy outbound 5fc9bbb0 was received by B. Reply de5319b9 was published and queued, and its bare wake reached Codex, but no complete inbound frame was present and the message remained pending in the legacy root. Matching hook/data roots and a complete automatic original-session round trip remain unverified."
+    },
+    {
+      "ac": "S04-11-7",
+      "status": "not_verified",
+      "finding": "The lifecycle log shows legacy connect rejecting a changed endpoint path. No successful legacy same-identity connect result was found in that log. An empty pairs directory does not establish successful reuse. Developer must reconcile the report with actual commands and results."
+    },
+    {
+      "ac": "S04-11-7",
+      "status": "not_tested",
+      "finding": "Real incoming-message behavior during an ongoing model call remains untested; successful idle wakes do not close this requirement."
+    },
+    {
+      "ac": "S04-11-2",
+      "status": "productization_gap",
+      "finding": "Unknown reply currently exposes ENOENT without a next action. Identical-name ambiguity recommends a longer name, which cannot distinguish identical names. Product errors need a usable recovery path."
+    },
+    {
+      "ac": "S04-11-6",
+      "status": "static_review_risk_not_runtime_reproduced",
+      "finding": "retire checks the pending slot before moving the pair; publish checks pair membership before publishing the slot. These operations can interleave so retirement succeeds and a publisher then accepts a message for the retired pair; take filters out that pair. The registry ENOENT scan fix does not close this gap. Developer must define and verify in-flight handling."
+    },
+    {
+      "ac": "S04-11-6",
+      "status": "remaining_scenario",
+      "finding": "The verified old-target send/reply failures preceded creation of the replacement pair. Rejection of old-message replies after retirement/rebuilding still needs a real sample."
+    },
+    {
+      "ac": "S04-11-8",
+      "status": "not_started_at_reviewed_commit",
+      "finding": "Product integration, both-tree consistency, installed-candidate receipt evidence and PO acceptance remain outstanding."
+    }
+  ],
+  "reportCorrections": [
+    "7b13c457 is the new send with replyTo=null; a6fd3f8a is the reply to d65bd878. The Developer report reversed these labels.",
+    "The historical operator-recovered d65bd878 remains excluded from automatic-wake acceptance.",
+    "Do not claim AC 1-7 fully passed or that every Developer claim has independent SM verification."
+  ],
+  "coordination": {
+    "feedbackMessageId": "5a2d818c-8755-4610-b882-ec3da77a02d6",
+    "receivedAt": "2026-09-12T19:17:26.123Z",
+    "completeFrameMatches": true,
+    "additionalFeedbackMessageId": "478e4529-3202-402f-9859-53fc593b5ac7",
+    "additionalFeedbackReceipt": "unverified_at_snapshot",
+    "nextStep": "Developer continues W8 preparation and resolves the named evidence and lifecycle gaps within the isolated worktree. Daily installations and data remain outside the work scope."
+  },
+  "pluginIncrementDone": false,
+  "poDod": "not_assessed"
+}

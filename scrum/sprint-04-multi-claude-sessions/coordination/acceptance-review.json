@@ -1,0 +1,794 @@
+{
+  "reviewedOn": "2026-09-13",
+  "reviewer": "SM / Codex",
+  "reviewedPrototypeCommit": "0df8dac341b05c0cc816f428fe855b6bb50e475c",
+  "planningCorrectionCommit": "4c38fda8fe0537b18876edf87412e5275995c4ff",
+  "productIntegration": {
+    "status": "technical_acceptance_passed",
+    "firstIntegratedCommit": "080c056b1392e671ca1b3ee506d83d012e609787",
+    "latestReviewedProductCommit": "ee73808cc9e5a2324f4a6900f404cf364af65ace",
+    "scope": "The installed ee73808 candidate passes S04-11-1 through S04-11-8 technical acceptance. Product code is unchanged from the independently tested b8e392e bridge; clean packaging and current-candidate business/reception checks are complete. PO Review and acceptance remain pending."
+  },
+  "branch": "worktree-s04-pbi-11",
+  "result": "technical_acceptance_passed_po_review_pending",
+  "acceptanceBasis": "SprintBacklog.md S04-11-1 through S04-11-8 and the shared DoD",
+  "finalInstalledCandidate": {
+    "status": "technical_acceptance_passed",
+    "sourceCommit": "ee73808cc9e5a2324f4a6900f404cf364af65ace",
+    "packageHash": null,
+    "installationPath": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test/codex-home/plugins/cache/claudetocodex-dev/claudetocodex/1.0.0",
+    "installedContentManifestSha256": "37750c3756370fb2282a61d4b6e341306fbe46c7edd34d761592bb1f056c3374",
+    "evidence": "candidate-ee73808-review.json",
+    "qualification": "Local marketplace installation: the full 19-file manifest and digest identify this candidate; no ZIP hash is claimed. All tracked files match the fixed source after Git clean rules, with no extra files."
+  },
+  "layerPolicy": "Prototype fixture and original-session results are recorded separately from final installed-candidate acceptance. Historical evidence is not silently promoted to a new candidate version.",
+  "offlineRegression": {
+    "command": "node --test scrum/sprint-04-multi-claude-sessions/prototype/test/multi.test.mjs",
+    "passed": 24,
+    "failed": 0,
+    "durationMs": 2389.0651
+  },
+  "independentBoundaryReview": {
+    "reviewedCommit": "5c8b21ffedd64a5f56184c3e1c39f7d0e6312f4b",
+    "sourceSha256": "c4ef2203857f54103fd6cbb991b578add01ced2795c16d25d6959488ea16d741",
+    "sourceMatchesCommit": true,
+    "sourceUnchangedDuringCheck": true,
+    "observations": [
+      {
+        "case": "ambiguous_recovery_entry",
+        "passed": true,
+        "fullCandidateIdsListed": true,
+        "listedRetireExit": 0,
+        "remainingTargetResolves": true
+      },
+      {
+        "case": "unknown_pair_pending_fixture",
+        "passed": true,
+        "unknownPairInjected": false,
+        "pendingPreserved": true
+      },
+      {
+        "case": "retired_pair_mismatched_sender_fixture",
+        "passed": true,
+        "mismatchedSenderInjected": false,
+        "pendingPreserved": true,
+        "unknownPairEventRecorded": false
+      },
+      {
+        "case": "retired_pair_duplicate_wake",
+        "passed": true,
+        "firstInjected": true,
+        "duplicateSuppressed": true
+      },
+      {
+        "case": "new_codex_after_last_pair_retired",
+        "passed": true,
+        "foreignRebindingRejected": true,
+        "oldCodexBodyInjected": true,
+        "sameCodexRebuildAllowed": true
+      },
+      {
+        "case": "publish_lookup_then_retire_then_slot_publish",
+        "passed": true,
+        "foreignInjected": false,
+        "pendingPreservedUntilRightRecipient": true,
+        "properInjected": true
+      },
+      {
+        "case": "reconnect_with_distinct_name_hint",
+        "passed": false,
+        "storedName": "same-name",
+        "requestedName": "renamed-alpha",
+        "renamedTargetResolves": false
+      },
+      {
+        "case": "legacy_named_target_after_adding_second_pair",
+        "passed": false,
+        "legacyNameStored": null,
+        "legacyNameResolves": false,
+        "secondTargetResolves": true
+      },
+      {
+        "case": "status_project_context",
+        "passed": false,
+        "endpointContainsProjectContext": true,
+        "statusContainsProjectContext": false,
+        "statusRowKeys": [
+          "pairId",
+          "target",
+          "claudeId",
+          "codexId",
+          "createdAt",
+          "endpoint",
+          "endpointOnDisk",
+          "pendingMessageId"
+        ]
+      }
+    ]
+  },
+  "targetIdentityFollowUp": {
+    "commit": "7bd1965bbcd7f31c2c5ef054d3e8c4f331ddf864",
+    "independentFixtures": {
+      "reviewedCommit": "7bd1965bbcd7f31c2c5ef054d3e8c4f331ddf864",
+      "sourceSha256": "6325993cee7c97cd777bd3d7fe030d21e0fda17a0dfd5dbf204b7be77116241b",
+      "sourceMatchesCommit": true,
+      "sourceUnchangedDuringCheck": true,
+      "checks": [
+        {
+          "case": "legacy_name_after_second_target",
+          "passed": true
+        },
+        {
+          "case": "rename_existing_identity",
+          "passed": true
+        },
+        {
+          "case": "status_actual_project_values",
+          "passed": true,
+          "projects": [
+            "C:/sm-fixture-project-a",
+            "C:/sm-fixture-project-b"
+          ]
+        }
+      ]
+    },
+    "liveStatus": {
+      "layer": "actual prototype CLI status over isolated real bridge data; not receipt or liveness proof",
+      "pairs": [
+        {
+          "pairId": "13cd259d-f951-4ee7-92e8-81853229eeab",
+          "target": "s04-claude-a",
+          "project": "D:\\ClaudeToCodex",
+          "claudeId": "10e98182-0d3a-4e9e-8167-1967dac4c81d",
+          "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+          "endpointOnDisk": true,
+          "pendingMessageId": null
+        },
+        {
+          "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+          "target": "s04-claude-b",
+          "project": "D:\\ClaudeToCodex",
+          "claudeId": "438a61f5-e69e-4eab-8983-2cee719ab926",
+          "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+          "endpointOnDisk": true,
+          "pendingMessageId": null
+        }
+      ]
+    },
+    "remainingTestNote": "Resolved in 0df8dac: the Developer status regression now uses known endpoint cwd values and asserts the exact project values. The updated 24-test suite passed independently."
+  },
+  "legacyRealVerification": {
+    "receipts": [
+      {
+        "messageId": "de5319b9-ad9c-43c2-adef-2f48381747ce",
+        "pairId": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+        "conversationId": "20e17f99-9235-43f6-9458-ff509bd4d89a",
+        "replyTo": "5fc9bbb0-80b8-477b-968c-20cdcf3bf9c8",
+        "recipient": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+        "correctSessionFrameCount": 1,
+        "wrongSessionFrameCount": 0,
+        "completeFrameMatches": true,
+        "receivedAt": "2026-09-12T19:37:43.752Z",
+        "events": [
+          {
+            "at": "2026-09-12T19:07:08.143Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T19:07:08.147Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T19:07:09.910Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T19:37:43.673Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit"
+          }
+        ],
+        "originalUserWakeAt": "2026-09-12T19:09:38.836Z",
+        "subsequentModelOutputAt": "2026-09-12T19:37:53.997Z",
+        "qualification": "Recovered after operator changed the effective test data root; not a clean automatic-wake sample."
+      },
+      {
+        "messageId": "fb2dce20-d7d4-4513-b90c-3ad97baa37fa",
+        "pairId": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+        "conversationId": "5fea7d2a-fb28-4c9e-934e-f0ea5b36c20c",
+        "replyTo": null,
+        "recipient": "438a61f5-e69e-4eab-8983-2cee719ab926",
+        "correctSessionFrameCount": 1,
+        "wrongSessionFrameCount": 0,
+        "completeFrameMatches": true,
+        "receivedAt": "2026-09-12T19:38:05.998Z",
+        "events": [
+          {
+            "at": "2026-09-12T19:38:04.990Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T19:38:06.007Z",
+            "type": "pipe-written"
+          }
+        ],
+        "originalUserWakeAt": null,
+        "subsequentModelOutputAt": null,
+        "qualification": "New message after the legacy test environment was corrected."
+      },
+      {
+        "messageId": "7ac38f36-6531-4988-b360-56ff68f24760",
+        "pairId": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+        "conversationId": "5fea7d2a-fb28-4c9e-934e-f0ea5b36c20c",
+        "replyTo": "fb2dce20-d7d4-4513-b90c-3ad97baa37fa",
+        "recipient": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+        "correctSessionFrameCount": 1,
+        "wrongSessionFrameCount": 0,
+        "completeFrameMatches": true,
+        "receivedAt": "2026-09-12T19:38:33.680Z",
+        "events": [
+          {
+            "at": "2026-09-12T19:38:26.345Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T19:38:26.348Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T19:38:28.235Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T19:38:33.631Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit"
+          }
+        ],
+        "originalUserWakeAt": "2026-09-12T19:38:33.674Z",
+        "subsequentModelOutputAt": "2026-09-12T19:38:38.785Z",
+        "qualification": "New message after the legacy test environment was corrected."
+      }
+    ],
+    "legacyPair": {
+      "id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+      "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "claudeId": "438a61f5-e69e-4eab-8983-2cee719ab926",
+      "endpointPath": "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\s04-test-bridge-legacy\\endpoints\\claude-438a61f5-e69e-4eab-8983-2cee719ab926.json",
+      "createdAt": "2026-09-10T00:00:00.000Z"
+    },
+    "legacyConnectEvents": [
+      {
+        "at": "2026-09-12T19:38:04.895Z",
+        "type": "legacy-endpoint-updated",
+        "pairId": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+        "endpointPath": "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\s04-test-bridge-legacy\\endpoints\\claude-438a61f5-e69e-4eab-8983-2cee719ab926.json"
+      },
+      {
+        "at": "2026-09-12T19:38:04.896Z",
+        "type": "connect",
+        "pairId": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+        "claudeSession": "438a61f5-e69e-4eab-8983-2cee719ab926",
+        "claudeName": "s04-claude-b",
+        "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+        "endpoint": "C:\\Users\\DELL\\AppData\\Local\\ClaudeToCodex\\s04-test-bridge-legacy\\endpoints\\claude-438a61f5-e69e-4eab-8983-2cee719ab926.json"
+      }
+    ],
+    "oldReplyExecutions": []
+  },
+  "postRetirementOldReply": {
+    "scenario": "reply_to_old_message_after_retirement_and_rebuild",
+    "originalTestCodexSession": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+    "commandAt": "2026-09-12T19:34:52.700Z",
+    "originalCallId": "call_5RENi0cbtyGGUabtcu1Njtmo",
+    "replyTo": "d65bd878-4966-4c35-8228-340e6ad8752e",
+    "expectedErrorObserved": true,
+    "matchingNewOutboundMessages": 0,
+    "matchingNewPeerInboundFrames": 0,
+    "passed": true
+  },
+  "workBoundaryReview": {
+    "reviewedPrototypeCommit": "0df8dac341b05c0cc816f428fe855b6bb50e475c",
+    "receipts": [
+      {
+        "messageId": "859edada-d2a7-438f-ba51-3011d9c3dbe0",
+        "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+        "conversationId": "2b7741a3-ea13-4dc0-8cf8-fc3b1cedc0d8",
+        "replyTo": null,
+        "recipient": "438a61f5-e69e-4eab-8983-2cee719ab926",
+        "receivedAt": "2026-09-12T19:51:32.137Z",
+        "completeFrameMatches": true,
+        "correctSessionFrameCount": 1,
+        "wrongSessionFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T19:51:31.150Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T19:51:32.136Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "47c5824e-153d-4a73-b7e4-23c79d88ab50",
+        "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+        "conversationId": "2b7741a3-ea13-4dc0-8cf8-fc3b1cedc0d8",
+        "replyTo": "859edada-d2a7-438f-ba51-3011d9c3dbe0",
+        "recipient": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+        "receivedAt": "2026-09-12T19:52:18.795Z",
+        "completeFrameMatches": true,
+        "correctSessionFrameCount": 1,
+        "wrongSessionFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T19:52:07.451Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T19:52:07.454Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T19:52:09.248Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T19:52:18.750Z",
+            "type": "context-prepared",
+            "hook": "PostToolUse"
+          },
+          {
+            "at": "2026-09-12T19:53:00.725Z",
+            "type": "wake-suppressed"
+          }
+        ]
+      },
+      {
+        "messageId": "c7308cb2-f98f-4087-9201-65b690e25f25",
+        "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+        "conversationId": "5c915d94-7466-450f-a21b-8279d6d754f0",
+        "replyTo": null,
+        "recipient": "438a61f5-e69e-4eab-8983-2cee719ab926",
+        "receivedAt": "2026-09-12T19:52:58.783Z",
+        "completeFrameMatches": true,
+        "correctSessionFrameCount": 1,
+        "wrongSessionFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T19:52:43.298Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T19:52:44.221Z",
+            "type": "pipe-written"
+          }
+        ]
+      },
+      {
+        "messageId": "35017281-9d5f-4b1e-8321-1aa65f2a00ac",
+        "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+        "conversationId": "5c915d94-7466-450f-a21b-8279d6d754f0",
+        "replyTo": "c7308cb2-f98f-4087-9201-65b690e25f25",
+        "recipient": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+        "receivedAt": "2026-09-12T19:53:30.892Z",
+        "completeFrameMatches": true,
+        "correctSessionFrameCount": 1,
+        "wrongSessionFrameCount": 0,
+        "events": [
+          {
+            "at": "2026-09-12T19:53:25.542Z",
+            "type": "created"
+          },
+          {
+            "at": "2026-09-12T19:53:25.546Z",
+            "type": "published"
+          },
+          {
+            "at": "2026-09-12T19:53:27.561Z",
+            "type": "wake-submitted"
+          },
+          {
+            "at": "2026-09-12T19:53:30.844Z",
+            "type": "context-prepared",
+            "hook": "UserPromptSubmit"
+          }
+        ]
+      }
+    ],
+    "essay": {
+      "originalAssistantMessageAt": "2026-09-12T19:51:55.340Z",
+      "originalTextLength": 1365,
+      "completionAnnouncementAt": "2026-09-12T19:51:57.470Z",
+      "messagePublishedAt": "2026-09-12T19:52:07.454Z",
+      "saveCallAt": "2026-09-12T19:52:18.275Z",
+      "bodyInjectedAt": "2026-09-12T19:52:18.795Z",
+      "hook": "PostToolUse",
+      "savedTextMatchesOriginal": true
+    },
+    "sleep": {
+      "commandAt": "2026-09-12T19:52:42.330Z",
+      "callId": "call_tHxtjg87HX78lHiaf9e4F1vZ",
+      "configuredSleepSeconds": 45,
+      "execYieldMilliseconds": 10000,
+      "wrapperReturnedAt": "2026-09-12T19:52:52.540Z",
+      "originalTurnCompletedAt": "2026-09-12T19:53:00.416Z",
+      "messagePublishedAt": "2026-09-12T19:53:25.546Z",
+      "processEndLoggedLocal": "2026-09-13 03:53:29 +08:00",
+      "bodyInjectedAt": "2026-09-12T19:53:30.892Z",
+      "hook": "UserPromptSubmit",
+      "newTurn": "01a0972e-a0d9-7112-b6fa-87faa22c403c",
+      "laterSelfReportAt": "2026-09-12T19:53:40.599Z",
+      "qualification": "Published while the external sleep process was still running, but the Codex turn had already ended; injection occurred in a new user-prompt turn after the logged sleep end. The model only printed exec output and did not expose or wait for the long-running process handle."
+    },
+    "assessment": {
+      "receipt": "passed_for_all_four_frames",
+      "generationOnlyBoundary": "not_demonstrated_by_this_sample",
+      "postToolUseBoundary": "observed_after_the_essay_save_tool",
+      "longToolContinuationBoundary": "not_demonstrated_by_the_sleep_sample",
+      "codexToClaudeGenerationBoundary": "no_sample_provided",
+      "s04117": "partial"
+    }
+  },
+  "recordUpdateConcurrencyReview": {
+    "sourcePrototypeCommit": "7bd1965bbcd7f31c2c5ef054d3e8c4f331ddf864",
+    "sourceUnchangedInLaterPrototypeCommits": true,
+    "layer": "isolated local process and fixture checks; not live peer delivery",
+    "refreshVersusReader": {
+      "source": "prototype/bridge/store.mjs",
+      "sourceSha256": "6325993cee7c97cd777bd3d7fe030d21e0fda17a0dfd5dbf204b7be77116241b",
+      "sourceUnchangedDuringCheck": true,
+      "scenario": "Refresh A name in one process while another resolves unchanged B",
+      "refreshIterations": 1200,
+      "readerAttempts": 8520,
+      "readerFailures": 266,
+      "errorSamples": [
+        {
+          "name": "SyntaxError",
+          "code": null,
+          "message": "Unexpected end of JSON input"
+        },
+        {
+          "name": "SyntaxError",
+          "code": null,
+          "message": "Unexpected end of JSON input"
+        },
+        {
+          "name": "SyntaxError",
+          "code": null,
+          "message": "Unexpected end of JSON input"
+        }
+      ],
+      "writer": {
+        "exitCode": 0,
+        "signal": null
+      },
+      "writerStderr": "",
+      "finalBIdentityUnchanged": true,
+      "durationMs": 3786
+    },
+    "refreshVersusRetire": {
+      "scenario": "Refresh reads existing pair, retire completes, refresh then writes the existing-pair update",
+      "retiredDuringRefresh": true,
+      "activePairRecreated": true,
+      "retiredEvidenceAlsoPresent": true,
+      "acceptsNewMessageAfterRetirement": true
+    },
+    "scope": "Metadata consistency for ordinary cross-target lifecycle operations; stress iteration counts only expose the race and are not throughput acceptance requirements.",
+    "feedbackMessageIds": [
+      "d8daef13-2a03-40fc-ad58-51ac052a7dae",
+      "d98dcf66-d97b-4a72-b67b-268886b0fb6d"
+    ]
+  },
+  "productCodeReview": {
+    "commit": "6e4ef0fe19582c49f61f33550919780b913bc809",
+    "tests": {
+      "command": "node --test bridge/test/*.test.mjs",
+      "passed": 47,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 8748.7757
+    },
+    "trackedMirrorVerification": {
+      "commit": "6e4ef0f",
+      "sourceFileCount": 16,
+      "matchingMirrors": 16,
+      "mismatches": []
+    },
+    "independentInterleavings": {
+      "reviewedCommit": "6e4ef0fe19582c49f61f33550919780b913bc809",
+      "sourceSha256": "1f64947e71a93783919bf26f71935cf5dfb89eef71eaadf6d4741d363e9c982e",
+      "sourceUnchangedDuringCheck": true,
+      "layer": "deterministic interleaving of actual store methods with independent store observers; no live session or daily data used",
+      "observations": [
+        {
+          "case": "read_existing_then_retire_then_refresh_publish_then_observer_then_rollback",
+          "retirementCompletedBeforeObserver": true,
+          "oldIdVisibleToIndependentStoreDuringWindow": true,
+          "newMessageAcceptedForOldIdDuringWindow": true,
+          "newMessageSubsequentlyDelivered": true,
+          "finalOldIdInactive": true,
+          "finalRebuildUsesNewId": true
+        },
+        {
+          "case": "two_first_connects_read_empty_registry_before_either_result_is_used",
+          "bothCallsReturnedPairs": true,
+          "pairIdsDiffer": true,
+          "activePairCount": 2,
+          "sameClaudeCanResolveOwnPair": false,
+          "error": "Multiple pairs claim the same Claude session; inspect the pairs registry."
+        }
+      ]
+    },
+    "closedFindings": [
+      "record-update-read-consistency"
+    ],
+    "remainingFindings": [
+      "refresh-recreates-retired-pair",
+      "duplicate-first-connect"
+    ],
+    "qualification": "Atomic publication and final rollback state pass their regression checks, but an independent observer can accept new traffic for the retired id before rollback. The first-connect case also violates the single-pair-per-Claude identity invariant.",
+    "feedbackMessageId": "10a58a0f-ec6c-477e-a7c3-6bb84fe7eaa1"
+  },
+  "rootLockReview": {
+    "commit": "75807b0ea2903f5390a4314913c2fa77fae54589",
+    "sourceMethod": "git archive of the fixed commit, extracted into an isolated temporary snapshot; concurrent Developer edits cannot change the tested code",
+    "regression": {
+      "command": "node --test bridge/test/*.test.mjs",
+      "passed": 49,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 10261.3666
+    },
+    "trackedMirrorVerification": {
+      "commit": "75807b0",
+      "sourceFileCount": 16,
+      "matchingMirrors": 16,
+      "mismatches": []
+    },
+    "liveOwnerProbe": {
+      "reviewedCommit": "75807b0ea2903f5390a4314913c2fa77fae54589",
+      "method": "Actual cross-process critical sections, elapsed stale threshold, no fabricated timestamps",
+      "owner": {
+        "enteredAt": "2026-09-12T20:41:41.471Z",
+        "exitingAt": "2026-09-12T20:41:59.477Z",
+        "result": {
+          "exitCode": 0,
+          "signal": null,
+          "stderr": ""
+        }
+      },
+      "contender": {
+        "enteredAt": "2026-09-12T20:41:57.947Z",
+        "exitingAt": "2026-09-12T20:42:05.962Z",
+        "ownerAliveAtAcquisition": true,
+        "ownerStillInCriticalSectionAtAcquisition": true,
+        "result": {
+          "exitCode": 0,
+          "signal": null,
+          "stderr": ""
+        }
+      },
+      "contenderStillInsideWhenOldOwnerReleased": true,
+      "lockExistsAfterOldOwnerRelease": false,
+      "thirdEnteredWhileContenderActive": true,
+      "thirdError": null
+    },
+    "reviewWorkspace": {
+      "path": "C:/Users/DELL/AppData/Local/Temp/ctc-sm-s04-lock-review-XmUPzW",
+      "processes": "all_validation_processes_finished",
+      "remainingContents": "immutable source archive and extracted bridge files only",
+      "cleanup": "retained_after_automatic_approval_rejected_both_recursive_and_explicit_file_list_cleanup",
+      "rejectionReason": "blocked by policy; no further reason was supplied"
+    },
+    "ordinaryPathAssessment": "The root mutex serializes the covered short mutation and preparation paths, including the same-identity first-connect regression. Full lifecycle closure is pending the ownership defect and adequate retirement-observer coverage.",
+    "regressionGap": {
+      "case": "independent observer during churn",
+      "finding": "The added test runs only a refresher and an observer; neither process retires the pair. Its zero-dual-state assertion cannot verify a refresh/retire interleaving. Separate active and archived reads also describe different instants unless a stable observation point is established."
+    },
+    "remainingOwnershipRequirements": [
+      "A live holder cannot be evicted solely because its lock is old.",
+      "Release must affect only the lock instance owned by that holder.",
+      "Stale-owner inspection and cleanup must not remove a replacement owner lock.",
+      "Uncertain ownership must produce an observable busy/failure result without weakening mutual exclusion."
+    ],
+    "feedbackMessageId": "c8e26e22-192a-4b3b-bad5-8f960bfa8c65"
+  },
+  "lockOwnershipClosureReview": {
+    "commit": "b8e392ee51a8d7b404474881036e8c0388c38278",
+    "sourceMethod": "git archive of the fixed commit into an isolated temporary snapshot; no product method was changed for the independent live-owner probe",
+    "sourceSha256": "2a2037cda1e516fe218675a7edf6a84d12b725373044f6e2295a90bcdeffd213",
+    "sourceUnchangedDuringCheck": true,
+    "regression": {
+      "command": "node --test --test-reporter=tap bridge/test/*.test.mjs",
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 24550.3321
+    },
+    "trackedMirrorVerification": {
+      "sourceFileCount": 16,
+      "matchingMirrors": 16,
+      "mismatches": []
+    },
+    "independentLiveOwnerProbe": {
+      "method": "Actual cross-process 18-second live holder; contender starts after 11 seconds; no fabricated lock age",
+      "holderEnteredAt": "2026-09-12T20:58:50.941Z",
+      "contenderStartedAt": "2026-09-12T20:59:01.968Z",
+      "contenderFinishedAt": "2026-09-12T20:59:08.128Z",
+      "contenderEntered": false,
+      "contentionError": "The bridge registry lock is busy; retry the operation shortly.",
+      "holderAliveAtContenderResult": true,
+      "holderStillInsideAtContenderResult": true,
+      "ownerTokenUnchanged": true,
+      "holderExitingAt": "2026-09-12T20:59:08.959Z",
+      "acquiredAfterRelease": true,
+      "holderExitCode": 0,
+      "passed": true
+    },
+    "regressionCoverage": [
+      "The existing ownership regression passes busy-on-live-owner, simulated dead-owner takeover and preservation of a replaced foreign token on release.",
+      "The revised observer regression includes six retire/rebuild cycles through public APIs, locked snapshots, successful pre-retirement preparation and refusal of the original pair after retirement.",
+      "Same-identity concurrent first-connect and atomic record publication regressions continue to pass."
+    ],
+    "scopeDecision": {
+      "decidedBy": "PO",
+      "date": "2026-09-13",
+      "developerRecordCommit": "a09869e10b945a3bee133225fd7ec399cd7fed11",
+      "decision": "Close concurrency hardening at b8e392e; direct remaining Sprint work to the installed candidate and the existing reception-boundary gaps. Deeper concurrency work may be proposed for PO ordering later and is not an added Sprint gate."
+    },
+    "assessment": "The previously reproduced live-age takeover path is closed by the independent probe. The revised ownership and actual retirement regressions pass. This is scoped verification of the reported paths, not proof of every crash or stale-owner replacement interleaving, and it does not establish installed-plugin acceptance.",
+    "reviewWorkspace": {
+      "path": "C:/Users/DELL/AppData/Local/Temp/ctc-sm-s04-b8e392e-99b3f61ce1",
+      "probeSource": "owner-probe.mjs",
+      "probeResult": "owner-probe-result.json",
+      "processes": "all_validation_processes_finished",
+      "retention": "retained_for_review"
+    }
+  },
+  "documentationReview": {
+    "commit": "c7d4939d807754f0de461c2337b4b6c37e664f90",
+    "updated": [
+      "README.md",
+      "INSTALL.md",
+      "bridge/docs/SMOKE.md",
+      "plugins/claudetocodex/skills/claudetocodex/SKILL.md"
+    ],
+    "status": "resolved",
+    "finding": "The skill's connect ambiguity instruction promises full pairIds. Actual selectSession candidates identify discovered sessions by sessionId and pid; full pairId belongs to connected-pair ambiguity/status, not unconnected discovery candidates.",
+    "resolutionCommit": "2d331636234678bda6a9d740d4c138c6f43848b4",
+    "resolution": "The corrected 2d33163 skill is installed. ee73808 corrects the manifest descriptions; installed metadata and the clean inventory are independently verified."
+  },
+  "criteria": [
+    {
+      "id": "S04-11-1",
+      "prototypeResult": "partial",
+      "verified": "At least two pairs coexist for one Codex original session. Project context is now independently checked against known fixture values and actual isolated A/B endpoint records; endpointOnDisk remains a file-presence fact, not a liveness claim.",
+      "candidateVerified": "The installed candidate retains A and B for the same original Codex thread, with names, project and original ids. Both peers complete actual business exchanges. endpointOnDisk is treated only as file presence.",
+      "remaining": "",
+      "finalCandidateResult": "passed",
+      "candidateEvidence": "candidate-ee73808-review.json"
+    },
+    {
+      "id": "S04-11-2",
+      "prototypeResult": "partial",
+      "verified": "Real named routing, rejection branches and executable retirement recovery have evidence. Independent fixtures now confirm name refresh on the same identity, preservation on null-name reconnect, and selection of both a named legacy target and a second target.",
+      "candidateVerified": "Named A/B delivery reaches the selected original sessions without cross-delivery. Candidate stale-endpoint failure and same-name retirement recovery are verified; applicable earlier error/name trials are reused with the migrated final-code regressions.",
+      "remaining": "",
+      "finalCandidateResult": "passed",
+      "candidateEvidence": "candidate-ee73808-review.json"
+    },
+    {
+      "id": "S04-11-3",
+      "prototypeResult": "passed_for_observed_scenarios",
+      "verified": "Replying to an old A message after talking to B preserves affiliation. The additional real post-retirement/rebuild attempt is rejected before new message creation, with no matching new A/B inbound frame.",
+      "candidateVerified": "B's first reply enters Codex at 21:59:06.457Z; the 22:03:56.066Z reply to A's earlier 08ed3efa keeps A's replyTo, pair and conversation. Both follow-up responses retain their linkage. Invalid/retired-reply guards retain their verified regression and original-session evidence.",
+      "remaining": "",
+      "finalCandidateResult": "passed",
+      "candidateEvidence": "candidate-ee73808-review.json"
+    },
+    {
+      "id": "S04-11-4",
+      "prototypeResult": "passed_for_observed_scenarios",
+      "verified": "Both original peers completed business requests, replies and follow-ups; complete frames and automatic linkage were independently compared with message storage.",
+      "candidateVerified": "Eight current-candidate frames cover actual PBI-09 discussion with A and PBI-12 discussion with B, including each request, reply, follow-up and response. Every complete message object matches storage in the correct original session exactly once, with no wrong-target inbound.",
+      "remaining": "",
+      "finalCandidateResult": "passed",
+      "candidateEvidence": "candidate-ee73808-review.json"
+    },
+    {
+      "id": "S04-11-5",
+      "prototypeResult": "passed_for_observed_scenarios",
+      "verified": "Real overlapping attempts, per-pair rejection, independent injection and duplicate suppression were observed. Previously found lifecycle-related duplicate behavior is fixed at fixture level.",
+      "remaining": "",
+      "finalCandidateResult": "passed",
+      "candidateVerified": "A/B replies publish at 21:58:38.780Z and 39.443Z; both wakes precede the first context-prepared at 49.114Z. Each original frame is injected once. Same-target c353669a refusal, peer-led status-checked retry and actual duplicate suppression complete the declared observable rules. No slot-occupancy duration is inferred.",
+      "candidateEvidence": "candidate-ee73808-review.json"
+    },
+    {
+      "id": "S04-11-6",
+      "prototypeResult": "partial",
+      "verified": "Real stop/restart/rebuild samples preserve B communication and refuse old-message replies. Six independent boundary checks confirm the reviewed lifecycle corrections at fixture level.",
+      "candidateVerified": "Candidate stale-endpoint failure, new identities, archived old targets and surviving B communication are combined with the independently verified earlier stop/restart/old-reply trials and final-code in-flight/retirement regressions. The PO-approved concurrency boundary is preserved.",
+      "remaining": "",
+      "finalCandidateResult": "passed",
+      "candidateEvidence": "candidate-ee73808-review.json"
+    },
+    {
+      "id": "S04-11-7",
+      "prototypeResult": "partial",
+      "verified": "Single-target unqualified send and automatic return work. Legacy same-identity endpoint refresh and a new automatic original-session round trip are verified; de5319b9 remains a recovery sample. W11 adds four verified original-session frames, delivery at the essay-save PostToolUse boundary, and an actual repeated-wake suppression.",
+      "candidateVerified": "Current-candidate automatic receipt/wake, T03CX, T04CX, T03XC and duplicate suppression are verified from original events. Single-target and legacy portions explicitly reuse earlier real trials plus their migrated final-code regressions; they are not relabeled as newly run installed-candidate cases.",
+      "remaining": "",
+      "finalCandidateResult": "passed",
+      "candidateEvidence": "candidate-ee73808-review.json"
+    },
+    {
+      "id": "S04-11-8",
+      "prototypeResult": "in_progress",
+      "verified": "The fixed b8e392e snapshot independently passes 50/50 including migrated baseline cases; all 16 tracked bridge files match their plugin mirrors. USAGE, SMOKE, skill, README and INSTALL updates are reviewed; 2d33163 fixes the skill wording.",
+      "candidateVerified": "The ee73808 local-marketplace installation has exactly 19 source-matching files, no extras, full SHA256 inventory and corrected metadata/skill/docs. All 16 bridge mirrors match. Actual candidate hook/reply paths and original-session receipt are verified; bridge code remains the independently tested b8e392e version.",
+      "remaining": "",
+      "finalCandidateResult": "passed",
+      "candidateEvidence": "candidate-ee73808-review.json"
+    }
+  ],
+  "openCodeFindings": [],
+  "closedPriorCodeFindings": [
+    "Full candidate pair ids support the executable retirement recovery path.",
+    "Unknown pair ids and sender identities inconsistent with the retired pair are not injected; their pending evidence remains.",
+    "Repeated wakes of consumed retired messages are suppressed.",
+    "A data root with another Codex identity in retired history refuses rebinding while same-Codex rebuilding remains allowed.",
+    "Publication that read the pair before retirement can complete and be consumed by its original recipient; a foreign recipient cannot consume it.",
+    "An existing identity refreshes its target name on reconnect; an unnamed legacy pair becomes selectable alongside a second target.",
+    "Status includes the recorded project context; independent fixtures and actual isolated endpoint data confirm the value.",
+    "record-update-read-consistency: atomic record publication passes the product regression that refreshes A in one process while another repeatedly resolves B; no partial-JSON reader errors are observed.",
+    "duplicate-first-connect: the b8e392e cross-process regression preserves one active pair for the same Claude identity.",
+    "refresh-recreates-retired-pair: the b8e392e public-API retire/rebuild observer regression refuses new preparation for the retired original pair.",
+    "root-mutex-ownership: the reported live-age takeover path is independently closed at b8e392e; existing ownership regressions pass. Closure is limited to the verified paths and the PO-approved scope, not exhaustive reclamation correctness."
+  ],
+  "reportingQualifications": [
+    "W11 receipt is verified, but the model's later labels of writing/sleeping at receipt contradict the original event sequence. Saving an essay is not its text-generation completion time; a returned exec wrapper that hides process handles is not proof that the external command completed.",
+    "An unknown pair id produces unknown-pair-letter. The reviewed mismatched-sender fixture for a known retired pair does not produce that same event; it preserves the slot without injection.",
+    "The Developer reports that work-boundary sample 60bd22bb arrived after the task completed; it is not accepted as a busy-receiving sample.",
+    "No Output/Outcome DoD or final installed-candidate acceptance is inferred from this prototype report."
+  ],
+  "evidenceReferences": [
+    "w4-partial-review.json",
+    "w6-w7-review.json",
+    "w8-preintegration-review.json",
+    "sm-b8e392e-feedback.txt",
+    "candidate-partial-review.json",
+    "sm-candidate-2d33163-feedback.txt",
+    "candidate-ee73808-review.json",
+    "sm-ee73808-feedback.txt",
+    "sm-technical-acceptance-ee73808.txt",
+    "po-review-arrangement.md"
+  ],
+  "feedbackMessageId": "6d7c1985-2712-4561-8adb-eace7ce51795",
+  "feedbackOriginalSessionReceipt": {
+    "sessionId": "6aeef5d8-75be-4627-8daf-7ae829fee49b",
+    "receivedAt": "2026-09-12T21:02:31.227Z",
+    "fullBodyMatches": true,
+    "qualification": "Coordination-message receipt only; not product candidate acceptance evidence."
+  },
+  "latestCandidateFeedbackMessageId": "17734fb5-eef2-478c-b855-a252f4f6a406",
+  "technicalAcceptance": {
+    "result": "passed",
+    "candidateSourceCommit": "ee73808cc9e5a2324f4a6900f404cf364af65ace",
+    "verifiedAt": "2026-09-12T22:07:49.382Z",
+    "evidence": "candidate-ee73808-review.json",
+    "evidenceReuse": "candidate-ee73808-review.json evidenceReuse",
+    "poArrangement": "po-review-arrangement.md",
+    "qualifications": [
+      "Three candidate trusted hashes and actual hook execution are verified; the actor who established trust is unknown.",
+      "Stopped PIDs are recorded as the Developer's account, not an independently reconstructed process history.",
+      "The technical recommendation does not record PO firsthand use, PO acceptance or release."
+    ],
+    "feedbackMessageId": "6f64b1fc-b2ec-436e-974a-1ea5ac54551c"
+  },
+  "poActionRequiredNow": true,
+  "poDod": "awaiting_PO_experience_and_acceptance",
+  "pluginIncrementDone": false
+}

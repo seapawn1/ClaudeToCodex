@@ -1,0 +1,133 @@
+{
+  "reviewedOn": "2026-09-13",
+  "reviewer": "SM / Codex",
+  "candidateCommit": "83ce17276579b14c33eb114885eedb13d04e8d7f",
+  "scope": "Run 3 partial original-session receipt verification",
+  "result": "partial_checks_passed",
+  "testCodexSession": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+  "testClaudeA": "90cdb961-c2f6-4993-8f8c-324b1327191a",
+  "testClaudeB": "438a61f5-e69e-4eab-8983-2cee719ab926",
+  "trustedHookEntries": 3,
+  "offlineTests": {
+    "command": "node --test scrum/sprint-04-multi-claude-sessions/prototype/test/multi.test.mjs",
+    "passed": 14,
+    "failed": 0,
+    "durationMs": 838.0862
+  },
+  "receiptMethod": "Parse the bridge JSON frame from the original Claude inbound user record or Codex inbound developer-context record; compare the complete frame with the stored message, including body and all correlation fields; verify the receiving original session.",
+  "verifiedReceipts": [
+    {
+      "messageId": "34bc8e32-fde7-402b-b37a-784ee2e7a33e",
+      "recipient": "claude-a",
+      "receivedAt": "2026-09-12T18:19:11.496Z",
+      "completeFrameMatches": true
+    },
+    {
+      "messageId": "d65bd878-4966-4c35-8228-340e6ad8752e",
+      "recipient": "codex",
+      "receivedAt": "2026-09-12T18:21:31.759Z",
+      "completeFrameMatches": true,
+      "qualification": "Received after operator recovery; this sample does not pass automatic idle wake acceptance. The original queue failure remains a failure."
+    },
+    {
+      "messageId": "7bea55c6-0e07-43b0-899f-97b9fdb14e6f",
+      "recipient": "claude-b",
+      "receivedAt": "2026-09-12T18:24:14.937Z",
+      "completeFrameMatches": true
+    },
+    {
+      "messageId": "956f593d-ec8b-438b-aee0-64c6684891b1",
+      "recipient": "codex",
+      "receivedAt": "2026-09-12T18:24:51.671Z",
+      "completeFrameMatches": true,
+      "automaticWakeEvidence": {
+        "wakeSubmittedAt": "2026-09-12T18:24:49.867Z",
+        "originalUserWakeAt": "2026-09-12T18:24:51.666Z",
+        "hook": "UserPromptSubmit",
+        "modelOutputAt": "2026-09-12T18:24:56.481Z"
+      }
+    },
+    {
+      "messageId": "c0bd3823-7afe-4f64-adf3-a73feb6e873e",
+      "recipient": "claude-a",
+      "receivedAt": "2026-09-12T18:27:24.201Z",
+      "completeFrameMatches": true,
+      "qualification": "Follow-up to A's earlier reply after the exchange with B; pair and conversation linkage remained with A."
+    },
+    {
+      "messageId": "854500dc-f4d1-4a06-a8b4-84b597ac72ee",
+      "recipient": "codex",
+      "receivedAt": "2026-09-12T18:27:51.708Z",
+      "completeFrameMatches": true,
+      "wakeSubmittedAt": "2026-09-12T18:27:46.469Z",
+      "originalUserWakeAt": "2026-09-12T18:27:51.693Z"
+    },
+    {
+      "messageId": "6b07702d-3e22-44e3-9c77-9be290f80e36",
+      "recipient": "claude-a",
+      "receivedAt": "2026-09-12T18:31:26.949Z",
+      "completeFrameMatches": true
+    },
+    {
+      "messageId": "e653e605-eb79-4612-bb2e-41561e71a116",
+      "recipient": "claude-b",
+      "receivedAt": "2026-09-12T18:31:28.179Z",
+      "completeFrameMatches": true
+    },
+    {
+      "messageId": "65f7cb76-0e50-4b90-bdc0-48cd4dc30121",
+      "recipient": "codex",
+      "receivedAt": "2026-09-12T18:31:51.798Z",
+      "completeFrameMatches": true,
+      "hook": "UserPromptSubmit"
+    },
+    {
+      "messageId": "bbe290fc-7407-4a1e-8277-e21e92e7f53f",
+      "recipient": "codex",
+      "receivedAt": "2026-09-12T18:32:02.233Z",
+      "completeFrameMatches": true,
+      "hook": "PostToolUse"
+    },
+    {
+      "messageId": "4f24f149-9076-42f1-8846-cba308680237",
+      "recipient": "claude-b",
+      "receivedAt": "2026-09-12T18:37:14.029Z",
+      "completeFrameMatches": true,
+      "replyTo": "bbe290fc-7407-4a1e-8277-e21e92e7f53f",
+      "conversationId": "a406a794-fd4b-4250-b71a-124fa73045ca"
+    },
+    {
+      "messageId": "c0f3d5b3-0ae2-423b-b093-ffafbeeffa04",
+      "recipient": "codex",
+      "receivedAt": "2026-09-12T18:37:41.654Z",
+      "completeFrameMatches": true,
+      "replyTo": "4f24f149-9076-42f1-8846-cba308680237",
+      "conversationId": "a406a794-fd4b-4250-b71a-124fa73045ca",
+      "hook": "UserPromptSubmit",
+      "wakeSubmittedAt": "2026-09-12T18:37:35.664Z"
+    }
+  ],
+  "overlappingArrivalSample": {
+    "replyA": "65f7cb76-0e50-4b90-bdc0-48cd4dc30121",
+    "replyB": "bbe290fc-7407-4a1e-8277-e21e92e7f53f",
+    "publishedA": "2026-09-12T18:31:42.255Z",
+    "publishedB": "2026-09-12T18:31:46.183Z",
+    "contextPreparedA": "2026-09-12T18:31:51.701Z",
+    "contextPreparedB": "2026-09-12T18:32:02.185Z",
+    "repeatWakeSuppressedB": "2026-09-12T18:32:16.787Z",
+    "observed": "Both replies were published and their wakes submitted before the first context-prepared record. Each complete frame appeared once in the correct Codex original session; B's later redundant wake was suppressed.",
+    "timingQualification": "The 5518 ms from B publication to A context preparation is not a measured lower bound on simultaneous pending-slot occupancy: atomic claiming occurs before context-prepared is logged."
+  },
+  "rejectedRetry": {
+    "messageId": "1f8a1145-5154-47ab-9b5f-d5d752553521",
+    "result": "Rejected while A's first reply occupied its pending slot; no matching original-session inbound record found."
+  },
+  "remainingVerification": [
+    "A complete per-AC coverage audit, including CLI rejection paths and any untested real-host scenarios.",
+    "Working-model and tool-boundary behavior, target lifecycle isolation, and legacy data handling.",
+    "Product integration, isolated installed-candidate acceptance, and PO experience acceptance."
+  ],
+  "poDod": "not_assessed",
+  "pluginIncrementDone": false,
+  "feedbackMessageId": "9624d5fd-eaca-4731-b081-a811a251c5b9"
+}

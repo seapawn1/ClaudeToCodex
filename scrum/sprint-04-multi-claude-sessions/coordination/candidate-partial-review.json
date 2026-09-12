@@ -1,0 +1,135 @@
+{
+  "reviewedOn": "2026-09-13",
+  "reviewer": "SM / Codex",
+  "sourceCommit": "2d331636234678bda6a9d740d4c138c6f43848b4",
+  "result": "installed_candidate_partially_verified_not_accepted",
+  "installation": {
+    "path": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test/codex-home/plugins/cache/claudetocodex-dev/claudetocodex/1.0.0",
+    "method": "Local marketplace add followed by plugin add in the isolated CODEX_HOME; Developer original tool result records both exit codes as zero.",
+    "installed": true,
+    "enabled": true,
+    "versionLabel": "1.0.0",
+    "inventoryObservedAt": "2026-09-12T21:29:13.654Z",
+    "trackedFileCount": 19,
+    "trackedFilesMatchingWorktreeBytes": 19,
+    "trackedFilesMatchingCommitAfterGitFilters": 19,
+    "gitComparison": "Raw SHA256 binds installed bytes; git hash-object --path applies repository clean rules to check each file against the fixed commit, including checkout line-ending conversion.",
+    "installedFileCount": 21,
+    "installedContentManifestSha256": "eca9f4289c3cc701b37a7b0399184b2559dccaa9629a46fc64bceb80a6e96738",
+    "manifestDigestMethod": "SHA256 of JSON.stringify of all {path,sha256} entries, with slash-normalized relative paths sorted by localeCompare('en').",
+    "trackedFileSha256": {
+      ".codex-plugin/plugin.json": "922c67c97ff0cbe7952ac9c9907d243600efbecb8977f4cf05a1a8dd8fb5652a",
+      "bridge/cli.mjs": "5bef8402d892405ba6901ecb7c6a38ee081329b0a6530de106d41a8cbe70839c",
+      "bridge/delivery/BridgeQueue.ps1": "fddb7c533e489be0fc6b4d0ec7fa8d541148c36521aef7a5df448c31f0a7f718",
+      "bridge/delivery/Register-ClaudeEndpoint.ps1": "c5d993a4fd691d381ca91fe88a2f6e52f7c70d7a826af12799ba4c119a8e0bc2",
+      "bridge/delivery/Send-ClaudePipe.ps1": "03859daa8d8b0c5bba2c5aaf1f8bd14c91009d5b178fa075bd347a512d15a40d",
+      "bridge/docs/SMOKE.md": "b2fab975b755da249d540c8e6f0ee83a1210b16d6645f78a8484c23a02a7994f",
+      "bridge/docs/USAGE.md": "14910f2bef05215d7169ea401d121df9f67b5f7dd3a40d8493b17ec0b65a2756",
+      "bridge/entry.mjs": "c44b66c6ebc25fc2395ac25223d84ba1b25d0e4d33523bd360cdb494ecc1457e",
+      "bridge/release/Build-Release.ps1": "497615b8211ba560334e797b9e9610a29d4b154bfb9b1b023106130f0c808b15",
+      "bridge/release/Test-Acceptance.ps1": "f79e8b7d060d9442a7887b4e3f16f21620da15d8744bf72db719ef8123601032",
+      "bridge/release/Verify-Release.ps1": "4bcf3e61e17cec0ddbb833a8ccf9352809e879fed49460aeb938729e73437987",
+      "bridge/sessions.mjs": "6ed02c51007ba99c4a1b18cb517191033dec9dc169d0e717ffb4a876d4778e9d",
+      "bridge/store.mjs": "60642abd763dba2613dc0979ee2f222bc76109b3f7b2a5028086ad365b6622dd",
+      "bridge/test/connect.test.mjs": "31bd739f6e7be3ba8d3927134dab6b5d168837d964f1ba6335d3b5b0e3fb64ed",
+      "bridge/test/install.test.mjs": "9e7e59ce1e102fa5f01be5baf6c13a093f8403c27ba4a6d3bc57996b96bcfe1e",
+      "bridge/test/pipe.test.mjs": "8b325bcc6f0507d4655d1f934c3388ff9304f2e03a42e991caafa5d5812b7da0",
+      "bridge/test/store.test.mjs": "6f53ebed1b4b11b258ef23d9b664d530888b571b77246459b5730dd9d4754390",
+      "hooks/hooks.json": "6ae7237705e7b17ec286adc671c2de131eb90aaeda46b9a1f11ebfe974a296b4",
+      "skills/claudetocodex/SKILL.md": "c140a14964edd1993b456e3c438af975998022ac988cc4dbb5be3b0e0daae878"
+    },
+    "extraFiles": [
+      { "path": "bridge/connect.test.mjs", "sha256": "31bd739f6e7be3ba8d3927134dab6b5d168837d964f1ba6335d3b5b0e3fb64ed" },
+      { "path": "bridge/store.test.mjs", "sha256": "88f24d48839004b51d023e3705c4bd7aefa93275b0af5ff4ba380d47f81bb459" }
+    ],
+    "prototypeProjectHooksAbsent": true,
+    "prototypeBackupPresent": true
+  },
+  "regressionReuse": {
+    "sourceCommit": "b8e392ee51a8d7b404474881036e8c0388c38278",
+    "passed": 50,
+    "basis": "git diff b8e392e 2d33163 -- bridge plugins/claudetocodex/bridge is empty; every tracked installed bridge file matches the fixed commit after Git clean rules.",
+    "rerun": false
+  },
+  "host": {
+    "codexVersion": "0.154.0",
+    "nodeVersion": "v24.14.0",
+    "os": "Windows 10 Pro 10.0.19045",
+    "codexHome": "C:/Users/DELL/AppData/Local/ClaudeToCodex/s04-test/codex-home",
+    "codexThread": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+    "resumeLauncherUsesHookTrustBypass": false,
+    "doctorQualification": "The SM's noninteractive invocation returned overall fail solely for TERM=dumb. Config, credentials, isolated state paths and no-MCP checks passed; this does not measure the interactive test window's terminal.",
+    "hookTrust": {
+      "prototypeSourceRecords": 3,
+      "pluginSourceRecords": 3,
+      "pluginSourcePrefix": "claudetocodex@claudetocodex-dev:hooks/hooks.json:",
+      "pluginTrustedHashes": {
+        "post_tool_use:0:0": "sha256:f465bef5a50f0e58b5414d3fced972640f9448131f2f480009d9fcfae00c6cf2",
+        "user_prompt_submit:0:0": "sha256:b4bf5e5df2b3a6ff5c74a68d19a0e0e46812360cbacc2b9da598ca75a0b2590a",
+        "stop:0:0": "sha256:6f5317033e5f5bb2a7b2cb3670a773aa52bec765a2168054b79236fbd65f4399"
+      },
+      "attribution": "pending Developer clarification of how and when the candidate trust records were established; persisted state alone does not identify the actor",
+      "officialReference": "https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks",
+      "officialGuidance": "Current documentation says installing or enabling a plugin does not automatically trust its hooks. Local version-specific observations and provenance must be reported separately."
+    }
+  },
+  "candidateStatusPairs": [
+    { "pairId": "e4d1b071-460a-4952-ad02-4aa3e2feb90c", "target": "s04-claude-a", "claudeId": "482892af-646d-484a-9d32-198ab07db9f6", "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942", "project": "D:\\ClaudeToCodex", "endpointOnDisk": true, "pendingMessageId": null },
+    { "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f", "target": "s04-claude-b", "claudeId": "ade0d2dc-0383-431b-8f24-a01caadb5e86", "codexId": "01a096d0-cc3a-7262-81b1-7402f8c7d942", "project": "D:\\ClaudeToCodex", "endpointOnDisk": true, "pendingMessageId": null }
+  ],
+  "originalSessionVerification": [
+    {
+      "messageId": "a9bb75b0-32c8-4d87-b4cb-086c00181692",
+      "pairId": "b2bd54db-96f7-4d03-a059-20d54899f2bf",
+      "conversationId": "f108b4ca-0c8a-4f7d-8db1-dfadbdf47fdb",
+      "replyTo": null,
+      "recipient": "438a61f5-e69e-4eab-8983-2cee719ab926",
+      "result": "send_error_without_matching_inbound",
+      "createdAt": "2026-09-12T21:08:12.423Z",
+      "sendErrorAt": "2026-09-12T21:08:17.943Z",
+      "expectedRecipientFrameCount": 0,
+      "wrongRecipientFrameCount": 0
+    },
+    {
+      "messageId": "767e9059-ccb0-431f-a5c7-b48c761b5965",
+      "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+      "conversationId": "d46b3c19-50af-45db-9f01-24f57385c2a5",
+      "replyTo": null,
+      "recipient": "ade0d2dc-0383-431b-8f24-a01caadb5e86",
+      "receivedAt": "2026-09-12T21:18:53.452Z",
+      "pipeWrittenAt": "2026-09-12T21:18:53.474Z",
+      "expectedRecipientFrameCount": 1,
+      "wrongRecipientFrameCount": 0,
+      "fullFrameMatches": true,
+      "replyEntryUsesCandidate": true
+    },
+    {
+      "messageId": "1e1c06f8-0c70-4c3c-b3fe-cabcfcab7ce0",
+      "pairId": "4a09093f-2904-4d0d-82db-88ad1ce8a13f",
+      "conversationId": "d46b3c19-50af-45db-9f01-24f57385c2a5",
+      "replyTo": "767e9059-ccb0-431f-a5c7-b48c761b5965",
+      "recipient": "01a096d0-cc3a-7262-81b1-7402f8c7d942",
+      "publishedAt": "2026-09-12T21:19:30.932Z",
+      "wakeSubmittedAt": "2026-09-12T21:19:32.615Z",
+      "contextPreparedAt": "2026-09-12T21:19:39.103Z",
+      "hook": "UserPromptSubmit",
+      "receivedAt": "2026-09-12T21:19:39.163Z",
+      "originalFrameKind": "hooks.additional_context",
+      "expectedRecipientFrameCount": 1,
+      "wrongRecipientFrameCount": 0,
+      "fullFrameMatches": true,
+      "replyEntryUsesCandidate": true
+    }
+  ],
+  "receiptQualification": "The successful exchange confirms candidate delivery and embedded reply provenance. Its content asks only for path confirmation; it does not complete the required A/B business requests and follow-ups. Complete parsed message objects were compared with storage, without relying on model self-labels.",
+  "openFollowUps": [
+    { "id": "candidate-extra-untracked-tests", "criterion": "S04-11-8", "finding": "The installed candidate includes two untracked test files outside bridge/test; the complete installation is not described by the source commit alone.", "action": "Prepare the final candidate without unintended source-external files and record the complete content manifest." },
+    { "id": "plugin-manifest-single-pair-description", "criterion": "S04-11-8", "finding": "The current .codex-plugin/plugin.json description still declares single pair.", "action": "Synchronize the product metadata with the implemented multi-pair scope." },
+    { "id": "candidate-hook-trust-attribution", "finding": "Three plugin-source trusted hashes are present, in addition to the old project-source hashes; the report has not established their origin.", "action": "Record the actor or host operation that established this state; no repeat PO trust action is requested now." },
+    { "id": "test-restart-process-selection", "finding": "The Developer's 2026-09-12T21:04:13.220Z restart command selected all npm-path Codex processes or codex-code-mode-host.exe processes created within three hours, without a test-specific process relationship.", "action": "Clarify actual stopped targets from available records and restrict future restart selection to test processes. No actual impact to a daily session is established by this review." }
+  ],
+  "remainingReceptionBoundaries": ["T03CX", "T04CX", "T03XC"],
+  "feedbackMessageId": "17734fb5-eef2-478c-b855-a252f4f6a406",
+  "poActionRequiredNow": false,
+  "pluginIncrementDone": false
+}

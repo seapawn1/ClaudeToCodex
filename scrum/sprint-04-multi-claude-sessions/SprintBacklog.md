@@ -2,14 +2,14 @@
 
 - 创建：2026-09-11；范围确认：2026-09-12；本次修订：2026-09-13。
 - 范围：PO 已决定先推进 Sprint 04 / PBI-11；PBI-09、PBI-10、PBI-12、PBI-13 留在 Sprint 03。
-- 状态：进入 Planning 与隔离原型准备；Developer 评估可行性、工作项与容量，技术细节由其确定，需要 PO 参与的事项由 SM 汇报。
+- 状态：`ee73808` 的 S04-11-1 至 S04-11-8 已通过 SM 独立技术验收。19 个安装文件、16 个 bridge 镜像、三项收信边界及 A/B 业务问答、交错追问、相近来信均已核；不变代码的 50/50 回归及适用历史证据明确记录复用。进入 Sprint Review 的 PO 体验与价值检视，PO DoD、发布及整个 Sprint 尚未完成。
 - 参与者：PO、SM / Codex、Developer / Claude Code。PO 指定的 Developer 会话为 `ClaudeToCodex # [developer]-[sprint-04]-[开始执行sprint-04冲刺]`。
-- 节奏：时长、开始日及收口日期待 Planning 明确。
+- 节奏：2026-09-13 已开始执行；完整 Sprint 时盒与收口日期尚未记录，Developer 的首检查点估计不等于整个 Sprint 的完成承诺。
 - 基线：以已发布的 1.0.0 通信能力为基础，Sprint 04 独立推进与验收，不以前置完成 Sprint 03 为条件。
 
 ## 第一部分：Sprint Goal 与 DoD
 
-### Sprint Goal（PO 方向，待团队 Planning 收敛）
+### Sprint Goal
 
 > 让 PO 通过同一个 Codex 原始会话，与至少两个可明确辨认的 Claude Code 原始会话持续开展独立交流，无需为了更换交流对象而拆除另一条连接，且每次消息、回复与连接操作都作用于正确目标。
 
@@ -27,11 +27,11 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 ## 第二部分：选入 PBI 与验收标准
 
-来源：[Product Backlog](../ProductBacklog.md)；后续体验范围见 [Sprint 03 Backlog](../sprint-03-usability-polish/SprintBacklog.md)。PBI-11 已由 PO 确认为优先推进方向；Developer 对可完成范围的预测待研究与容量评估。
+来源：[Product Backlog](../ProductBacklog.md)；后续体验范围见 [Sprint 03 Backlog](../sprint-03-usability-polish/SprintBacklog.md)。PBI-11 已由 PO 确认为优先推进方向；Developer 在 `worktree-s04-pbi-11` 分支维护第三部分的工作分解与预测。2026-09-13 的独立核验见 [W6/W7 检视记录](coordination/w6-w7-review.json)；`44c1119` 的修正检视与候选验收安排见 [W8 整合前检视](coordination/w8-preintegration-review.json)。原型证据不代表产品验收完成。
 
 | 编号 | 标题 | 用户故事 | 当前状态 |
 |---|---|---|---|
-| PBI-11 | 一 Codex 对多 Claude Code 会话 | 作为日常使用者，我要让一个 Codex 会话同时与多个 Claude Code 会话保持桥接并按名称往来，以便并行开展多项协作，而不是每次换目标都要换配对。 | PO 已授权先推进；Developer 进行 Planning 与隔离原型评估 |
+| PBI-11 | 一 Codex 对多 Claude Code 会话 | 作为日常使用者，我要让一个 Codex 会话同时与多个 Claude Code 会话保持桥接并按名称往来，以便并行开展多项协作，而不是每次换目标都要换配对。 | 八项技术 AC 通过；待 PO 体验与验收结论；未 Done |
 
 ### 与 Sprint 03 的责任边界（无前置依赖）
 
@@ -49,6 +49,7 @@ Sprint 04 以 1.0.0 为基线，完成多配对所必需的目标辨识、基本
 - 先在独立工作区编写原型代码，验证多配对、路由和统一收件；原型阶段保持产品源码、分发副本及已安装插件原状。具体架构和分解由 Developer 决定。
 - 使用专用测试 Codex 与两个测试 Claude，隔离工作目录、配置、桥数据及生效 hooks。不得修改日常插件安装、缓存、marketplace、共享配置或在用桥；对话内禁用若可能影响共享配置，不作为默认隔离办法。
 - 最小真实检查点覆盖两个配对共存、交错回复不串目标、相近时间来信处理。原型通过后再在开发工作区整合产品代码，并在独立测试安装中验收候选插件；日常安装更新由 PO 另行决定。
+- PO 于 2026-09-13 决定并发加固在 `b8e392e` 锁所有权修正处收口（Developer 记录 `a09869e`）。SM 对已报告缺口做针对性复验，后续集中于 W8 候选安装、实际插件路径及三项收信边界；更深并发研究如有需要，作为 Product Backlog 候选由 PO 后续排序，不新增本 Sprint 的验收门槛。此范围决定不替代现有 AC 与 DoD 的候选验收。
 - Developer 与 SM 组织环境准备和技术验证；需要 PO 登录、宿主信任、范围取舍或集中体验时，由 SM 报告具体事项。原型验证不计为插件 Increment 已达到 DoD。
 
 ### 明确不纳入
@@ -60,9 +61,9 @@ Sprint 04 以 1.0.0 为基线，完成多配对所必需的目标辨识、基本
 
 不承诺并发吞吐或全局顺序，并不免除两个目标相近时间回复时的明确处理规则，见 S04-11-5。
 
-### PBI-11 验收标准（审阅稿）
+### PBI-11 验收标准
 
-以下编号用于逐项验收与证据关联。验收细节待研究后与 PO 明确，可行性由 Developer 评估。
+以下编号用于逐项验收与证据关联。本轮技术检视以这些既定标准和共同验收要求为依据，PO 的体验与 DoD 结论另行记录。
 
 1. **S04-11-1 配对共存**：在声明支持的 Windows 环境中，同一个 Codex 原始会话能显式建立并保留至少两个正在运行的 Claude 原始会话目标。连接 B 不拆除 A；状态入口能辨认各目标、项目上下文、原会话和连接状态。
 2. **S04-11-2 目标确定**：新发送有确定的目标，实际对象与用户选择一致。目标名称不存在、有歧义、身份失效或已断开时，操作说明原因与可执行下一步，不猜测、不静默切换。名称只是可读选择依据，不能替代稳定的原会话身份。
@@ -75,8 +76,12 @@ Sprint 04 以 1.0.0 为基线，完成多配对所必需的目标辨识、基本
 
 ### 共同验收要求
 
+SM 当前逐项结论见 [独立验收表](coordination/acceptance-review.json)，`ee73808` 的安装清单、原始会话证据、三边界更正、业务补验与证据复用依据见 [候选技术验收](coordination/candidate-ee73808-review.json)。八项技术 AC 已通过；原型与安装候选分别记录，历史失败和人工恢复样本仍按原定性保留。候选 hook 的有效信任与执行已核，建立者暂记未知；重启 PID 归属注明来自 Developer 补述。
+
+- SM 对照 S04-11-1 至 S04-11-8 与 DoD 独立验收，逐项记录最终候选版本、证据、通过 / 部分 / 未测 / 不通过及剩余缺口，形成技术验收建议。Developer 的工作项完成与测试数量不代替验收；Developer 仍负责实现、质量与第三部分工作计划，PO 判断价值并作出其验收和发布决定。
 - 收信按接收方原始会话中的完整正文、自动 messageId / pairId / conversationId / replyTo、目标身份、数据目录和时间窗核对。fixture、宿主加载、实际执行与原会话收信分别判定，`submitted:true` 或单条 context-prepared 不等于收信。
 - 同一轮真实使用分别记录技术 AC 与 PO DoD，PO 无需手写标记、ID 或环境变量。
+- 安装候选的必要端到端验证由 Developer 与 SM 组织；PO 不必重复已充分验证的整套技术测试。[PO 最小体验安排](coordination/po-review-arrangement.md)已就绪，复用现有隔离窗口与有效 A/B，会话中的普通产品讨论预计 5-10 分钟。技术通过不改变 DoD，材料审阅与实际亲身体验分别记录；PO 判断价值并作出验收和发布决定。
 
 ## 第三部分：Developer 工作区
 
