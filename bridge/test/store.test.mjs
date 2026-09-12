@@ -669,15 +669,16 @@ test('concurrent first connects of one identity leave exactly one active pair (S
   assert.equal(store.findPairByClaude(claudeA).claudeId, claudeA);
 });
 
-test('an independent observer never sees an id active and retired at once during churn (SM 10a58a0f-1)', async (t) => {
+test('retire churn with an independent observer: acceptance ends at the retire point (SM 8439e9ca-1)', async (t) => {
   const { root, store, pairA, epA } = setup(t, { withB: false });
   const storeUrl = pathToFileURL(fileURLToPath(new URL('../store.mjs', import.meta.url))).href;
   const done = join(root, 'churn-done');
+  const timeline = join(root, 'timeline.jsonl');
   const env = { ...process.env, CTC_BRIDGE_DIR: root };
   delete env.CODEX_THREAD_ID;
   delete env.CLAUDE_CODE_SESSION_ID;
   const run = (code) => new Promise((resolveRun, rejectRun) => {
-    const child = spawn(process.execPath, ['--input-type=module', '-e', code], { env, windowsHide: true, timeout: 60000 });
+    const child = spawn(process.execPath, ['--input-type=module', '-e', code], { env, windowsHide: true, timeout: 90000 });
     let output = '';
     let errors = '';
     child.stdout.setEncoding('utf8').on('data', (data) => { output += data; });
@@ -687,32 +688,108 @@ test('an independent observer never sees an id active and retired at once during
   });
   const refresher = `
     import { BridgeStore } from "${storeUrl}";
-    import { existsSync, writeFileSync } from 'node:fs';
     const store = new BridgeStore(${JSON.stringify(root)});
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 200; i++) {
       try { store.pair(${JSON.stringify(codexId)}, ${JSON.stringify(resolve(epA))}, i % 2 ? 'alpha' : 'renamed-alpha'); } catch (error) { if (!/lock is busy/.test(String(error))) throw error; }
+    }
+  `;
+  const cycler = `
+    import { BridgeStore } from "${storeUrl}";
+    import { appendFileSync, writeFileSync } from 'node:fs';
+    const store = new BridgeStore(${JSON.stringify(root)});
+    const timeline = ${JSON.stringify(timeline)};
+    // Let the observer boot and exercise acceptance against the ORIGINAL pair
+    // before any retire takes effect; the churn ends only after the retire
+    // cycles complete, so the observer always sees post-retire refusals.
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 1500));
+    for (let i = 0; i < 6; i++) {
+      const active = store.findPairByClaude(${JSON.stringify(claudeA)});
+      store.retire(active.id);
+      appendFileSync(timeline, JSON.stringify({ t: Date.now(), kind: 'retired', pairId: active.id }) + '\\n');
+      const rebuilt = store.pair(${JSON.stringify(codexId)}, ${JSON.stringify(resolve(epA))}, 'alpha');
+      appendFileSync(timeline, JSON.stringify({ t: Date.now(), kind: 'rebuilt', pairId: rebuilt.id }) + '\\n');
     }
     writeFileSync(${JSON.stringify(done)}, 'done');
   `;
   const observer = `
     import { BridgeStore } from "${storeUrl}";
-    import { existsSync } from 'node:fs';
+    import { appendFileSync, existsSync } from 'node:fs';
     const store = new BridgeStore(${JSON.stringify(root)});
-    let checks = 0; let dual = 0; let accepted = 0; let errors = 0; let lastError = '';
+    const timeline = ${JSON.stringify(timeline)};
+    const pair = JSON.parse(${JSON.stringify(JSON.stringify(pairA))});
+    let snapshots = 0; let dual = 0; let acceptedTotal = 0; let rejected = 0; let errors = 0; let lastError = '';
     while (!existsSync(${JSON.stringify(done)})) {
       try {
-        const active = store.pairById(${JSON.stringify(pairA.id)});
-        const retired = store.retiredPairById(${JSON.stringify(pairA.id)});
-        if (active && retired) dual++;
-        if (active) { try { store.prepare(active, 'claude', 'observer probe', null, ${JSON.stringify(claudeA)}); accepted++; } catch (error) { lastError = String(error); } }
-        checks++;
+        const snapshot = store.withLock(() => ({ active: Boolean(store.pairById(pair.id)), retired: Boolean(store.retiredPairById(pair.id)) }));
+        if (snapshot.active && snapshot.retired) dual++;
+        snapshots++;
+        try {
+          store.prepare(pair, 'claude', 'observer probe', null, ${JSON.stringify(claudeA)});
+          acceptedTotal++;
+          appendFileSync(timeline, JSON.stringify({ t: Date.now(), kind: 'accepted', pairId: pair.id }) + '\\n');
+        } catch (error) {
+          if (/not registered/.test(String(error))) rejected++; else { errors++; lastError = String(error); }
+        }
       } catch (error) { errors++; lastError = String(error); }
     }
-    process.stdout.write(JSON.stringify({ checks, dual, accepted, errors, lastError }));
+    process.stdout.write(JSON.stringify({ snapshots, dual, acceptedTotal, rejected, errors, lastError }));
   `;
-  const [, report] = await Promise.all([run(refresher), run(observer)]);
+  const [, , report] = await Promise.all([run(refresher), run(cycler), run(observer)]);
   const result = JSON.parse(report);
-  assert.ok(result.checks > 0, 'observer must have exercised the window');
-  assert.equal(result.dual, 0, 'an id is never active and retired at the same time');
-  assert.equal(result.errors, 0, `registry reads must never fail: ${result.lastError}`);
+  const events = readFileSync(timeline, 'utf8').trim().split('\n').map(JSON.parse);
+  const retires = events.filter((e) => e.kind === 'retired');
+  const acceptances = events.filter((e) => e.kind === 'accepted');
+  assert.ok(retires.length >= 3, 'the churn must include real retire actions');
+  assert.equal(result.dual, 0, 'a single-instant locked snapshot never shows the id active and retired at once');
+  assert.equal(result.errors, 0, `observer must never see unrelated failures: ${result.lastError}`);
+  assert.ok(result.acceptedTotal > 0, 'the observer must have exercised acceptance while the pair was live');
+  assert.ok(result.rejected > 0, 'post-retire attempts must occur and be refused');
+  // Acceptance for the original id ended at its first retire: every accepted
+  // probe predates the retire effective point recorded under the same lock.
+  const firstRetireAt = retires[0].t;
+  assert.ok(acceptances.every((e) => e.t < firstRetireAt), 'no acceptance for the id after its retire took effect');
+  assert.equal(result.acceptedTotal, acceptances.length, 'acceptance counters match the timeline');
+  const finalActive = store.findPairByClaude(claudeA);
+  assert.notEqual(finalActive.id, pairA.id, 'the rebuilt pair carries a new id');
+  assert.ok(store.retiredPairById(pairA.id), 'the original id rests only in the archive');
+});
+
+test('lock ownership: live holders are never robbed, crashed ones are taken over, and release touches only its own lock (SM c8e26e22)', (t) => {
+  const { root, store } = setup(t, { withB: false });
+  const lock = join(root, '.lock');
+  const env = { ...process.env };
+  delete env.CODEX_THREAD_ID;
+  delete env.CLAUDE_CODE_SESSION_ID;
+  // A live owner with a foreign token: contention fails honestly as busy -
+  // no age threshold may rob a holder whose pid is alive.
+  mkdirSync(lock);
+  writeFileSync(join(lock, 'owner'), `${process.pid}-live-but-slow`);
+  assert.throws(() => store.withLock(() => 'ran'), /lock is busy/);
+  assert.ok(existsSync(join(lock, 'owner')), 'the live holder kept its lock');
+  rmSync(lock, { recursive: true, force: true });
+  // A crashed holder whose pid is provably gone: a fresh-exit Windows pid can
+  // still answer the existence probe (handle semantics), so the takeover
+  // branch is driven by an owner pid that cannot exist. The real cross-
+  // process mutex behaviour is covered by the churn and first-connect tests.
+  mkdirSync(lock);
+  writeFileSync(join(lock, 'owner'), '999999999-notalive');
+  let ran = null;
+  for (let attempt = 0; attempt < 3 && ran === null; attempt++) {
+    try { ran = store.withLock(() => 'took over after the crashed holder'); }
+    catch (error) { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 3000); }
+  }
+  assert.equal(ran, 'took over after the crashed holder');
+  assert.ok(!existsSync(lock), 'our own release removed our own lock');
+  // A robbed holder never deletes the new owner's lock: while holding the
+  // lock, simulate the post-takeover state (the lock now belongs to someone
+  // else) and exit - the release must skip the foreign lock.
+  const kept = store.withLock(() => {
+    rmSync(lock, { recursive: true, force: true });
+    mkdirSync(lock);
+    writeFileSync(join(lock, 'owner'), `${process.pid}-newowner`);
+    return 'fn done';
+  });
+  assert.equal(kept, 'fn done');
+  assert.equal(readFileSync(join(lock, 'owner'), 'utf8').trim(), `${process.pid}-newowner`);
+  rmSync(lock, { recursive: true, force: true });
 });

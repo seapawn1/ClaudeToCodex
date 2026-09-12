@@ -71,19 +71,39 @@ export class BridgeStore {
   // longer interleave with a retire (a resurrected id is never observable or
   // acceptable mid-operation), and two concurrent first connects of the same
   // identity cannot both create a pair (1.0.0's single-file wx flag gave this
-  // guarantee; the registry needs the lock). mkdir is the atomic acquire; a
-  // lock older than the stale threshold is taken over after a crash.
+  // guarantee; the registry needs the lock).
+  // Ownership rules (SM 8439e9ca): the lock dir carries an owner token
+  // (pid + random). Takeover happens ONLY on provable death - the owner pid
+  // is gone, or the owner file is missing on a lock older than the stale
+  // threshold (our protocol writes the token immediately after mkdir, so
+  // absence means a crashed acquire). A live-but-slow holder is never robbed;
+  // contention beyond the wait budget fails honestly as busy. Release
+  // removes the lock only when the owner token still matches, so a robbed
+  // stale holder cannot delete the new owner's lock.
   withLock(fn) {
     const lock = join(this.root, '.lock');
+    const token = `${process.pid}-${randomUUID()}`;
+    const STALE_MS = 10000;
     for (let attempt = 0; ; attempt++) {
       try {
         mkdirSync(lock);
+        try {
+          writeFileSync(join(lock, 'owner'), token, { flag: 'wx' });
+        } catch (ownerError) {
+          // mkdir won but the token write failed: leave nothing half-owned.
+          rmSync(lock, { recursive: true, force: true });
+          throw ownerError;
+        }
         break;
       } catch (error) {
         if (error.code !== 'EEXIST') throw error;
         if (attempt >= 400) {
-          if (Date.now() - statSync(lock).mtimeMs > 10000) {
-            rmSync(lock, { recursive: true, force: true });
+          if (this.provablyDeadLock(lock, STALE_MS)) {
+            const tombstone = join(this.root, `.lock-dead-${randomUUID()}`);
+            try {
+              renameSync(lock, tombstone);
+              rmSync(tombstone, { recursive: true, force: true });
+            } catch { /* another waiter took it over first */ }
             continue;
           }
           throw new Error('The bridge registry lock is busy; retry the operation shortly.');
@@ -94,7 +114,36 @@ export class BridgeStore {
     try {
       return fn();
     } finally {
-      rmSync(lock, { recursive: true, force: true });
+      try {
+        const current = readFileSync(join(lock, 'owner'), 'utf8').trim();
+        if (current === token) rmSync(lock, { recursive: true, force: true });
+      } catch { /* not ours or already gone: nothing to remove */ }
+    }
+  }
+
+  provablyDeadLock(lock, staleMs) {
+    let owner;
+    try {
+      owner = readFileSync(join(lock, 'owner'), 'utf8').trim();
+    } catch (error) {
+      if (error.code !== 'ENOENT') return false;
+      // No owner token on an old lock means a crashed acquire (the token is
+      // written immediately after mkdir); young locks are simply racing.
+      try {
+        return Date.now() - statSync(lock).mtimeMs > staleMs;
+      } catch {
+        return false;
+      }
+    }
+    const pid = Number.parseInt(owner.split('-')[0], 10);
+    if (!Number.isInteger(pid)) return false;
+    try {
+      process.kill(pid, 0); // owner is alive
+      return false;
+    } catch (error) {
+      // Only ESRCH proves death. On Windows EPERM means the process EXISTS
+      // under another owner - treating it as dead would rob a live holder.
+      return error.code === 'ESRCH';
     }
   }
 
