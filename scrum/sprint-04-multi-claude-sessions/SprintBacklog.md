@@ -110,13 +110,13 @@ Sprint 04 以 1.0.0 为基线，完成多配对所必需的目标辨识、基本
 
 | AC | 状态 | 关键证据 |
 |---|---|---|
-| S04-11-1 配对共存 | 通过（真实环境） | run3 两配对并存（25784c0a→A、b2bd54db→B），connect B 不拆 A；status 可辨各目标与端点 |
-| S04-11-2 目标确定 | 通过（真实） | A×3、B×3+ 均投正确原会话（入站帧核对）；同名歧义真实层两次如实拒绝并列候选；失效端点如实 send-error；未知目标/未知回复分支见 W6b 记录 |
+| S04-11-1 配对共存 | 通过（真实环境；项目辨识信息已补） | run3 两配对并存（25784c0a→A、b2bd54db→B），connect B 不拆 A；status 补 endpoint cwd 项目上下文（endpointOnDisk 仅示注册文件存在，不作存活/可达声明；fixture 验证，真实层随候选复验） |
+| S04-11-2 目标确定 | 通过（真实；名称刷新已补） | A×3、B×3+ 均投正确原会话（入站帧核对）；同名歧义真实层两次如实拒绝并列候选（现列完整 pairId、措辞中性、retire 可执行）；失效端点如实 send-error；未知目标/未知回复分支见 W6b；重连名称刷新（改名沿用新名、legacy 无名重连获名、与新增目标共存均可按名选定）fixture 验证 |
 | S04-11-3 回复归属 | 通过（真实） | c0bd3823 对 A 旧消息 reply：to=A（90cdb961）、conversationId 保持首轮 fa4bd398；当时最近往来为 B |
 | S04-11-4 真实交流 | 通过（真实，B 追问闭环已补） | A 两轮、B 一轮+追问，自动唤醒回链（wake-submitted→context-prepared；明确不含 d65bd878 人工恢复样本）；1f8a1145 无入站（无误投） |
 | S04-11-5 重叠来信 | 通过（真实） | 实际时间记录：65f7cb76 发布 18:31:42.255、上下文准备 18:31:51.701；bbe290fc 发布 18:31:46.183、上下文准备 18:32:02.185；两条 wake（44.352/46.701）均早于任一上下文准备；A 经 UserPromptSubmit、B 经 PostToolUse 逐事件进入，无覆盖无串目标；B 重复 wake 被抑制各一次；1f8a1145 同槽拒绝=未接纳。无 claim/槽快照，不声称并存时长下界。d65bd878 为人工恢复样本，另册不计自动唤醒 |
 | S04-11-6 单目标生命周期隔离 | 通过（真实；在途约定已定并有交错测试） | 停 A 后 B 全链路自动回链（6ea2c2f1）；旧端点直发 7b13c457（replyTo=null）与旧消息回复 a6fd3f8a（replyTo=d65bd878）均如实 send-error 无误投（ID 已按 SM 478e4529 更正）；A 重启 connect 成新配对（1cec6785）、同名歧义如实拒绝；显式 retire（25784c0a）为重建边界、证据存 pairs-retired；恢复后新 A 自动回链（e9aced4d，自报 sessionId 前四位）。retire/publish 竞态窗口按"已接纳必达、退役只停新路由"约定关闭（take 按收件地址选取，retired 配对在途信仍投递并在收据标注 pairRetired；退役后新发/新回复在 prepare 即拒）——两种交错 fixture 复现验证。余项：退役/重建后回旧消息的真实层拒绝样本待补 |
-| S04-11-7 单目标兼容 | 部分 | 单目标免 --name 真实往返不回退（77b5fb5d→d7392a3a）✓。legacy：可见、免 --name 真实送达（5fc9bbb0 B 已收）✓；但 de5319b9 正文未达（主根 hooks 不服务 legacy 根）=未闭环样本；且当时同身份 connect 实际被 changed-endpoint 拒绝（我曾误记为"沿用不新写"，按 SM 更正）——已实现端点显式刷新（同身份仅更新 endpointPath，id/createdAt 不变，事件留痕，fixture 验证）。升级条件：hooks 与根一致的隔离环境完整闭环 + 工作中收信真实证据 |
+| S04-11-7 单目标兼容 | 主体通过；余工作中收信 | 单目标免 --name 真实往返（77b5fb5d→d7392a3a）✓。legacy 真实闭环（W10，hooks 与根一致的同线程 resume 环境）：搁浅回复 de5319b9 经 hook 恢复投递（19:37:43，单列为环境修正后恢复样本）→ 同身份 connect 端点原位刷新（legacy-endpoint-updated，19:38:04）→ 免 --name 新业务消息送达（fb2dce20）→ B 回复全自动闭环（7ac38f36 published→wake→context-prepared）→ 槽清空。旧 pair.json 按已验证 1.0.0 格式合成。余项：工作中收信按 T03/T04 模式重测（八-1 未构成样本，已如实记录） |
 | S04-11-8 产品化 | 未开始 | 原型阶段刻意不动 `bridge/` 与 `plugins/` 产品树 |
 
 过程中发现并修复（均限测试范围代码）：hooks.json BOM、项目受信条目、启动身份变量泄漏、回复指引缺 CODEX_HOME；详见 DESIGN §6。协作副产物：A/B 各提出一条真实产品建议（简化 reply 指引的风险与可溯源推断）。

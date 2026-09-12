@@ -163,19 +163,26 @@ export class BridgeStore {
     const existing = current.find((pair) => pair.codexId === selected.codexId && pair.claudeId === selected.claudeId);
     if (existing) {
       const isLegacy = this.legacyPair()?.id === existing.id;
-      if (existing.endpointPath !== selected.endpointPath) {
+      // Reuse refreshes what the reconnect actually brings (SM d8b04760-1):
+      // a moved endpoint updates endpointPath, and a carried session name
+      // updates the stored target name - so renamed sessions and legacy pairs
+      // without a name become addressable. Id and createdAt never change, a
+      // null name never erases an existing one, and no new pair appears.
+      const refreshed = { ...existing };
+      if (existing.endpointPath !== selected.endpointPath) refreshed.endpointPath = selected.endpointPath;
+      if (claudeName && existing.claudeName !== claudeName) refreshed.claudeName = claudeName;
+      const changed = ['endpointPath', 'claudeName'].filter((key) => refreshed[key] !== existing[key]);
+      if (changed.length > 0) {
+        const text = `${JSON.stringify(refreshed, null, 2)}\n`;
+        // Event names stay stable with the earlier runs (endpoint-updated,
+        // legacy-endpoint-updated) so recorded evidence keeps matching.
+        const suffix = { endpointPath: 'endpoint', claudeName: 'claudeName' };
         if (isLegacy) {
-          // S04-11-7 continue-using path (SM review 5a2d818c): reconnecting the
-          // same identity refreshes the legacy endpoint in place - same id and
-          // createdAt, only endpointPath moves to this root, event recorded.
-          // No new pair is created and nothing is silently replaced.
-          writeFileSync(join(this.root, 'pair.json'),
-            `${JSON.stringify({ ...existing, endpointPath: selected.endpointPath }, null, 2)}\n`);
-          this.event('legacy-endpoint-updated', { pairId: existing.id, endpointPath: selected.endpointPath });
+          writeFileSync(join(this.root, 'pair.json'), text);
+          for (const key of changed) this.event(`legacy-${suffix[key]}-updated`, { pairId: existing.id, [key]: refreshed[key] });
         } else {
-          writeFileSync(join(this.root, 'pairs', `${existing.id}.json`),
-            `${JSON.stringify({ ...existing, endpointPath: selected.endpointPath }, null, 2)}\n`);
-          this.event('endpoint-updated', { pairId: existing.id, endpointPath: selected.endpointPath });
+          writeFileSync(join(this.root, 'pairs', `${existing.id}.json`), text);
+          for (const key of changed) this.event(`${suffix[key]}-updated`, { pairId: existing.id, [key]: refreshed[key] });
         }
       }
       return this.pairById(existing.id);

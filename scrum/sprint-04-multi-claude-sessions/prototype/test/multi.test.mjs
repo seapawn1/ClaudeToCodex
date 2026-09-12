@@ -374,6 +374,50 @@ test('a root with another Codex retired history refuses rebinding; same-Codex re
   assert.equal(store.pairs().length, 1);
 });
 
+test('reconnects refresh the target name so renamed and legacy pairs stay addressable (SM d8b04760-1)', (t) => {
+  const { store, pairA, epA } = setup(t, { withB: false });
+  // A renamed session reconnecting the same identity updates the stored name.
+  store.pair(codexId, epA, 'renamed-alpha');
+  const refreshed = store.pairById(pairA.id);
+  assert.equal(refreshed.id, pairA.id, 'identity unchanged');
+  assert.equal(refreshed.claudeName, 'renamed-alpha');
+  assert.equal(store.resolveTarget('renamed-alpha').id, pairA.id);
+  // Substring semantics (like session discovery): the old short form still
+  // matches the renamed target and no longer matches anything else.
+  assert.equal(store.resolveTarget('alpha').id, pairA.id);
+  // A legacy pair without a name gains one on reconnect and coexists with a
+  // new named target; both stay selectable by name with no hand-written ids.
+  const root2 = mkdtempSync(join(tmpdir(), 'ctc-multi-named-legacy-'));
+  t.after(() => rmSync(root2, { recursive: true, force: true }));
+  const legacyEndpoint = join(root2, 'endpoints', `claude-${claudeA}.json`);
+  mkdirSync(join(root2, 'endpoints'), { recursive: true });
+  writeFileSync(legacyEndpoint, JSON.stringify({ sessionId: claudeA, cwd: 'D:\\proj\\legacy' }));
+  const legacy = { id: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeee02', codexId, claudeId: claudeA, endpointPath: legacyEndpoint, createdAt: '2026-09-01T00:00:00.000Z' };
+  writeFileSync(join(root2, 'pair.json'), `${JSON.stringify(legacy, null, 2)}\n`);
+  const legacyStore = new BridgeStore(root2);
+  legacyStore.pair(codexId, legacyEndpoint, 'legacy-alpha');
+  const epB2 = join(root2, 'ep-b.json');
+  writeFileSync(epB2, JSON.stringify({ sessionId: claudeB, cwd: 'D:\\proj\\beta' }));
+  const betaPair = legacyStore.pair(codexId, epB2, 'beta');
+  assert.equal(legacyStore.resolveTarget('legacy-alpha').id, legacy.id);
+  assert.equal(legacyStore.resolveTarget('beta').id, betaPair.id);
+  assert.equal(legacyStore.pairById(legacy.id).claudeName, 'legacy-alpha');
+});
+
+test('status carries project context from the endpoint without claiming liveness (SM d8b04760-2)', (t) => {
+  const { store, root } = setup(t);
+  const env = { ...process.env, CTC_BRIDGE_DIR: root };
+  delete env.CODEX_THREAD_ID;
+  delete env.CLAUDE_CODE_SESSION_ID;
+  const run = spawnSync(process.execPath, [cli, 'status'], { env, encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  const out = JSON.parse(run.stdout);
+  assert.equal(out.pairs.length, 2);
+  assert.ok(out.pairs.every((p) => typeof p.project === 'string' || p.project === null));
+  assert.ok(out.pairs.every((p) => typeof p.endpointOnDisk === 'boolean'));
+  assert.ok(out.pairs.every((p) => !('alive' in p) && !('reachable' in p)), 'no liveness claim is made');
+});
+
 test('single-target send keeps the 1.0.0 shape without --name; several targets refuse (S04-11-7, SM 01f3554d)', (t) => {
   const { store, pairA, pairB, root } = setup(t);
   const base = { ...process.env, CODEX_THREAD_ID: codexId };

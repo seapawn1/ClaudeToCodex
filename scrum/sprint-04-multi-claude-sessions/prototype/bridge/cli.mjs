@@ -155,9 +155,16 @@ async function main() {
     const pairs = store.pairs().map((pair) => {
       const pendingPath = join(store.root, 'pending', pair.id, 'message.json');
       const pending = existsSync(pendingPath) ? readJson(pendingPath) : null;
+      // Project context comes from the endpoint's recorded cwd (S04-11-1);
+      // endpointOnDisk only says the registration file exists - it is NOT a
+      // process-alive or reachability claim, and none is implied here.
+      let project = null;
+      if (existsSync(pair.endpointPath)) {
+        try { project = readJson(pair.endpointPath).cwd ?? null; } catch { project = null; }
+      }
       return {
         pairId: pair.id, target: pair.claudeName ?? null, claudeId: pair.claudeId, codexId: pair.codexId,
-        createdAt: pair.createdAt ?? null, endpoint: pair.endpointPath, endpointOnDisk: existsSync(pair.endpointPath),
+        createdAt: pair.createdAt ?? null, project, endpoint: pair.endpointPath, endpointOnDisk: existsSync(pair.endpointPath),
         pendingMessageId: pending?.id ?? null,
       };
     });
