@@ -30,7 +30,7 @@ $hooks = [ordered]@{
     }
 }
 
-foreach ($name in 'workCodex', 'workA', 'workB') {
+foreach ($name in 'workCodex', 'workA', 'workB', 'codex-home') {
     New-Item -ItemType Directory -Force -Path (Join-Path $TestRoot $name) | Out-Null
 }
 $hooksFile = Join-Path $TestRoot 'workCodex\.codex\hooks.json'
@@ -40,6 +40,7 @@ $hooks | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -LiteralPath $hook
 [PSCustomObject]@{
     BridgeRoot = $BridgeRoot
     TestRoot   = $TestRoot
+    CodexHome  = Join-Path $TestRoot 'codex-home'
     HooksFile  = $hooksFile
     HookCommand = $hookCommand
     CliPath    = $CliPath

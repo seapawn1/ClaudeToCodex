@@ -99,7 +99,7 @@ Sprint 04 以 1.0.0 为基线，完成多配对所必需的目标辨识、基本
 | W1 | 基线复读 + Developer 工作区填写 | 0.25d | 2026-09-13 完成 |
 | W2 | 预研：多配对数据模型与路由设计笔记（`prototype/DESIGN.md`） | 0.5d | 2026-09-13 完成（含 SM 澄清后的 D4/D5 修订） |
 | W3 | 原型骨架：隔离副本扩展多配对 + fixture 级测试（共存、回复归属、重叠三态、唤醒去重） | 1d | 2026-09-13 完成：`prototype/bridge/`（store/cli 改多配对，entry/sessions/delivery 沿用 1.0.0）+ `prototype/test/multi.test.mjs` 10/10 通过 |
-| W4 | 真实闭环 harness：专用测试 Codex + Claude A/B（隔离桥数据），原会话收信与空闲唤醒验证 | 1d | 未开始（环境分工已明确：Developer 准备并启动测试会话，SM 核对隔离与证据） |
+| W4 | 真实闭环 harness：专用测试 Codex + Claude A/B（隔离桥数据），原会话收信与空闲唤醒验证 | 1d | 进行中：harness 已可检视（`prototype/harness/`：Set-Up-TestEnv + Start-TestSessions 干跑通过，自动初始提示/身份清理/隔离 CODEX_HOME 就绪），待 SM 检视后真启动 |
 | W5 | 首个检查点自查并向 SM 报告 | 0.25d | 未开始 |
 
 检查点后另排：单目标失效隔离（S04-11-6）、单目标兼容与旧数据路径（S04-11-7）、产品树整合与安装候选验收（S04-11-8）。
@@ -107,5 +107,7 @@ Sprint 04 以 1.0.0 为基线，完成多配对所必需的目标辨识、基本
 ### 障碍与待明确
 
 - 协调通道：按 SM 指示用 codex queue 回报，不用标准桥 reply（避免在协调目录留无法投递的待收槽）；不改 SM hooks 与日常配对。
-- 环境分工（SM 2026-09-13 消息 cb7917e4，PO 已同意）：Developer 准备并启动专用测试 Codex 与 Claude A/B，SM 核对隔离与证据；先核对能维持同一原始测试会话的启动方式（不每条消息新建/替代会话）。独立配置/工作目录/桥数据/原型 hooks，仅测试范围内操作；保留用户模型与 provider 设置；不复制或伪造 hook 信任、不绕过授权；确需交互登录/人工信任时，先备好具体入口、用途与最小操作发 SM 转 PO。
+- 环境分工（SM 消息 cb7917e4 / f3ab48b8，PO 已同意）：Developer 准备并启动专用测试 Codex 与 Claude A/B，SM 核对隔离与证据；PO 触点仅限实际登录/信任/体验，届时给已备好的入口。
+- 待 PO 决定（经 SM 转）：隔离 CODEX_HOME 内测试 Codex 的登录方式——(a) 测试窗口一次性 `codex login`（Developer 推荐，信任链最干净）或 (b) PO 明确授权后复制日常 auth.json。日常凭据不默认复制。`--dangerously-bypass-hook-trust` 旗标已知存在，按"不绕过授权"边界刻意不用；hook 信任保留为测试窗口内一次性人工确认。
 - 宿主版本按 SM 只读核对：Codex CLI 0.154.0、Claude Code 2.1.268；相应宿主行为在 W4 实测，不沿用旧版本假设。
+- 按 SM c9a1f0d9 口径：读取配置、创建测试文件不算宿主隔离已实证；隔离实证以真启动后的 `codex doctor --json` 加载核查与实际运行为准。

@@ -13,47 +13,28 @@
 ## 1. 搭建
 
 ```powershell
-node --test "scrum/sprint-04-multi-claude-sessions/prototype/test/*.test.mjs"   # 前置应 10/10
+node --test "scrum/sprint-04-multi-claude-sessions/prototype/test/*.test.mjs"   # 前置应 13/13（含 SM 复审回归 T11-T13）
 powershell -File "scrum/sprint-04-multi-claude-sessions/prototype/harness/Set-Up-TestEnv.ps1"
 ```
 
-## 2. 启动三个原始测试会话
+## 2. 启动三个原始测试会话（Start-TestSessions.ps1）
 
-### 2.1 测试 Codex（专用 TUI 窗口）
-
-```powershell
-$env:CTC_BRIDGE_DIR = "$env:LOCALAPPDATA\ClaudeToCodex\s04-test-bridge"
-Start-Process powershell -WorkingDirectory "$env:LOCALAPPDATA\ClaudeToCodex\s04-test\workCodex" -ArgumentList '-NoExit','-Command','codex'
-```
-
-初始提示词（贴入该窗口）：
-
-> 你是 Sprint 04 专用测试 Codex 会话，仅用于桥接多配对验证，不做其他工作。请先执行：
-> `Set-Content -Path .\thread-id.txt -Value $env:CODEX_THREAD_ID`
-> 然后等待后续指令。
-
-- **预期 PO 触点**：首个 hook 事件触发时，Codex 会要求信任 hook 定义（`node "<worktree>\...\prototype\bridge\cli.mjs" hook` 三条）。这是宿主信任机制，不可代点、不可预置——已备具体入口（测试窗口内 /hooks 或提示处确认）报 SM 转 PO。
-- 之后的指令经 `codex queue --thread <thread-id.txt 内容> --message ...` 下发，保持同一原始会话。
-
-### 2.2 Claude A / B（后台会话）
+一个启动入口完成全部动作（SM 7690b372 要求：可检视、自动传递初始提示、不劳 PO 粘贴/复制）：
 
 ```powershell
-# A（B 同理，换 s04-claude-b 与 workB）；先清继承身份，保留模型/provider 配置
-$child = @{ CODEX_THREAD_ID = $null; CLAUDE_CODE_SESSION_ID = $null }
-Push-Location "$env:LOCALAPPDATA\ClaudeToCodex\s04-test\workA"
-claude --bg --name s04-claude-a "你是 Sprint 04 测试会话 A（s04-claude-a），仅用于桥接验证。收到跨会话桥消息后按其内嵌指引用 reply 回复；不要主动发确认或无关消息。等待即可。"
-Pop-Location
+powershell -File "...\prototype\harness\Start-TestSessions.ps1"            # 干跑：只生成启动文件
+powershell -File "...\prototype\harness\Start-TestSessions.ps1" -Launch    # 真启动
 ```
 
-- 身份核对：`node "<prototype cli>" sessions --sessions-dir $env:USERPROFILE\.claude\sessions` 应列出 s04-claude-a / b（注册表全局，但名称唯一、按名选用，不触碰其他会话记录）。
+- **Claude A/B**：脚本在自身一次性进程内先 `Remove-Item Env:\CODEX_THREAD_ID / Env:\CLAUDE_CODE_SESSION_ID` 再 `claude --bg --name s04-claude-a|b <待命提示>`——子进程拿不到继承身份，自建原会话身份；父（本 Developer）会话身份不动。保留用户模型与 provider 配置。
+- **测试 Codex**：独立 `CODEX_HOME=s04-test\codex-home`（隔离已装插件、信任与状态，杜绝日常插件参与）；日常 `config.toml` 仅作设置复制（无凭据、无信任态，可用 `-SkipDailyConfigCopy` 关掉）；`CTC_BRIDGE_DIR` 指测试桥。初始提示由脚本写入 `_initial-prompt.txt`，`_launch-codex.ps1` 读入后作为 `codex <prompt>` 启动——自登记 thread-id.txt、自查 sessions、自动 connect A/B、结果落 connect-log.txt。
+- **登录**：隔离 CODEX_HOME 无凭据。两个选项报 SM/PO 定：(a) 测试窗口内一次性 `codex login`（推荐，信任链最干净）；(b) PO 明确授权后把日常 auth.json 复制进隔离 home。**不**默认复制。
+- **唯一预期 PO 触点**：测试窗口内 Codex 首次要求信任三条原型 hook（`node "<worktree>\...\prototype\bridge\cli.mjs" hook`）。`--dangerously-bypass-hook-trust` 旗标存在但按"不绕过授权"边界**刻意不用**。
+- **加载核查**（隔离声明须有证据，不凭 hooks.json 自说自话）：测试窗口内 `codex doctor --json` 存档；核对其中 config/home/插件/auth 各项均指向 `s04-test\codex-home` 或为空，无日常路径。核查输出归入证据目录。
 
-## 3. 建立两个配对（在测试 Codex 会话内执行）
+## 3. 建立两个配对（已并入初始提示，自动执行）
 
-经 queue 下发给测试 Codex：
-
-> 运行 `node "<prototype cli>" connect --name s04-claude-a`，再运行 `node "<prototype cli>" connect --name s04-claude-b`，把两条输出的 pairId 报给我。
-
-- 预期：两配对共存（`status` 列出两条）；连接 B 不拆 A（S04-11-1 实测起点）。
+初始提示让测试 Codex 自己跑 `sessions` + `connect --name s04-claude-a/b`，输出全量落 `connect-log.txt`。Developer 在外部核对：thread-id.txt 存在、connect-log 两条 pairId、`status` 列两配对、B 连接后 A 完好（S04-11-1 实测起点）。此后对测试 Codex 的指令一律走 `codex queue --thread <thread-id> --message ...`，保持同一原始会话。
 
 ## 4. 首个检查点场景
 
