@@ -18,9 +18,9 @@ function setup(t, { withB = true } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'ctc-multi-test-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const epA = join(root, 'endpoint-a.json');
-  writeFileSync(epA, JSON.stringify({ sessionId: claudeA }));
+  writeFileSync(epA, JSON.stringify({ sessionId: claudeA, cwd: 'D:\\proj\\alpha' }));
   const epB = join(root, 'endpoint-b.json');
-  writeFileSync(epB, JSON.stringify({ sessionId: claudeB }));
+  writeFileSync(epB, JSON.stringify({ sessionId: claudeB, cwd: 'D:\\proj\\beta' }));
   const store = new BridgeStore(root);
   const pairA = store.pair(codexId, epA, 'alpha');
   const pairB = withB ? store.pair(codexId, epB, 'beta') : null;
@@ -413,7 +413,11 @@ test('status carries project context from the endpoint without claiming liveness
   assert.equal(run.status, 0, run.stderr);
   const out = JSON.parse(run.stdout);
   assert.equal(out.pairs.length, 2);
-  assert.ok(out.pairs.every((p) => typeof p.project === 'string' || p.project === null));
+  // Known cwd values must come through exactly - a null-tolerant assertion
+  // alone cannot catch an always-null regression (SM deab5390).
+  const byName = Object.fromEntries(out.pairs.map((p) => [p.target, p.project]));
+  assert.equal(byName.alpha, 'D:\\proj\\alpha');
+  assert.equal(byName.beta, 'D:\\proj\\beta');
   assert.ok(out.pairs.every((p) => typeof p.endpointOnDisk === 'boolean'));
   assert.ok(out.pairs.every((p) => !('alive' in p) && !('reachable' in p)), 'no liveness claim is made');
 });
