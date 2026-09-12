@@ -7,6 +7,11 @@ import { BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store
 import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
 import { cliPath, commandString, repoRoot } from './entry.mjs';
 
+// Sprint 04 / PBI-11: connect upserts into a multi-pair registry, codex sends
+// take an explicit --name target (the single-target 1.0.0 shape without --name
+// keeps working), replies resolve their pair from the referenced message,
+// retire is the explicit lifecycle boundary, and status lists every pair.
+
 const execute = promisify(execFile);
 const directory = fileURLToPath(new URL('.', import.meta.url));
 const usage = 'Use one of: install, register, pair, connect, sessions, send, reply, status, hook.';
@@ -52,7 +57,7 @@ async function main() {
     options: {
       codex: { type: 'string' }, 'claude-endpoint': { type: 'string' },
       body: { type: 'string' }, 'body-file': { type: 'string' }, to: { type: 'string' },
-      'hooks-file': { type: 'string' }, name: { type: 'string' }, 'sessions-dir': { type: 'string' },
+      'hooks-file': { type: 'string' }, name: { type: 'string' }, 'sessions-dir': { type: 'string' }, pairId: { type: 'string' },
     },
   });
   const [command] = positionals;
@@ -79,7 +84,7 @@ async function main() {
   }
   if (command === 'pair') {
     if (!values.codex || !values['claude-endpoint']) throw new Error('pair requires --codex and --claude-endpoint.');
-    console.log(JSON.stringify(store.pair(values.codex, values['claude-endpoint']), null, 2));
+    console.log(JSON.stringify(store.pair(values.codex, values['claude-endpoint'], values.name ?? null), null, 2));
     return;
   }
   if (command === 'sessions') {
@@ -131,19 +136,42 @@ async function main() {
       cwd: session.cwd ?? null,
       origin: 'connect-synthesis',
     }, null, 2) + '\n');
-    const pair = store.pair(codexId, endpointPath);
+    // Upsert into the multi-pair registry: same Claude session reuses its pair
+    // (endpoint refresh allowed); a different one becomes an additional target.
+    // Existing pairs are never touched, so connecting B never disturbs A.
+    const pair = store.pair(codexId, endpointPath, session.name);
     store.event('connect', { pairId: pair.id, claudeSession: session.sessionId, claudeName: session.name, codexId: pair.codexId, endpoint: endpointPath });
-    console.log(JSON.stringify({ pair, claudeSession: { sessionId: session.sessionId, name: session.name, status: session.status }, hint: `Send with: node "${cliPath()}" send --body "..."` }, null, 2));
+    console.log(JSON.stringify({ pair, claudeSession: { sessionId: session.sessionId, name: session.name, status: session.status }, hint: `Send with: node "${cliPath()}" send --name <target> --body "..."` }, null, 2));
+    return;
+  }
+  if (command === 'retire') {
+    if (!values.pairId && !values.name) throw new Error('retire requires --pairId <uuid> or a unique --name.');
+    const pair = values.pairId ? store.pairById(values.pairId) : store.resolveTarget(values.name);
+    if (!pair) throw new Error('No registered pair matches.');
+    console.log(JSON.stringify(store.retire(pair.id), null, 2));
     return;
   }
   if (command === 'status') {
-    const pair = store.getPair();
-    const pendingPath = join(store.root, 'pending', pair.codexId, 'message.json');
-    const pending = existsSync(pendingPath) ? readJson(pendingPath) : null;
+    const pairs = store.pairs().map((pair) => {
+      const pendingPath = join(store.root, 'pending', pair.id, 'message.json');
+      const pending = existsSync(pendingPath) ? readJson(pendingPath) : null;
+      // Project context comes from the endpoint's recorded cwd (S04-11-1);
+      // endpointOnDisk only says the registration file exists - it is NOT a
+      // process-alive or reachability claim, and none is implied here.
+      let project = null;
+      if (existsSync(pair.endpointPath)) {
+        try { project = readJson(pair.endpointPath).cwd ?? null; } catch { project = null; }
+      }
+      return {
+        pairId: pair.id, target: pair.claudeName ?? null, claudeId: pair.claudeId, codexId: pair.codexId,
+        createdAt: pair.createdAt ?? null, project, endpoint: pair.endpointPath, endpointOnDisk: existsSync(pair.endpointPath),
+        pendingMessageId: pending?.id ?? null,
+      };
+    });
     const eventPath = join(store.root, 'events.jsonl');
     const events = existsSync(eventPath)
       ? readFileSync(eventPath, 'utf8').trim().split('\n').filter(Boolean).slice(-12).map(JSON.parse) : [];
-    console.log(JSON.stringify({ pair, pendingMessageId: pending?.id ?? null, events }, null, 2));
+    console.log(JSON.stringify({ pairs, events }, null, 2));
     return;
   }
   if (!['send', 'reply'].includes(command)) throw new Error(usage);
@@ -153,8 +181,44 @@ async function main() {
   if (command === 'reply' && !values.to) throw new Error('reply requires --to <received message UUID>.');
   if (command === 'send' && values.to) throw new Error('Use reply to reference a received message.');
   const body = values['body-file'] ? readFileSync(values['body-file'], 'utf8').replace(/^﻿/, '') : values.body;
-  const pair = store.getPair();
-  const message = store.prepare(store.caller(), body, command === 'reply' ? values.to : null);
+  // Pair resolution before any body is written: replies bind to the pair of the
+  // message they answer (S04-11-3); codex sends name an explicit target
+  // (S04-11-2); claude sends resolve through their own session identity. There
+  // is no "current" or "most recent" target anywhere on this path.
+  const who = store.caller();
+  let pair;
+  if (command === 'reply') {
+    let previous;
+    try {
+      previous = store.message(values.to);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error('No bridge message with that id exists in this data root. Use the reply entry embedded in the message you received (it carries the exact id); run status to inspect recent messages.');
+      }
+      throw error;
+    }
+    pair = store.pairById(previous.pairId);
+    if (!pair) throw new Error('The referenced message does not belong to any registered pair.');
+  } else if (who.tool === 'codex') {
+    // 1.0.0 compatibility (S04-11-7): with exactly one connected target, send
+    // works without --name exactly as before. No guessing: zero or several
+    // targets without a name is an explicit error listing the options.
+    if (!values.name) {
+      const pairs = store.pairs();
+      if (pairs.length === 1) {
+        pair = pairs[0];
+      } else if (pairs.length === 0) {
+        throw new Error('No connected target. Run connect first, or pass --name.');
+      } else {
+        throw new Error(`send from Codex requires --name <connected target>: ${pairs.length} targets are connected. Run status to list them.`);
+      }
+    } else {
+      pair = store.resolveTarget(values.name);
+    }
+  } else {
+    pair = store.findPairByClaude(who.sessionId);
+  }
+  const message = store.prepare(pair, who.tool, body, command === 'reply' ? values.to : null, who.sessionId);
   try {
     if (message.to.tool === 'codex') {
       store.publish(message);
@@ -167,7 +231,9 @@ async function main() {
       const endpoint = readJson(pair.endpointPath);
       if (endpoint.sessionId !== pair.claudeId) throw new Error('Claude endpoint identity changed.');
       const wirePath = join(store.root, 'wire', `${message.id}.txt`);
-      writeFileSync(wirePath, renderPeer(message, store.root), { flag: 'wx' });
+      // codexHome passes through when this send runs inside an isolated-home
+      // Codex session, so the peer's reply wake reaches the right session.
+      writeFileSync(wirePath, renderPeer(message, store.root, process.env.CODEX_HOME ?? null), { flag: 'wx' });
       await execute('powershell.exe', [
         '-NoProfile', '-File', join(directory, 'delivery', 'Send-ClaudePipe.ps1'),
         '-EndpointPath', pair.endpointPath, '-ReplyThreadId', pair.codexId,
@@ -180,7 +246,7 @@ async function main() {
     store.event('send-error', { messageId: message.id, error: error.message });
     throw new Error(`Message ${message.id}: ${error.message}. Inspect status before retrying; it may already be pending or consumed.`);
   }
-  console.log(JSON.stringify({ messageId: message.id, conversationId: message.conversationId, to: message.to, submitted: true, receipt: 'unverified' }));
+  console.log(JSON.stringify({ messageId: message.id, conversationId: message.conversationId, pairId: message.pairId, to: message.to, submitted: true, receipt: 'unverified' }));
 }
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
