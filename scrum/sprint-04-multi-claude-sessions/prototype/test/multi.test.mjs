@@ -280,3 +280,20 @@ test('retiring one target is explicit, evidenced, and leaves the other intact (S
   const events = readFileSync(join(store.root, 'events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
   assert.ok(events.some((e) => e.type === 'retired' && e.pairId === pairA.id));
 });
+
+test('the retire CLI entry accepts --pairId and --name (run 4 real-loop finding)', (t) => {
+  const { store, pairA, pairB } = setup(t);
+  const env = { ...process.env, CTC_BRIDGE_DIR: store.root };
+  delete env.CODEX_THREAD_ID;
+  delete env.CLAUDE_CODE_SESSION_ID;
+  // The real loop caught an unknown-option failure: parseArgs must declare the
+  // flag exactly as spelled on the command line.
+  const byId = spawnSync(process.execPath, [cli, 'retire', '--pairId', pairA.id], { env, encoding: 'utf8' });
+  assert.equal(byId.status, 0, byId.stderr);
+  assert.equal(JSON.parse(byId.stdout).pair.id, pairA.id);
+  assert.equal(store.pairs().length, 1);
+  const byName = spawnSync(process.execPath, [cli, 'retire', '--name', 'beta'], { env, encoding: 'utf8' });
+  assert.equal(byName.status, 0, byName.stderr);
+  assert.equal(JSON.parse(byName.stdout).pair.id, pairB.id);
+  assert.equal(store.pairs().length, 0);
+});
