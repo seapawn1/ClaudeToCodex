@@ -35,6 +35,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--source', required=True)
     ap.add_argument('--target', required=True)
+    # Optional: mark one test project directory as trusted so Codex actually
+    # loads its project-level .codex/hooks.json (run 2 finding: without a
+    # [projects.<path>] trust entry, /hooks shows nothing and bridge inbound
+    # hooks never load). Only ever point this at the isolated test workdir.
+    ap.add_argument('--trust-project')
     args = ap.parse_args()
 
     src = tomllib.loads(Path(args.source).read_text(encoding='utf-8'))
@@ -49,6 +54,8 @@ def main() -> int:
 
     out = {k: src[k] for k in TOP_KEYS if k in src}
     out['model_providers'] = {provider: table}
+    if args.trust_project:
+        out['projects'] = {args.trust_project.lower(): {'trust_level': 'trusted'}}
     Path(args.target).write_text(toml.dumps(out), encoding='utf-8')
 
     # Validation: re-parse the written file and prove it carries exactly what
@@ -59,6 +66,11 @@ def main() -> int:
         if k != 'model_providers':
             assert check.get(k) == out[k], f'value changed: {k}'
     leaked = [s for s in EXCLUDED if s in check]
+    if 'projects' in leaked:
+        # Allowed only as the single explicit test-project trust entry.
+        assert args.trust_project, 'projects section present without --trust-project'
+        assert set(check['projects']) == {args.trust_project.lower()}, 'unexpected project trust entries'
+        leaked.remove('projects')
     assert not leaked, f'excluded sections leaked: {leaked}'
 
     print('extraction ok (written config re-parsed and validated)')

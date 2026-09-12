@@ -32,7 +32,7 @@ if (-not $SkipDailyConfigCopy) {
     # the referenced provider table land in the isolated CODEX_HOME; the bearer
     # token rides in that table, is never printed, and never enters git.
     # Verified in this isolated home: doctor auth ok, no MCP, real call ok.
-    python (Join-Path $PSScriptRoot 'extract_model_config.py') --source (Join-Path $env:USERPROFILE '.codex\config.toml') --target (Join-Path $CodexHome 'config.toml')
+    python (Join-Path $PSScriptRoot 'extract_model_config.py') --source (Join-Path $env:USERPROFILE '.codex\config.toml') --target (Join-Path $CodexHome 'config.toml') --trust-project (Join-Path $TestRoot 'workCodex')
     if ($LASTEXITCODE -ne 0) { throw 'Model config extraction failed.' }
 }
 
