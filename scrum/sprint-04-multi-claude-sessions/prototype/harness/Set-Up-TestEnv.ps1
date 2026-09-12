@@ -35,7 +35,9 @@ foreach ($name in 'workCodex', 'workA', 'workB', 'codex-home') {
 }
 $hooksFile = Join-Path $TestRoot 'workCodex\.codex\hooks.json'
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $hooksFile) | Out-Null
-$hooks | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -LiteralPath $hooksFile
+# BOM-less UTF-8 is required: Codex's JSON parser rejects a hooks.json that
+# starts with a UTF-8 BOM (run 3 finding), unlike the bridge's own readJson.
+[IO.File]::WriteAllText($hooksFile, ($hooks | ConvertTo-Json -Depth 8), (New-Object Text.UTF8Encoding $false))
 
 [PSCustomObject]@{
     BridgeRoot = $BridgeRoot

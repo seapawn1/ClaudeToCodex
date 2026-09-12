@@ -195,7 +195,9 @@ async function main() {
       const endpoint = readJson(pair.endpointPath);
       if (endpoint.sessionId !== pair.claudeId) throw new Error('Claude endpoint identity changed.');
       const wirePath = join(store.root, 'wire', `${message.id}.txt`);
-      writeFileSync(wirePath, renderPeer(message, store.root), { flag: 'wx' });
+      // codexHome passes through when this send runs inside an isolated-home
+      // Codex session, so the peer's reply wake reaches the right session.
+      writeFileSync(wirePath, renderPeer(message, store.root, process.env.CODEX_HOME ?? null), { flag: 'wx' });
       await execute('powershell.exe', [
         '-NoProfile', '-File', join(directory, 'delivery', 'Send-ClaudePipe.ps1'),
         '-EndpointPath', pair.endpointPath, '-ReplyThreadId', pair.codexId,

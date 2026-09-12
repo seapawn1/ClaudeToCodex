@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { BridgeStore, dailyRoot, defaultRoot, handleHook, wakeText } from '../bridge/store.mjs';
+import { BridgeStore, dailyRoot, defaultRoot, handleHook, renderPeer, wakeText } from '../bridge/store.mjs';
 
 const cli = fileURLToPath(new URL('../bridge/cli.mjs', import.meta.url));
 
@@ -247,4 +247,15 @@ test('wake-shaped but malformed text never throws (SM review 4d9f6031, robustnes
   const delivered = handleHook(store, hookEvent('UserPromptSubmit', { prompt: `[CTC-WAKE ${dashes} ${valid}]` }));
   assert.match(delivered.hookSpecificOutput.additionalContext, /delivered despite malformed wake/);
   assert.ok(store.consumed(letter.id));
+});
+
+test('reply guidance carries the isolated CODEX_HOME when the sender runs under one (run 3 finding)', (t) => {
+  const { store, pairA } = setup(t);
+  const letter = store.prepare(pairA, 'codex', 'guidance check', null, codexId);
+  const daily = renderPeer(letter, store.root, null);
+  assert.doesNotMatch(daily, /CODEX_HOME/);
+  assert.match(daily, /CTC_BRIDGE_DIR/);
+  const isolated = renderPeer(letter, store.root, 'C:\\isolated\\codex-home');
+  assert.match(isolated, /\$env:CODEX_HOME='C:\\isolated\\codex-home'; /);
+  assert.match(isolated, new RegExp(`reply --to ${letter.id}`));
 });

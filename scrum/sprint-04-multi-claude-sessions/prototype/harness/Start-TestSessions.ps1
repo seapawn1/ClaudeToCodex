@@ -58,6 +58,11 @@ $launchScript = Join-Path $TestRoot 'workCodex\_launch-codex.ps1'
     "`$Host.UI.RawUI.WindowTitle = 'S04-TEST-CODEX (isolated)'",
     "`$env:CTC_BRIDGE_DIR = '$BridgeRoot'",
     "`$env:CODEX_HOME = '$CodexHome'",
+    "# Scrub identity vars inherited from whoever launched this window (run 3",
+    "# finding: a leaked CLAUDE_CODE_SESSION_ID makes bridge caller() see two",
+    "# original sessions and every send fails). Codex sets its own CODEX_THREAD_ID.",
+    'Remove-Item Env:\CODEX_THREAD_ID -ErrorAction SilentlyContinue',
+    'Remove-Item Env:\CLAUDE_CODE_SESSION_ID -ErrorAction SilentlyContinue',
     "`$prompt = Get-Content -Raw -Encoding UTF8 '$promptFile'",
     'Write-Host "Test Codex starting (CODEX_HOME and CTC_BRIDGE_DIR are scoped to this window only.)"',
     'codex $prompt'

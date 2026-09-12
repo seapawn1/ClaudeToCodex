@@ -56,7 +56,17 @@ def main() -> int:
     out['model_providers'] = {provider: table}
     if args.trust_project:
         out['projects'] = {args.trust_project.lower(): {'trust_level': 'trusted'}}
-    Path(args.target).write_text(toml.dumps(out), encoding='utf-8')
+    # Preserve trust state the USER already confirmed inside THIS test home
+    # (SM review abbc6662): a rerun must not wipe hooks.state that the PO
+    # established interactively. Never carried from the daily config - only
+    # from a previously written copy of this same isolated target.
+    target = Path(args.target)
+    prev = {}
+    if target.exists():
+        prev = tomllib.loads(target.read_text(encoding='utf-8'))
+        if 'hooks' in prev:
+            out['hooks'] = prev['hooks']
+    target.write_text(toml.dumps(out), encoding='utf-8')
 
     # Validation: re-parse the written file and prove it carries exactly what
     # was intended - same values, provider table intact, excluded sections gone.
@@ -71,6 +81,12 @@ def main() -> int:
         assert args.trust_project, 'projects section present without --trust-project'
         assert set(check['projects']) == {args.trust_project.lower()}, 'unexpected project trust entries'
         leaked.remove('projects')
+    if 'hooks' in leaked:
+        # Allowed only as user-confirmed trust state carried over from a
+        # previous copy of this same isolated target, never from the daily
+        # config (the daily source's hooks section is never read into out).
+        assert target.exists() and 'hooks' in prev, 'hooks section present without prior test-home state'
+        leaked.remove('hooks')
     assert not leaked, f'excluded sections leaked: {leaked}'
 
     print('extraction ok (written config re-parsed and validated)')
