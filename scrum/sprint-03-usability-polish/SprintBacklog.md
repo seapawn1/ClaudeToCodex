@@ -43,7 +43,7 @@ PBI-10 与 PBI-13 共享一套状态事实和连接规则。10 负责状态含�
 
 ### 不纳入本次范围
 
-- 多配对同时保持、按多个已连接目标路由及目标间故障隔离，归 [Sprint 04](../sprint-04-multi-claude-sessions/SprintBacklog.md) / PBI-11。
+- 多配对同时保持、按多个已连接目标路由及目标间故障隔离已由 Sprint 04 / PBI-11 交付；边界与证据见 [Sprint 04 Review](../../docs/scrum-sprint/sprint-04-multi-claude-sessions-review-retro.md)。
 - 自动启动或终止 Claude / Codex 进程、自动恢复、广播、自动重试、送达回执、跨机器或跨平台能力。
 - 插件卸载、完整安装维护与未验证的升级兼容承诺，仍由相应产品待办项精化。
 - PBI-03 的完整消息投递状态语义；本 Sprint 的摘要仍须诚实区分已知状态与未知，不能把连接存在、领取或 `submitted:true` 表述为原会话收信。
