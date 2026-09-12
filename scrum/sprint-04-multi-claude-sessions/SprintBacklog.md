@@ -79,3 +79,25 @@ Sprint 04 不重复计入 Sprint 03 的交付工作，但必须扩展并复验�
 - 尽早验证多目标真实使用闭环，及时向 SM 提出障碍及跨 Sprint 依赖。
 
 ### 工作项与进展
+
+- 2026-09-13 开工。SM 经协调目录 s04-coordination-01a09641（任务消息 a44f48b5）传达 PO 已确认路径：Sprint 04 先做 PBI-11，以已发布 1.0.0 为基线，独立于 Sprint 03（03 的呈现改版与完整快捷连接管理留后续）。Developer 首轮回报经 codex queue 发送（消息 01a096a1），含范围/边界理解、worktree 方案、首批工作项与估计。
+- 施工路径（SM 指示）：① 独立工作区短预研与原型 → ② 专用测试 Codex + Claude A/B 真实闭环 → ③ 原型成立后整合产品代码并在独立测试安装验收候选插件。
+- 隔离边界（执行中）：原型阶段不改 `bridge/` 产品源码与 `plugins/claudetocodex/bridge/` 分发副本；不动日常已安装插件、缓存、marketplace、共享配置与在用默认桥数据（默认桥属其他项目且有待收，不改配对、不归档）；测试用专用 `CTC_BRIDGE_DIR` 隔离代码/配置/工作目录/桥数据/生效 hooks；本开发会话不作可随意重启的测试对端；宿主授权不绕过。
+- worktree 与归属：`.claude/worktrees/s04-pbi-11`，分支 `worktree-s04-pbi-11`；创建后已 merge 本地 main（2b46e77）对齐——本地 main 领先 origin/main 6 个提交，SM 合入时以此为准。Developer 只写本文件第三部分与本冲刺目录 `prototype/` 内文件，按显式文件清单 stage，不整文件覆盖、不碰 SM 区域与 Product Backlog。
+- 预研结论摘要：1.0.0 的单配对假设集中在 `pair.json` 单文件、`caller()` 唯一配对解析、`pending/<codexId>` 单待收槽、`handleHook`/`take` 单配对门控、`connect`/`send`/`status` 无多目标概念；`pairId`/`replyTo` 消息关联、`endpoints/` 按 sessionId 存放、唤醒文本携带 pairId、全局 `receipts/` 按 messageId 去重已具备多配对基础。详细触点清单与设计方案见 `prototype/DESIGN.md`。
+
+| 工作项 | 内容 | 估计 | 状态 |
+|---|---|---|---|
+| W1 | 基线复读 + Developer 工作区填写 | 0.25d | 2026-09-13 完成 |
+| W2 | 预研：多配对数据模型与路由设计笔记（`prototype/DESIGN.md`） | 0.5d | 进行中 |
+| W3 | 原型骨架：隔离副本扩展多配对 + fixture 级测试（共存、回复归属、重叠三态、唤醒去重） | 1d | 未开始 |
+| W4 | 真实闭环 harness：专用测试 Codex + Claude A/B（隔离桥数据），原会话收信与空闲唤醒验证 | 1d | 未开始（测试 Codex 会话启动方式待 SM 明确） |
+| W5 | 首个检查点自查并向 SM 报告 | 0.25d | 未开始 |
+
+检查点后另排：单目标失效隔离（S04-11-6）、单目标兼容与旧数据路径（S04-11-7）、产品树整合与安装候选验收（S04-11-8）。
+
+### 障碍与待明确
+
+- 协调通道：按 SM 指示用 codex queue 回报，不用标准桥 reply（避免在协调目录留无法投递的待收槽）；不改 SM hooks 与日常配对。
+- 专用测试 Codex 会话由谁启动待 SM 明确（建议 SM 提供专用线程或授权 Developer 用 codex CLI 启动；不占用 SM 会话本身）。
+- Claude A/B 由 Developer 用 `claude --bg` 以隔离环境启动；涉及宿主信任时如实报 PO。
