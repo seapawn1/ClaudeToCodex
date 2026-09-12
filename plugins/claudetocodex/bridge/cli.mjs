@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
-import { BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store.mjs';
+import { atomicWriteJson, BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store.mjs';
 import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
 import { cliPath, commandString, repoRoot } from './entry.mjs';
 
@@ -127,7 +127,9 @@ async function main() {
     if (!protectedToken) throw new Error('DPAPI protection returned an empty token.');
     store.initialize();
     const endpointPath = join(store.root, 'endpoints', `claude-${session.sessionId}.json`);
-    writeFileSync(endpointPath, JSON.stringify({
+    // Atomic temp+rename publish: a concurrent reader always sees the complete
+    // previous or complete new endpoint record, never a truncated file.
+    atomicWriteJson(endpointPath, {
       schema: 1,
       sessionId: session.sessionId,
       socket: session.socket,
@@ -135,7 +137,7 @@ async function main() {
       registeredAt: new Date().toISOString(),
       cwd: session.cwd ?? null,
       origin: 'connect-synthesis',
-    }, null, 2) + '\n');
+    });
     // Upsert into the multi-pair registry: same Claude session reuses its pair
     // (endpoint refresh allowed); a different one becomes an additional target.
     // Existing pairs are never touched, so connecting B never disturbs A.

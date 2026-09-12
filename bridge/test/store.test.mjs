@@ -3,7 +3,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
 import { BridgeStore, handleHook, readJson, renderPeer, wakeText } from '../store.mjs';
 
@@ -559,4 +559,77 @@ test('a changed Claude endpoint identity is rejected before any pipe write', (t)
   assert.match(result.stderr, /identity changed/);
   assert.deepEqual(readdirSync(join(root, 'wire')), []);
   assert.ok(readFileSync(join(store.root, 'events.jsonl'), 'utf8').trim().split('\n').some((line) => JSON.parse(line).type === 'send-error'));
+});
+
+test('registry refreshes never expose a truncated record to other processes (SM d8daef13)', async (t) => {
+  const { root, pairB, epA } = setup(t);
+  const storeUrl = pathToFileURL(fileURLToPath(new URL('../store.mjs', import.meta.url))).href;
+  const done = join(root, 'writer-done');
+  const writer = `
+    import { BridgeStore } from "${storeUrl}";
+    import { writeFileSync } from 'node:fs';
+    const store = new BridgeStore(${JSON.stringify(root)});
+    for (let i = 0; i < 400; i++) {
+      store.pair(${JSON.stringify(codexId)}, ${JSON.stringify(resolve(epA))}, i % 2 ? 'alpha' : 'renamed-alpha');
+    }
+    writeFileSync(${JSON.stringify(done)}, 'done');
+  `;
+  const reader = `
+    import { BridgeStore } from "${storeUrl}";
+    import { existsSync } from 'node:fs';
+    const store = new BridgeStore(${JSON.stringify(root)});
+    let reads = 0; let errors = 0; let lastError = '';
+    while (!existsSync(${JSON.stringify(done)})) {
+      try {
+        const beta = store.resolveTarget('beta');
+        if (beta.claudeId !== ${JSON.stringify(claudeB)}) { errors++; lastError = 'wrong target resolved'; }
+        reads++;
+      } catch (error) { errors++; lastError = String(error); }
+    }
+    process.stdout.write(JSON.stringify({ reads, errors, lastError }));
+  `;
+  const env = { ...process.env, CTC_BRIDGE_DIR: root };
+  delete env.CODEX_THREAD_ID;
+  delete env.CLAUDE_CODE_SESSION_ID;
+  const run = (code) => new Promise((resolveRun, rejectRun) => {
+    const child = spawn(process.execPath, ['--input-type=module', '-e', code], { env, windowsHide: true, timeout: 60000 });
+    let output = '';
+    let errors = '';
+    child.stdout.setEncoding('utf8').on('data', (data) => { output += data; });
+    child.stderr.setEncoding('utf8').on('data', (data) => { errors += data; });
+    child.on('error', rejectRun);
+    child.on('close', (code2) => code2 === 0 ? resolveRun(output) : rejectRun(new Error(errors || output)));
+  });
+  const [, report] = await Promise.all([run(writer), run(reader)]);
+  const result = JSON.parse(report);
+  assert.ok(result.reads > 0, 'reader must have exercised the window');
+  assert.equal(result.errors, 0, `concurrent reads must never fail: ${result.lastError}`);
+  const final = new BridgeStore(root);
+  assert.equal(final.resolveTarget('beta').id, pairB.id, 'B unchanged after the churn');
+});
+
+test('a refresh that loses a retire race never resurrects the archived id (SM d98dcf66)', (t) => {
+  const { root, store, pairA, epA } = setup(t, { withB: false });
+  // Inject the interleaving at the exact race point: right after the refresh
+  // write, another process retires the pair, then the refresh's own post-
+  // write check runs - exactly what SM's injection reproduced.
+  const originalRetiredPairById = store.retiredPairById.bind(store);
+  let armed = true;
+  store.retiredPairById = (pairId) => {
+    if (armed) {
+      armed = false;
+      store.retire(pairId);
+    }
+    return originalRetiredPairById(pairId);
+  };
+  const outcome = store.pair(codexId, epA, 'renamed-alpha');
+  // The stale id exists ONLY in the archive; the rebuild got a NEW id.
+  assert.notEqual(outcome.id, pairA.id, 'post-retire rebuild takes a fresh id');
+  assert.equal(store.pairs().length, 1);
+  assert.equal(store.pairs()[0].id, outcome.id);
+  assert.ok(store.retiredPairById(pairA.id), 'archived evidence present');
+  // The archived id no longer accepts new traffic; the new pair does.
+  assert.throws(() => store.prepare(pairA, 'claude', 'stale', null, claudeA), /not registered/);
+  const letter = store.prepare(outcome, 'claude', 'fresh traffic', null, claudeA);
+  assert.equal(letter.pairId, outcome.id);
 });

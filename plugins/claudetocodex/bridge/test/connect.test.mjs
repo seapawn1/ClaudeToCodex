@@ -127,14 +127,18 @@ test('connect rejects a key record that lacks the peerToken field', async () => 
   writeSession(process.pid, 'Alpha dev room', '11111111-2222-4333-8444-555555555555', { peerToken: 'token-alpha-dev-room' });
 });
 
-test('connect never silently replaces an existing different pair', async () => {
-  // Same live session, but the registry now advertises a different Claude session id.
+test('connect coexists with another Claude target instead of replacing it', async () => {
+  // Same live session, but the registry now advertises a different Claude
+  // session id: the multi-pair contract creates a SECOND pair and leaves the
+  // original untouched - replacement exists only as the explicit retire op.
   writeSession(process.pid, 'Alpha dev room', '99999999-8888-4777-8666-555555555555');
   const r = await runConnect('dev room');
-  assert.notEqual(r.code, 0);
-  assert.match(r.stderr, /already has a different pair/);
-  const pair = JSON.parse(readFileSync(join(root, 'pair.json'), 'utf8'));
-  assert.equal(pair.claudeId, '11111111-2222-4333-8444-555555555555', 'pair must be untouched');
+  assert.equal(r.code, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.pair.claudeId, '99999999-8888-4777-8666-555555555555');
+  const pairs = readdirSync(join(root, 'pairs')).map((file) => JSON.parse(readFileSync(join(root, 'pairs', file), 'utf8')));
+  assert.ok(pairs.some((p) => p.claudeId === '11111111-2222-4333-8444-555555555555'), 'original pair untouched');
+  assert.equal(pairs.length, 2);
 });
 
 test('sessions lists registry entries without secrets', async () => {

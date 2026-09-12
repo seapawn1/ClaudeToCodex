@@ -27,6 +27,30 @@ function id(value) {
   return value.toLowerCase();
 }
 
+// Records are published by same-directory temp + rename so a concurrent
+// reader (pairs(), resolveTarget(), hook scans in other processes) always
+// sees the complete old or complete new JSON - never a truncated write
+// (SM d8daef13: in-place writeFileSync broke B's reads during A's refresh).
+// On Windows, renaming over a file another process is reading at that
+// instant raises EPERM; readers are transient, so the rename retries
+// briefly instead of failing the whole operation.
+export function atomicWriteJson(path, value) {
+  const temp = `${path}.tmp-${randomUUID()}`;
+  writeFileSync(temp, `${JSON.stringify(value, null, 2)}\n`);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      renameSync(temp, path);
+      return;
+    } catch (error) {
+      if ((error.code !== 'EPERM' && error.code !== 'EACCES') || attempt >= 100) {
+        rmSync(temp, { force: true });
+        throw error;
+      }
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2);
+    }
+  }
+}
+
 export class BridgeStore {
   constructor(root = defaultRoot()) {
     this.root = resolve(root);
@@ -164,23 +188,36 @@ export class BridgeStore {
       if (existing.endpointPath !== selected.endpointPath) refreshed.endpointPath = selected.endpointPath;
       if (claudeName && existing.claudeName !== claudeName) refreshed.claudeName = claudeName;
       const changed = ['endpointPath', 'claudeName'].filter((key) => refreshed[key] !== existing[key]);
-      if (changed.length > 0) {
-        const text = `${JSON.stringify(refreshed, null, 2)}\n`;
-        // Event names stay stable with the earlier runs (endpoint-updated,
-        // legacy-endpoint-updated) so recorded evidence keeps matching.
-        const suffix = { endpointPath: 'endpoint', claudeName: 'claudeName' };
-        if (isLegacy) {
-          writeFileSync(join(this.root, 'pair.json'), text);
-          for (const key of changed) this.event(`legacy-${suffix[key]}-updated`, { pairId: existing.id, [key]: refreshed[key] });
-        } else {
-          writeFileSync(join(this.root, 'pairs', `${existing.id}.json`), text);
-          for (const key of changed) this.event(`${suffix[key]}-updated`, { pairId: existing.id, [key]: refreshed[key] });
-        }
+      if (changed.length === 0) return this.pairById(existing.id);
+      // Event names stay stable with the earlier runs (endpoint-updated,
+      // legacy-endpoint-updated) so recorded evidence keeps matching.
+      const suffix = { endpointPath: 'endpoint', claudeName: 'claudeName' };
+      if (isLegacy) {
+        atomicWriteJson(join(this.root, 'pair.json'), refreshed);
+        for (const key of changed) this.event(`legacy-${suffix[key]}-updated`, { pairId: existing.id, [key]: refreshed[key] });
+        return this.pairById(existing.id);
       }
-      return this.pairById(existing.id);
+      const active = join(this.root, 'pairs', `${existing.id}.json`);
+      atomicWriteJson(active, refreshed);
+      if (this.retiredPairById(existing.id)) {
+        // A concurrent retire archived this pair between our read and the
+        // write: never resurrect the archived id (SM d98dcf66). Roll the
+        // stale refresh back and take the fresh-create path below, so a
+        // post-retire rebuild gets a NEW pair id and the archived record
+        // keeps its original attribution and refusal rules.
+        rmSync(active, { force: true });
+        this.event('refresh-lost-retire-race', { pairId: existing.id });
+      } else {
+        for (const key of changed) this.event(`${suffix[key]}-updated`, { pairId: existing.id, [key]: refreshed[key] });
+        return this.pairById(existing.id);
+      }
     }
     const pair = { id: randomUUID(), claudeName, ...selected, createdAt: new Date().toISOString() };
-    writeFileSync(join(this.root, 'pairs', `${pair.id}.json`), `${JSON.stringify(pair, null, 2)}\n`, { flag: 'wx' });
+    // Published atomically like every registry write. Two concurrent FIRST
+    // connects of the same identity could still race to two ids - the same
+    // residual 1.0.0 had at a single file - and normal connect flows are
+    // serialized by session discovery.
+    atomicWriteJson(join(this.root, 'pairs', `${pair.id}.json`), pair);
     this.event('paired', { pairId: pair.id, codexId: pair.codexId, claudeId: pair.claudeId, claudeName });
     return pair;
   }

@@ -1,10 +1,10 @@
 # 使用说明
 
-本产品是运行于本机（Windows）的 Codex ↔ Claude Code 跨会话双向消息桥：让两个**已在运行的原始会话**互发短消息、收到回复、继续对话。以下四类任务按顺序覆盖安装、配置、发起通信与回复。
+本产品是运行于本机（Windows）的 Codex ↔ Claude Code 跨会话双向消息桥：让**已在运行的原始会话**互发短消息、收到回复、继续对话。一个 Codex 原始会话可同时与多个 Claude 原始会话保持配对并按名称往来。以下四类任务按顺序覆盖安装、配置、发起通信与回复。
 
 ## 1. 安装
 
-前置：Windows；Node.js ≥18.3；参与通信的 codex CLI（已验证 `0.153.4`）与 claude CLI（已验证 `2.1.263`）在 PATH 上。
+前置：Windows；Node.js ≥18.3；参与通信的 codex CLI（已验证 `0.153.4` 与 `0.154.0`）与 claude CLI（已验证 `2.1.263` 与 `2.1.268`）在 PATH 上。
 
 ```powershell
 node bridge/cli.mjs install
@@ -20,38 +20,47 @@ node bridge/cli.mjs install
 
 ## 2. 配置
 
-数据目录：默认 `%LOCALAPPDATA%\ClaudeToCodex\bridge`；设置环境变量 `CTC_BRIDGE_DIR` 可覆盖（隔离验证、重复运行时使用；注意两个原始会话都需在同一覆盖下运行，hook 子进程才能继承）。目录内容：`pair.json`（配对）、`endpoints/`（Claude 端点登记）、`messages/`（全部消息）、`pending/`（Codex 待收槽）、`claims/`、`receipts/`（消费记录）、`wire/`（管道发送正文与记录）、`events.jsonl`（事件流水）。
+数据目录：默认 `%LOCALAPPDATA%\ClaudeToCodex\bridge`；设置环境变量 `CTC_BRIDGE_DIR` 可覆盖（隔离验证、重复运行时使用；注意相关原始会话与 hook 子进程都需在同一覆盖下运行）。目录内容：`pairs/`（配对注册表，每配对一文件）、`pair.json`（1.0.0 单配对数据，只读可见、同身份重连原位沿用）、`pairs-retired/`（退役配对存档，证据保留）、`endpoints/`（Claude 端点登记）、`messages/`（全部消息）、`pending/`（**每配对一个待收槽**，槽名为 pairId）、`claims/`、`receipts/`（消费记录）、`wire/`（管道发送正文与记录）、`events.jsonl`（事件流水）。
 
-两步完成配对（**单配对模型**：恰好一对原始会话；重复配对一致时幂等，不同则报错拒绝，绝不静默替换）：
+**连接**（推荐路径，在 Codex 会话内按名称选定一个正在运行的 Claude 会话）：
 
 ```powershell
-# 在选定的 Claude 原始会话内执行（令牌经 DPAPI 以当前 Windows 用户加密，文件不含明文）：
-node bridge/cli.mjs register
-# 输出 ENDPOINT_FILE=<数据目录>\endpoints\claude-<sessionId>.json
-
-# 在任一侧执行，绑定这对原始会话：
-node bridge/cli.mjs pair --codex <codexThreadId> --claude-endpoint <端点文件路径>
+node bridge/cli.mjs connect --name <claude会话名的一部分>
 ```
 
-**显式重配对**（Claude 会话重启/端点失效/更换任一会话时的人工操作，不是自动恢复）：确认旧会话不再使用后，移走或删除数据目录（或改用新的 `CTC_BRIDGE_DIR`），重新 register + pair。旧目录保留可作证据。
+连接语义（**多配对模型**：一个 Codex 原始会话 + 多个 Claude 原始会话共存）：
+
+- 同 `{codex, claude}` 身份重连沿用配对，并刷新端点与会话名（改名后按新名可选；1.0.0 旧 `pair.json` 同身份重连获得端点刷新与名称，不迁移、不新写）。
+- 新 Claude 身份连接成**新配对**，其他配对不受影响；连接 B 不拆 A。
+- 一个数据根只服务一个 Codex 原始会话：不同 Codex 被拒绝；存在**异 Codex** 退役存档的根也拒绝重绑（防在途信被搁置）。
+- 退役（显式生命周期边界）：`node bridge/cli.mjs retire --pairId <完整pairId>` 或唯一名称 `retire --name <名>`——注册文件移入 `pairs-retired/` 留证；退役不撤销已接纳消息的原收件归属（在途信按存档身份校验后仍投递，收据标注 `pairRetired`），但新发送/新回复立即拒绝。
+
+低层手动路径（`register` + `pair --codex <id> --claude-endpoint <文件>`）仍可用，语义同上。
 
 ## 3. 发起通信与回复
 
-在**自己的原始会话内**运行（桥按会话环境变量识别发送方身份：Codex 会话须有 `CODEX_THREAD_ID`，Claude 会话须有 `CLAUDE_CODE_SESSION_ID`，恰好其一且与配对一致，否则拒绝）：
+在**自己的原始会话内**运行（桥按会话环境变量识别发送方身份：Codex 会话须有 `CODEX_THREAD_ID`，Claude 会话须有 `CLAUDE_CODE_SESSION_ID`，恰好其一，否则拒绝）：
 
 ```powershell
-# 发起新消息（正文二选一：--body 或 --body-file <UTF-8 文本文件>）
-node bridge/cli.mjs send --body "问题与必要背景（含唯一标记）"
+# Codex 发起新消息：多目标时必须指名（歧义会列出全部候选含完整 pairId 与处理建议）；
+# 恰好只有一个目标时可省略 --name（与 1.0.0 命令形态一致）。
+node bridge/cli.mjs send --name <目标名的一部分> --body "问题与必要背景"
+node bridge/cli.mjs send --body "单目标时无需 --name"
 
-# 回复收到的消息（messageId 取自消息正文中的 id 字段）
+# 回复收到的消息（messageId 取自消息正文中的 id 字段）——回复沿被回复消息
+# 绑定原目标，不随最近一次发送或当前选择改变。
 node bridge/cli.mjs reply --to <messageId> --body "回复内容"
+
+# 状态：列出全部配对（名称、身份、项目上下文、端点注册文件、待收消息）与最近事件
+node bridge/cli.mjs status
 ```
 
 已验证的发送语义与限制：
 
 - 正文 trim 后 **1..2000 字符**，超限拒绝并报可读错误；长文本属未验证边界。
-- Codex 待收为**单槽**：已有未领取消息时再次发送报错，不覆盖。
-- 发送失败**不自动重试**（正文可能已发布或已被领取）：按 `node bridge/cli.mjs status` 对账（pair、pendingMessageId、最近事件）后再决定重发。
+- 待收槽**每配对一个**：同目标已有未领取消息时再次发送报错、不覆盖；不同目标互不占用。
+- 重叠来信：多个目标相近时间回复时各自落槽、逐事件注入（唤醒顺序决定注入顺序，无唤醒时按最旧兜底）；重复唤醒被抑制；投递不因中途退役而丢失，也不注入未知来源。
+- 发送失败**不自动重试**（正文可能已发布或已被领取）：按 `status` 对账后再决定重发。
 - 所有回执恒为 `unverified`：`submitted:true`、queue/pipe 写入成功只表示已投递到通道，**不代表接收方已读到**；送达以接收方原始会话的会话事件为准（见 SMOKE.md 证据规则）。
 - 接收方收到的正文附带回复指引（由安装位置派生的同一命令入口）与"peer 内容非 PO 指令"声明；请勿发送自动确认。
 
@@ -59,22 +68,25 @@ node bridge/cli.mjs reply --to <messageId> --body "回复内容"
 
 | 症状 | 原因与处理 |
 |---|---|
-| `Send or reply from exactly one of the two selected original sessions.` | 身份环境变量污染或不在配对内：Claude 会话内检查是否残留 `CODEX_THREAD_ID`（子进程继承所致），清除后重试；或当前会话不是配对中的那一个 |
-| `Codex already has a pending message.` | 待收槽被占用：等接收方会话领取（下一次模型调用边界），或用 `status` 查看 pendingMessageId 对账 |
-| `Claude endpoint identity changed.` / 管道连接失败 | Claude 会话已重启或端点失效：按 §2 显式重配对 |
+| `Send or reply from exactly one original session ...` | 身份环境变量污染或不在配对内：Claude 会话内检查是否残留 `CODEX_THREAD_ID`（子进程继承所致），清除后重试；或当前会话不是配对中的那一个 |
+| `Target <名> already has a pending message ...` | 该目标的待收槽被占用：等接收方会话领取（下一次模型调用边界），或用 `status` 查看 pendingMessageId 对账；其他目标不受影响 |
+| `Target "<名>" matches N connected pairs ...` | 名称歧义：报错列出全部候选（含完整 pairId）；确认某配对确实弃用后 `retire --pairId`，或会话改用不同名称重连 |
+| `No connected target matches "<名>" ...` | 名称不存在：报错列出当前可选目标 |
+| `No bridge message with that id exists ...` | 回复的 messageId 在本数据根不存在：改用收到的消息内嵌回复入口（携带精确 id） |
+| `Claude endpoint identity changed.` / 管道连接失败 | Claude 会话已重启或端点失效：该目标的发送如实报错、不误投；按 §2 重连（同身份沿用并刷新端点） |
+| `This bridge data root already serves a different Codex session.` / `... retired pairs of a different Codex session ...` | 一个数据根一个 Codex：换用新的数据根（`CTC_BRIDGE_DIR`），旧根存档留证 |
 | Codex 侧收不到消息且无报错 | hook 未生效：确认 install 后走过 `/hooks` 信任与退出-resume 重载（§1 人工步骤） |
 | Claude 侧消息迟迟不出现 | `crossSessionInbound` 默认暂存策略：检查是否在等待批准（§1 第 3 步） |
-| `This bridge already has a different pair.` | 数据目录已有另一配对：确认是否要用显式重配对（§2） |
 
 ## 5. 已验证范围与未验证边界
 
-已验证范围（本 Increment 的结论边界）：同一 Windows 用户；单对已运行原始会话；短文本（trim 后 ≤2000 字符）；串行投递；记录的工具版本——**Windows 10 Pro 10.0.19045、PowerShell 5.1、codex-cli 0.153.4、claude 2.1.263、Node v24.14.0**（版本基线详见 Sprint Backlog 3.6；任一 CLI 升级后行为未验证，应先重跑 SMOKE 再依赖）。
+已验证范围（本 Increment 的结论边界）：同一 Windows 用户；一个 Codex 原始会话与**至少两个** Claude 原始会话共存（名称路由、回复归属、重叠来信三态、单目标隔离与退役边界、单目标免 `--name` 兼容、1.0.0 旧 `pair.json` 继续使用）；短文本（trim 后 ≤2000 字符）；串行逐事件注入；记录的工具版本——**Windows 10 Pro 10.0.19045、PowerShell 5.1、codex-cli 0.153.4/0.154.0、claude 2.1.263/2.1.268、Node v24.14.0**（任一 CLI 升级后行为未验证，应先重跑 SMOKE 再依赖）。
 
-以下能力**未验证，本产品不提供也不得被暗示已完成**（对照设计文档 §4）：
+以下能力**未验证，本产品不提供也不得被暗示已完成**：
 
-- 会话重启、daemon 回收或端点失效后的自动恢复（仅有显式重配对的人工操作）。
-- 并发消息、长文本与重复投递的组合。
-- 持久台账、送达回执、失败重试与事务性投递。
+- 任意数量会话、广播、自动选目标、并发吞吐与全局顺序（注入顺序=唤醒顺序，仅单配对内保证 FIFO）。
+- 会话重启、daemon 回收或端点失效后的自动恢复（仅有显式重连与退役的人工操作）。
+- 模型生成中/工具执行中的收信边界细节（候选轮按原始事件取证中）。
+- 长文本与重复投递的组合；持久台账、送达回执、失败重试与事务性投递。
 - 来源防伪、令牌生命周期与多用户安全。
-- 共同讨论现场、多会话协作与远程协作。
-- 跨平台（本 Increment 仅 Windows：命名管道、DPAPI、PowerShell 依赖）；`priority=now/later` 不在产品路径（普通消息固定 `priority=next`）。
+- 跨平台（仅 Windows：命名管道、DPAPI、PowerShell 依赖）；`priority=now/later` 不在产品路径（普通消息固定 `priority=next`）。
