@@ -108,6 +108,7 @@ Sprint 04 以 1.0.0 为基线，完成多配对所必需的目标辨识、基本
 
 - 协调通道：按 SM 指示用 codex queue 回报，不用标准桥 reply（避免在协调目录留无法投递的待收槽）；不改 SM hooks 与日常配对。
 - 环境分工（SM 消息 cb7917e4 / f3ab48b8，PO 已同意）：Developer 准备并启动专用测试 Codex 与 Claude A/B，SM 核对隔离与证据；PO 触点仅限实际登录/信任/体验，届时给已备好的入口。
-- 待 PO 决定（经 SM 转）：隔离 CODEX_HOME 内测试 Codex 的登录方式——(a) 测试窗口一次性 `codex login`（Developer 推荐，信任链最干净）或 (b) PO 明确授权后复制日常 auth.json。日常凭据不默认复制。`--dangerously-bypass-hook-trust` 旗标已知存在，按"不绕过授权"边界刻意不用；hook 信任保留为测试窗口内一次性人工确认。
+- ~~待 PO 决定：测试 Codex 登录方式~~ 已按 SM e1f9350c 撤回：认证内嵌于 provider 表（`requires_openai_auth=false` + bearer token），隔离 home 下 `codex doctor` auth ok、`codex exec` 真实调用通过——无需 PO 登录；后续若实际认证失败再报具体原因。整份复制 config 的做法已废弃，改为 `Copy-ModelConfig.ps1` 结构化提取（仅模型/provider 参数 + provider 表；日常 hooks/插件/marketplace/MCP/项目/信任态排除；凭据不打印、不进 Git）。
+- 唯一保留的预期 PO 触点：测试窗口内一次性 hook 信任确认。`--dangerously-bypass-hook-trust` 旗标存在但按"不绕过授权"边界刻意不用。`approval_policy`/`sandbox_mode` 按用户日常值带入测试配置（保持会话行为一致），已向 SM 披露可复核。
 - 宿主版本按 SM 只读核对：Codex CLI 0.154.0、Claude Code 2.1.268；相应宿主行为在 W4 实测，不沿用旧版本假设。
 - 按 SM c9a1f0d9 口径：读取配置、创建测试文件不算宿主隔离已实证；隔离实证以真启动后的 `codex doctor --json` 加载核查与实际运行为准。

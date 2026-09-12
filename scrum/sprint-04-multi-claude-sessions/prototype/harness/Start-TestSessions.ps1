@@ -19,14 +19,16 @@ if (-not $CliPath) { $CliPath = (Resolve-Path (Join-Path $PSScriptRoot '..\bridg
 $hooksFile = Join-Path $TestRoot 'workCodex\.codex\hooks.json'
 if (-not (Test-Path $hooksFile)) { throw "Test environment missing ($hooksFile). Run Set-Up-TestEnv.ps1 first." }
 if (-not (Test-Path $CodexHome)) { New-Item -ItemType Directory -Force -Path $CodexHome | Out-Null }
-if (-not $SkipDailyConfigCopy -and (Test-Path (Join-Path $env:USERPROFILE '.codex\config.toml')) -and -not (Test-Path (Join-Path $CodexHome 'config.toml'))) {
-    Copy-Item (Join-Path $env:USERPROFILE '.codex\config.toml') (Join-Path $CodexHome 'config.toml')
-    Write-Output 'Copied daily config.toml (settings only) into the isolated CODEX_HOME.'
+if (-not $SkipDailyConfigCopy) {
+    # Structured extraction, never a whole-file copy: the daily config also
+    # carries hooks, plugins, marketplaces, mcp_servers, projects and inline
+    # auth fields (SM review e1f9350c). Only the model/provider keys and the
+    # referenced provider table land in the isolated CODEX_HOME; the bearer
+    # token rides in that table, is never printed, and never enters git.
+    # Verified in this isolated home: doctor auth.credentials ok, no MCP, and
+    # a real codex exec call answered (no login needed).
+    powershell -NoProfile -File (Join-Path $PSScriptRoot 'Copy-ModelConfig.ps1') -TargetConfig (Join-Path $CodexHome 'config.toml')
 }
-# Auth is deliberately NOT copied: the isolated home either gets a one-time
-# `codex login` in the test window, or an explicitly PO-approved credential
-# copy. Hook trust is never copied, forged, or bypassed
-# (--dangerously-bypass-hook-trust exists and is deliberately not used).
 
 $claudePrompt = '你是 Sprint 04 桥接多配对验证的专用测试会话 __NAME__，仅做本测试。' +
     '收到跨会话桥消息后，按消息内嵌指引用 reply 回复；不要主动发送确认、问候或与本测试无关的消息。其余时间等待即可。'

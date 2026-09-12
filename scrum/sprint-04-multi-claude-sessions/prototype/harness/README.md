@@ -28,9 +28,10 @@ powershell -File "...\prototype\harness\Start-TestSessions.ps1" -Launch    # 真
 
 - **Claude A/B**：脚本在自身一次性进程内先 `Remove-Item Env:\CODEX_THREAD_ID / Env:\CLAUDE_CODE_SESSION_ID` 再 `claude --bg --name s04-claude-a|b <待命提示>`——子进程拿不到继承身份，自建原会话身份；父（本 Developer）会话身份不动。保留用户模型与 provider 配置。
 - **测试 Codex**：独立 `CODEX_HOME=s04-test\codex-home`（隔离已装插件、信任与状态，杜绝日常插件参与）；日常 `config.toml` 仅作设置复制（无凭据、无信任态，可用 `-SkipDailyConfigCopy` 关掉）；`CTC_BRIDGE_DIR` 指测试桥。初始提示由脚本写入 `_initial-prompt.txt`，`_launch-codex.ps1` 读入后作为 `codex <prompt>` 启动——自登记 thread-id.txt、自查 sessions、自动 connect A/B、结果落 connect-log.txt。
-- **登录**：隔离 CODEX_HOME 无凭据。两个选项报 SM/PO 定：(a) 测试窗口内一次性 `codex login`（推荐，信任链最干净）；(b) PO 明确授权后把日常 auth.json 复制进隔离 home。**不**默认复制。
+- **登录**：~~隔离 CODEX_HOME 无凭据~~ 已按 SM e1f9350c 撤回——认证随 provider 表内嵌（`requires_openai_auth=false` + bearer token）。实测：`codex doctor` 报 `auth.credentials: ok`（OpenAI auth 不需要），隔离 home 下 `codex exec` 真实调用返回正常。**无需 PO 登录**；若后续真实认证失败再报具体原因。
+- **配置提取**：不整份复制日常 config（它会带入 hooks/插件/marketplace/MCP/项目与信任态，且含认证字段）。`Copy-ModelConfig.ps1` 做 TOML 结构化提取：仅顶层模型参数（model、model_provider、reasoning effort、上下文窗口等）+ 引用的 `[model_providers.<provider>]` 表（bearer token 只落在隔离 home 的临时配置里，不打印、不进 Git）。`approval_policy` 与 `sandbox_mode` 按用户日常值带入以保持会话行为一致——如 SM 认为不该带可去掉改用默认。
+- **加载核查**（已做并存档 `s04-test\evidence\codex-doctor.json`）：`overallStatus ok`；auth/config/mcp 各项 ok；MCP 为空；路径全部指向 `s04-test\codex-home`。真启动后窗口内再存一份运行时 doctor。
 - **唯一预期 PO 触点**：测试窗口内 Codex 首次要求信任三条原型 hook（`node "<worktree>\...\prototype\bridge\cli.mjs" hook`）。`--dangerously-bypass-hook-trust` 旗标存在但按"不绕过授权"边界**刻意不用**。
-- **加载核查**（隔离声明须有证据，不凭 hooks.json 自说自话）：测试窗口内 `codex doctor --json` 存档；核对其中 config/home/插件/auth 各项均指向 `s04-test\codex-home` 或为空，无日常路径。核查输出归入证据目录。
 
 ## 3. 建立两个配对（已并入初始提示，自动执行）
 
