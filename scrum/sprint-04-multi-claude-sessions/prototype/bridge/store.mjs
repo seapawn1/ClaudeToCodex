@@ -10,12 +10,22 @@ import { commandString } from './entry.mjs';
 
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
-// Stable per-user data root. CTC_BRIDGE_DIR overrides it for tests and isolated
-// smoke runs; there is intentionally no %TEMP% fallback and no pointer file.
+// The prototype must never touch the daily bridge data, so it refuses to pick
+// a root on its own (SM review 4d9f6031): every entry point needs an explicit
+// CTC_BRIDGE_DIR that is not the daily default. No fallback, no pointer file.
+export const dailyRoot = () =>
+  join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'ClaudeToCodex', 'bridge');
+
 export const defaultRoot = () => {
-  if (process.env.CTC_BRIDGE_DIR) return process.env.CTC_BRIDGE_DIR;
-  const base = process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local');
-  return join(base, 'ClaudeToCodex', 'bridge');
+  const override = process.env.CTC_BRIDGE_DIR;
+  if (!override || !override.trim()) {
+    throw new Error('The Sprint 04 prototype requires CTC_BRIDGE_DIR set to an isolated test data root; it never uses or creates the daily bridge directory.');
+  }
+  const root = resolve(override);
+  if (root.toLowerCase() === resolve(dailyRoot()).toLowerCase()) {
+    throw new Error('CTC_BRIDGE_DIR points at the daily bridge data root; the prototype refuses to operate on it.');
+  }
+  return root;
 };
 
 export const readJson = (path) => JSON.parse(readFileSync(path, 'utf8').replace(/^﻿/, ''));
@@ -296,7 +306,10 @@ export function handleHook(store, event) {
   if (!pairs.some((pair) => pair.codexId === event.session_id)) return {};
   let wake = null;
   if (event.hook_event_name === 'UserPromptSubmit') {
-    wake = /^\[CTC-WAKE ([0-9a-f-]{36}) ([0-9a-f-]{36})\]$/i.exec((event.prompt ?? '').trim());
+    const match = /^\[CTC-WAKE ([0-9a-f-]{36}) ([0-9a-f-]{36})\]$/i.exec((event.prompt ?? '').trim());
+    // Shape alone is not identity: 36 dashes match the class but not a UUID.
+    // Malformed wake-shaped text counts as ordinary input, never an error.
+    if (match && UUID.test(match[1]) && UUID.test(match[2])) wake = match;
   }
   const message = store.take(event, wake?.[1] ?? null);
   if (message) {
@@ -305,7 +318,7 @@ export function handleHook(store, event) {
       ? { decision: 'block', reason: body }
       : { hookSpecificOutput: { hookEventName: event.hook_event_name, additionalContext: body } };
   }
-  if (wake && UUID.test(wake[1]) && UUID.test(wake[2])) {
+  if (wake) {
     const pair = store.pairById(wake[1]);
     let original;
     try { original = store.message(wake[2]); } catch (error) { if (error.code === 'ENOENT') return {}; throw error; }

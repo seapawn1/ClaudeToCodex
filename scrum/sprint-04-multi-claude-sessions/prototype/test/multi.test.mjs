@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { BridgeStore, handleHook, wakeText } from '../bridge/store.mjs';
+import { BridgeStore, dailyRoot, defaultRoot, handleHook, wakeText } from '../bridge/store.mjs';
+
+const cli = fileURLToPath(new URL('../bridge/cli.mjs', import.meta.url));
 
 const codexId = '11111111-1111-4111-8111-111111111111';
 const claudeA = '22222222-2222-4222-8222-222222222222';
@@ -79,7 +83,14 @@ test('legacy single-pair data stays visible and can coexist with new pairs', (t)
 test('target names resolve uniquely, never by guessing (S04-11-2)', (t) => {
   const { store, pairA } = setup(t);
   assert.equal(store.resolveTarget('alp').id, pairA.id);
-  assert.throws(() => store.resolveTarget('gamma'), /No connected target matches "gamma". Known targets: alpha -> claude 22222222; beta -> claude 44444444/);
+  try {
+    store.resolveTarget('gamma');
+    assert.fail('expected resolveTarget to throw');
+  } catch (error) {
+    assert.match(error.message, /No connected target matches "gamma"/);
+    assert.match(error.message, /alpha -> claude 22222222/);
+    assert.match(error.message, /beta -> claude 44444444/);
+  }
   assert.throws(() => store.resolveTarget('a'), /matches 2 connected pairs/);
   // The caller must be exactly one original session.
   assert.deepEqual(store.caller({ CODEX_THREAD_ID: codexId }), { tool: 'codex', sessionId: codexId });
@@ -197,4 +208,43 @@ test('single-target use keeps the 1.0.0 receiving behaviour (S04-11-7 fixture le
   assert.deepEqual(handleHook(store, hookEvent('UserPromptSubmit', { prompt: 'plain user text' })), {});
   assert.deepEqual(handleHook(store, hookEvent('UserPromptSubmit', { session_id: '55555555-5555-4555-8555-555555555555', prompt: 'x' })), {});
   assert.ok(existsSync(join(store.root, 'receipts', `${letter.id}.json`)));
+});
+
+test('the prototype refuses to pick a data root on its own (SM review 4d9f6031, isolation)', (t) => {
+  const saved = process.env.CTC_BRIDGE_DIR;
+  t.after(() => {
+    if (saved === undefined) delete process.env.CTC_BRIDGE_DIR;
+    else process.env.CTC_BRIDGE_DIR = saved;
+  });
+  delete process.env.CTC_BRIDGE_DIR;
+  assert.throws(() => defaultRoot(), /requires CTC_BRIDGE_DIR/);
+  process.env.CTC_BRIDGE_DIR = dailyRoot();
+  assert.throws(() => defaultRoot(), /daily bridge data root/);
+  const safe = join(tmpdir(), 's04-refusal-check');
+  process.env.CTC_BRIDGE_DIR = safe;
+  assert.equal(defaultRoot(), resolve(safe));
+});
+
+test('the prototype CLI refuses to run instead of touching the daily bridge (CLI level)', () => {
+  const env = { ...process.env };
+  delete env.CTC_BRIDGE_DIR;
+  const missing = spawnSync(process.execPath, [cli, 'status'], { env, encoding: 'utf8' });
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /requires CTC_BRIDGE_DIR/);
+  const daily = spawnSync(process.execPath, [cli, 'status'], { env: { ...process.env, CTC_BRIDGE_DIR: dailyRoot() }, encoding: 'utf8' });
+  assert.equal(daily.status, 1);
+  assert.match(daily.stderr, /daily bridge data root/);
+});
+
+test('wake-shaped but malformed text never throws (SM review 4d9f6031, robustness)', (t) => {
+  const { store, pairA } = setup(t);
+  const dashes = '-'.repeat(36);
+  const valid = '123e4567-e89b-4212-a456-426614174000';
+  // Nothing pending: malformed wake text is indistinguishable from plain input.
+  assert.deepEqual(handleHook(store, hookEvent('UserPromptSubmit', { prompt: `[CTC-WAKE ${dashes} ${valid}]` })), {});
+  // Something pending: the malformed wake is still a delivery opportunity and must not error.
+  const letter = incoming(store, pairA, 'delivered despite malformed wake');
+  const delivered = handleHook(store, hookEvent('UserPromptSubmit', { prompt: `[CTC-WAKE ${dashes} ${valid}]` }));
+  assert.match(delivered.hookSpecificOutput.additionalContext, /delivered despite malformed wake/);
+  assert.ok(store.consumed(letter.id));
 });
