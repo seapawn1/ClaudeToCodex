@@ -610,15 +610,18 @@ test('registry refreshes never expose a truncated record to other processes (SM 
 
 test('a refresh that loses a retire race never resurrects the archived id (SM d98dcf66)', (t) => {
   const { root, store, pairA, epA } = setup(t, { withB: false });
-  // Inject the interleaving at the exact race point: right after the refresh
-  // write, another process retires the pair, then the refresh's own post-
-  // write check runs - exactly what SM's injection reproduced.
+  // Inject the completed interleaving at the exact race point: the public
+  // retire would deadlock on the lock pair() holds, so the injection uses
+  // retireLocked to stand in for another process whose retire ALREADY
+  // finished before this refresh's write - which is precisely the state the
+  // post-write check exists to catch (the lock makes it unreachable via the
+  // public API; the check stays as the belt-and-suspenders).
   const originalRetiredPairById = store.retiredPairById.bind(store);
   let armed = true;
   store.retiredPairById = (pairId) => {
     if (armed) {
       armed = false;
-      store.retire(pairId);
+      store.retireLocked(pairId);
     }
     return originalRetiredPairById(pairId);
   };
@@ -632,4 +635,84 @@ test('a refresh that loses a retire race never resurrects the archived id (SM d9
   assert.throws(() => store.prepare(pairA, 'claude', 'stale', null, claudeA), /not registered/);
   const letter = store.prepare(outcome, 'claude', 'fresh traffic', null, claudeA);
   assert.equal(letter.pairId, outcome.id);
+});
+
+test('concurrent first connects of one identity leave exactly one active pair (SM 10a58a0f-2)', async (t) => {
+  const { root, store, pairA, epA } = setup(t, { withB: false });
+  store.retire(pairA.id); // clean slate: every following call is a first connect
+  const storeUrl = pathToFileURL(fileURLToPath(new URL('../store.mjs', import.meta.url))).href;
+  const env = { ...process.env, CTC_BRIDGE_DIR: root };
+  delete env.CODEX_THREAD_ID;
+  delete env.CLAUDE_CODE_SESSION_ID;
+  const run = (code) => new Promise((resolveRun, rejectRun) => {
+    const child = spawn(process.execPath, ['--input-type=module', '-e', code], { env, windowsHide: true, timeout: 60000 });
+    let output = '';
+    let errors = '';
+    child.stdout.setEncoding('utf8').on('data', (data) => { output += data; });
+    child.stderr.setEncoding('utf8').on('data', (data) => { errors += data; });
+    child.on('error', rejectRun);
+    child.on('close', (code2) => code2 === 0 ? resolveRun(output) : rejectRun(new Error(errors || output)));
+  });
+  const connector = `
+    import { BridgeStore } from "${storeUrl}";
+    const store = new BridgeStore(${JSON.stringify(root)});
+    let ok = 0;
+    for (let i = 0; i < 60; i++) {
+      try { store.pair(${JSON.stringify(codexId)}, ${JSON.stringify(resolve(epA))}, 'alpha'); ok++; } catch (error) { if (!/lock is busy/.test(String(error))) throw error; }
+    }
+    process.stdout.write(String(ok));
+  `;
+  const results = await Promise.all([run(connector), run(connector)]);
+  assert.ok(results.every((count) => Number(count) > 0), 'both connectors must have run');
+  const active = store.pairs().filter((pair) => pair.claudeId === claudeA);
+  assert.equal(active.length, 1, 'exactly one active pair for the identity');
+  assert.equal(store.findPairByClaude(claudeA).claudeId, claudeA);
+});
+
+test('an independent observer never sees an id active and retired at once during churn (SM 10a58a0f-1)', async (t) => {
+  const { root, store, pairA, epA } = setup(t, { withB: false });
+  const storeUrl = pathToFileURL(fileURLToPath(new URL('../store.mjs', import.meta.url))).href;
+  const done = join(root, 'churn-done');
+  const env = { ...process.env, CTC_BRIDGE_DIR: root };
+  delete env.CODEX_THREAD_ID;
+  delete env.CLAUDE_CODE_SESSION_ID;
+  const run = (code) => new Promise((resolveRun, rejectRun) => {
+    const child = spawn(process.execPath, ['--input-type=module', '-e', code], { env, windowsHide: true, timeout: 60000 });
+    let output = '';
+    let errors = '';
+    child.stdout.setEncoding('utf8').on('data', (data) => { output += data; });
+    child.stderr.setEncoding('utf8').on('data', (data) => { errors += data; });
+    child.on('error', rejectRun);
+    child.on('close', (code2) => code2 === 0 ? resolveRun(output) : rejectRun(new Error(errors || output)));
+  });
+  const refresher = `
+    import { BridgeStore } from "${storeUrl}";
+    import { existsSync, writeFileSync } from 'node:fs';
+    const store = new BridgeStore(${JSON.stringify(root)});
+    for (let i = 0; i < 150; i++) {
+      try { store.pair(${JSON.stringify(codexId)}, ${JSON.stringify(resolve(epA))}, i % 2 ? 'alpha' : 'renamed-alpha'); } catch (error) { if (!/lock is busy/.test(String(error))) throw error; }
+    }
+    writeFileSync(${JSON.stringify(done)}, 'done');
+  `;
+  const observer = `
+    import { BridgeStore } from "${storeUrl}";
+    import { existsSync } from 'node:fs';
+    const store = new BridgeStore(${JSON.stringify(root)});
+    let checks = 0; let dual = 0; let accepted = 0; let errors = 0; let lastError = '';
+    while (!existsSync(${JSON.stringify(done)})) {
+      try {
+        const active = store.pairById(${JSON.stringify(pairA.id)});
+        const retired = store.retiredPairById(${JSON.stringify(pairA.id)});
+        if (active && retired) dual++;
+        if (active) { try { store.prepare(active, 'claude', 'observer probe', null, ${JSON.stringify(claudeA)}); accepted++; } catch (error) { lastError = String(error); } }
+        checks++;
+      } catch (error) { errors++; lastError = String(error); }
+    }
+    process.stdout.write(JSON.stringify({ checks, dual, accepted, errors, lastError }));
+  `;
+  const [, report] = await Promise.all([run(refresher), run(observer)]);
+  const result = JSON.parse(report);
+  assert.ok(result.checks > 0, 'observer must have exercised the window');
+  assert.equal(result.dual, 0, 'an id is never active and retired at the same time');
+  assert.equal(result.errors, 0, `registry reads must never fail: ${result.lastError}`);
 });

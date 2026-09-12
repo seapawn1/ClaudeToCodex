@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { commandString } from './entry.mjs';
@@ -64,6 +64,38 @@ export class BridgeStore {
 
   event(type, data = {}) {
     appendFileSync(join(this.root, 'events.jsonl'), `${JSON.stringify({ at: new Date().toISOString(), type, ...data })}\n`);
+  }
+
+  // Registry mutations and acceptance run under a root-level mutex so their
+  // read-decide-write sequences serialize across processes: a refresh can no
+  // longer interleave with a retire (a resurrected id is never observable or
+  // acceptable mid-operation), and two concurrent first connects of the same
+  // identity cannot both create a pair (1.0.0's single-file wx flag gave this
+  // guarantee; the registry needs the lock). mkdir is the atomic acquire; a
+  // lock older than the stale threshold is taken over after a crash.
+  withLock(fn) {
+    const lock = join(this.root, '.lock');
+    for (let attempt = 0; ; attempt++) {
+      try {
+        mkdirSync(lock);
+        break;
+      } catch (error) {
+        if (error.code !== 'EEXIST') throw error;
+        if (attempt >= 400) {
+          if (Date.now() - statSync(lock).mtimeMs > 10000) {
+            rmSync(lock, { recursive: true, force: true });
+            continue;
+          }
+          throw new Error('The bridge registry lock is busy; retry the operation shortly.');
+        }
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+      }
+    }
+    try {
+      return fn();
+    } finally {
+      rmSync(lock, { recursive: true, force: true });
+    }
   }
 
   // Multi-pair registry: one wx-written file per pair under pairs/. The legacy
@@ -162,6 +194,10 @@ export class BridgeStore {
   // never replaced or removed here.
   pair(codexId, endpointPath, claudeName = null) {
     this.initialize();
+    return this.withLock(() => this.pairLocked(codexId, endpointPath, claudeName));
+  }
+
+  pairLocked(codexId, endpointPath, claudeName = null) {
     const endpoint = readJson(endpointPath);
     const selected = { codexId: id(codexId), claudeId: id(endpoint.sessionId), endpointPath: resolve(endpointPath) };
     const current = this.pairs();
@@ -231,6 +267,10 @@ export class BridgeStore {
   // refused (their rebuild path is the S04-11-7 decision, not a silent move).
   retire(pairId) {
     this.initialize();
+    return this.withLock(() => this.retireLocked(pairId));
+  }
+
+  retireLocked(pairId) {
     const pair = this.pairById(pairId);
     if (!pair) throw new Error('No registered pair matches that id.');
     if (this.legacyPair()?.id === pair.id) {
@@ -275,6 +315,10 @@ export class BridgeStore {
   // Codex sends name an explicit target (S04-11-2). No implicit "current" or
   // "most recent" target exists anywhere on this path.
   prepare(pair, from, body, replyTo = null, callerSessionId = null) {
+    return this.withLock(() => this.prepareLocked(pair, from, body, replyTo, callerSessionId));
+  }
+
+  prepareLocked(pair, from, body, replyTo = null, callerSessionId = null) {
     if (!['codex', 'claude'].includes(from)) throw new Error('Invalid sender.');
     if (!pair || !this.pairById(pair.id)) throw new Error('The selected pair is not registered in this bridge.');
     const expected = from === 'codex' ? pair.codexId : pair.claudeId;
