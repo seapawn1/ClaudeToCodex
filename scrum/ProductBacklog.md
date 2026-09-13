@@ -42,12 +42,12 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 2026-09-13，PO 判定 PBI-14（待收槽不领取、每配对首条之后发送全拒）为严重缺陷并要求修复，优先级提到未完成条目最前；根因定位与修复方案由 Developer 评估后与 PO 确认。
 
+2026-09-13，Sprint 05 Review 决策：PBI-14 与 PBI-15 均通过隔离安装候选、SM R1–R6 真实验证和 PO 手动端到端验收，移入已交付能力；PBI-09 吸收“bridge 正文已进入模型上下文但 Codex 未主动向 PO 报告”的呈现 / 行动提示问题。全局 DoD 不变，宿主状态命令防护进入长期工作规则与测试记忆。
+
 2026-09-13，SM 复核补充：宿主 Codex 以正确隔离数据根 resume 并重新加载/信任 hooks 后，三条旧待收消息均经官方 UserPromptSubmit/PostToolUse 路径注入并释放，女巫与狼人的后续天气回复也直接入站；因此 `take()` 自身损坏不是已证实根因，PBI-14 保留连续投递回归与状态透明验收，根因和修复方案仍由 Developer 判定。同日新增 PBI-15 记录 per-Codex 数据根自动选择、宿主/Hook 一致性与 mismatch 诊断缺口；优先级未定，由 PO 决定。
 
 | 编号 | 标题 | 用户故事 | 架构定位 | 当前状态 | 备注 |
 |---|---|---|---|---|---|
-| PBI-14 | 待收槽不领取致每配对首条后发送全拒 | 作为从 Claude 向 Codex 发消息的日常使用者，我要待收消息被 Codex 侧领取后待收槽及时清空、后续消息可继续投递，以便持续协作不因首条消息而中断、也不依赖对方直读数据文件的旁路。 | Claude→Codex 待收-唤醒-Hook 交付链路的领取与清槽步骤；修复不改变单槽语义与重叠保护本身。 | 2026-09-13 PO 判定严重缺陷并要求修复，优先级提到未完成条目最前；待 Developer 定位根因与方案 | 来自 2026-09-12/13 多配对真实演示（1 Codex + 3 Claude，CTC-WOLF 系列，bridge-threads/01a09805）：每配对首条 Claude→Codex 消息 pipe 写入后长期停留待收槽，status 持续显示 pendingMessageId，事件流无领取事件；此后同配对所有发送被重叠保护拒绝（send-error，仅存 created 记录）。宿主会话却完整引用了首日发言原文、并复述了仅存在于 send-error 记录中的第二轮猜测内容，表明其经直读记录文件取得内容而非领取路径——通道实际已中断而协作表面照常，属投递中断与状态失真的双重缺陷。验收（初步，待精化）：真实多配对场景同一配对连续多条消息经官方交付路径送达 Codex 原始会话，待收槽随领取清空且有领取证据；领取缺失时 status 如实呈现、不静默依赖旁路；重叠保护行为与说明一致；修复经隔离安装候选验证，证据遵循原始会话事件与唯一标记规则。 |
-| PBI-15 | 自动会话数据根与 Hook 一致性 | 作为随意新开或恢复 Codex 对话的日常使用者，我要插件自动为当前 Codex 原始会话选择并复用正确 bridge 数据根，而不必手动导出 `CTC_BRIDGE_DIR` 或理解目录布局，以便新会话可直接连接 Claude 且 Claude→Codex 官方交付不会因 root 不一致而死锁。 | 数据根生命周期与运行时解析：为每个 Codex 原始会话建立可发现/可复用的 root 或索引，使 connect、reply entry、queue wake 与 Codex hook 解析到同一处；保留一个 root 只服务一个 Codex 的身份边界，不静默改绑或合并旧证据。 | 待 Developer 评估；优先级未定 | 来自 2026-09-13 恢复复核：默认 root 绑定旧 Codex；临时隔离 root 只在 CLI 子进程设置，Claude 回复入口与 queue wake 可达，但 Codex hook 查看默认 root，三个待收槽不释放；宿主以正确 root resume 并重载/信任 hooks 后官方路径恢复。建议方向：按 Codex 会话自动创建/复用 root 或提供会话-root 索引；hook 依据事件中的 original session 解析 root；connect 遇默认 root 被其他 Codex 占用时自动为当前会话启用新 root；status/wake 对“消息在另一 root”“hook 未信任/未重载”给出明确诊断和下一步。验收（初步，待精化）：同一机器上新开 Codex 会话无需手写 `CTC_BRIDGE_DIR` 即可连接一个或多个 Claude 并完成双向通信；同一 thread 完全退出后 resume 自动复用正确 root；默认 root 被旧会话占用时不阻塞、不串扰、不要求 PO 手写路径或 ID；人为制造 root/hook 不一致时出现可理解诊断且不形成永久 pending；既有数据保留，PBI-14 连续投递回归通过隔离安装候选验证。 |
 | PBI-02 | 发布使用说明与故障排查 | 作为首批用户，我要仅凭随版本提供的说明完成安装、配置和故障处理，以便在实际项目中使用产品。 | 文档覆盖发布物的使用路径、两个实测故障、身份边界与运行环境；与安装和维护能力保持一致。 | 待 Developer 评估 | 延续 Sprint 01 Review 的文档修正。验收：随版本提供的说明覆盖获取、前置条件、安装、项目配置、首次通信、维护与卸载，命令与发布物一致；可据此识别双侧数据目录不一致及 Claude 端点失效，保留旧数据并完成显式重配对；澄清身份环境变量用于路由匹配，区分 Node 最低前置与已验证版本，声明工具版本和能力限制，修正已失效的 Sprint Backlog 引用。端点失效识别与显式重配对指引切片已由 PBI-10 承接，本条验收仅约束其余范围。 |
 | PBI-03 | 投递失败状态透明化 | 作为首批用户，我要看清消息的尝试投递、通道报错、待领取及有证据的领取状态，以免被本地记录误导。 | 改进 send-error、status 与消息记录的可解释性；证据不足时明确未知，领取不等于原会话已收到；不引入自动重试或送达回执。 | 待 Developer 评估 | 来自 Sprint 01 最终检视；是否纳入首版由 PO 排序决定。验收：标准状态入口可对照消息与事件，解释已发生的失败场景及已有的待领取或领取证据，证据不足时明确未知；`submitted:true`、通道写入及领取记录不被表述为原会话已收到，送达仍按接收方原始会话事件与唯一标记判定；报错但消息可能已发布或领取时，不诱导直接重发。status 人话化与换配对指引切片已由 PBI-10 承接，本条验收仅约束其余范围。 |
 | PBI-06 | 从发布物安装并启用通信 | 作为首批用户，我要把取得的发布物安装到自己的实际项目中，以便无需开发工作区的现成配置即可开始跨会话协作。 | 明确安装位置、目标项目配置、前置依赖及首次启用路径，沿用已验证的双向通信能力与信任要求。 | 待 Developer 评估 | 为 PBI-05 提供安装能力。验收：PO 在声明支持的 Windows 环境中可按说明确定安装位置与目标项目，完成安装、必要信任、端点登记和配对；产品入口、hook 及回复指引指向实际安装位置，保留其他工具配置；两个选定原始会话完成真实双向通信，接收证据符合原始会话事件与唯一标记规则。 |
@@ -102,6 +102,9 @@ flowchart TD
 
 ### 已交付能力
 
+- PBI-15（Sprint 05）：交付 per-Codex 会话数据根自动选择与复用。新开或 resume 的 Codex 原始会话无需手写 `CTC_BRIDGE_DIR`、threadId 或 root 路径；默认 root 属于其他 Codex 时自动让位 `bridge-threads\<threadId>`；`bridge-roots\` 每会话索引采用原子独占发布，多会话并发首连不丢失；CLI 与 hooks 解析同一 root；跨 root wake 有确定性诊断；不改绑、不迁移旧证据。双树 81/81、解包候选 81/81、SM SMOKE 4c R1–R6 与 PO 手动 E2E 通过。证据与边界见 [Sprint 05 Review](../docs/scrum-sprint/sprint-05-bridge-root-consistency-review-retro.md)。
+
+- PBI-14（Sprint 05）：作为连续官方投递回归交付。至少两个 Claude pair 各自连续多条 Claude→Codex 回复经 hook 进入同一 Codex 原始会话，pending 随领取清空，后续消息不被首条阻塞；重复 wake 抑制、单槽重叠保护与显式 retire 边界一致。root 失配被证实为原演示共同根因，未发现 `take()` 独立缺陷。SM 与 PO 真实原始会话证据见 [Sprint 05 Review](../docs/scrum-sprint/sprint-05-bridge-root-consistency-review-retro.md)。
 - PBI-11（Sprint 04）：交付一个 Codex 原始会话与多个可命名 Claude Code 原始会话的并行桥接。配对共存、按名路由、回复归属、每配对待收槽、相近来信、重复抑制、显式退役/重建、单目标与 legacy 兼容、产品双树和隔离安装候选均通过验收。最低验证规模为一 Codex + 两 Claude；不承诺任意规模、广播或并发吞吐。技术 AC 与 PO DoD 均通过，正式发布版本为 v1.1.0；证据与边界见 [Sprint 04 Review](../docs/scrum-sprint/sprint-04-multi-claude-sessions-review-retro.md)。
 
 - PBI-08（Sprint 02）：已交付 Codex CLI 插件，封装双向 bridge、连接 skill 与必要 hooks；用户指定正在运行的 Claude 会话即可自动建联，用户无需手动登记端点、复制会话 ID 或管理桥数据目录，Claude 侧无需安装插件或手动配置桥。保留宿主必要授权，沿用 Windows 本机、单对原始会话、短文本串行通信。候选 2 技术 AC 与 PO DoD 均已通过，PO 明确表示“满意，通过我负责的DoD”。版本、场景与证据见 [Sprint 02 Review](../docs/scrum-sprint/sprint-02-install-package-release-review.md)。

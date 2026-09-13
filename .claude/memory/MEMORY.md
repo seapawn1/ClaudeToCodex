@@ -7,3 +7,4 @@
 - [Sprint 01 retrospective](sprint-01-retrospective.md) — layered validation, receiver-event evidence, environment consistency
 - [Sprint 02 retrospective](sprint-02-retrospective.md) — layered evidence, real formats, joint acceptance, attribution and staging discipline
 - [Sprint 04 retrospective](sprint-04-retrospective.md) — installed-candidate-first validation, original-frame boundaries, scope-cost escalation
+- [Sprint 05 retrospective](sprint-05-retrospective.md) — empirical root reproduction, host-state guards, atomic per-session indexes, context-vs-visibility evidence

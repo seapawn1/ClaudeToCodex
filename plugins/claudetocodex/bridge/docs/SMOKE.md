@@ -73,12 +73,12 @@ S05 系数据根为自动选择（不设环境变量即真实路径）；`status
 
 ## 5. 重复运行约定
 
-「可重复执行」＝同一版本基线下**至少两次独立运行通过**：每次使用独立 runId、新会话（或 resume 后的原会话明确记录）、全新唯一标记，并使用隔离数据目录（`CTC_BRIDGE_DIR`，两个会话都从设置了该变量的终端启动）或显式重配对（见 USAGE §配置）。端点失效走显式重配对，不做自动恢复。
+「可重复执行」＝同一版本基线下**至少两次独立运行通过**：每次使用独立 runId、新会话（或 resume 后的原会话明确记录）、全新唯一标记，并记录自动选择的 root / source 或显式隔离覆盖。S05 系默认不设置 `CTC_BRIDGE_DIR`，用于验证 per-Codex 自动根；旧 T01–T05 / MT 系若需强制隔离，可显式设置 `CTC_BRIDGE_DIR`，但须记录该覆盖只用于隔离轮。端点失效走显式重配对，不做自动恢复。
 
 ## 6. 现场操作步骤（供 PO 协调）
 
-1. 双方就位：一个 Codex 原始会话（threadId 记录在案）+ 一个 Claude 原始会话；按第 1 节完成前置 2–7。
-2. Claude 会话内执行 `node bridge/cli.mjs register`，记录端点文件路径；执行 `node bridge/cli.mjs pair --codex <codexThreadId> --claude-endpoint <端点文件>`，记录 pairId。
+1. 双方就位：一个 Codex 原始会话（threadId 记录在案）+ 至少一个 Claude 原始会话；按第 1 节完成前置检查。
+2. 推荐路径：Codex 会话内执行 `sessions` 后用 `connect --name <唯一名称片段>` 建立配对；多目标重复连接不同 Claude。低层 `register` + `pair` 仅用于兼容 / 诊断场景，并必须记录手动路径。
 3. 按矩阵逐格执行：发起方在**自己的原始会话内**运行 `send`（或对收到的消息 `reply --to <messageId>`），正文含该格标记；接收方按第 3 节判据核对会话事件后回应。
-4. 每格结束立即把证据摘录落到 `bridge/docs/evidence/<runId>/`。
-5. 十格完成后由 PO 签署 MATRIX.md 判定；随后按第 5 节择期执行第二次独立运行。
+4. 每格结束立即把证据摘录落到约定 evidence 目录或 Sprint 协调记录；不得读取消息文件替代原始会话入站证据。
+5. 矩阵完成后由 PO 签署判定；随后按第 5 节择期执行第二次独立运行。

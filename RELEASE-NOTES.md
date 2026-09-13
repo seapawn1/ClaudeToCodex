@@ -1,29 +1,47 @@
-# ClaudeToCodex 1.2.0 版本说明（Sprint 05 候选，未发布）
+# ClaudeToCodex 1.2.0 版本说明（Sprint 05 已验收收口）
 
-> 状态：Sprint 05 安装候选。以下"新增能力"为候选内容；"验证摘要"待 PO 完成
-> 安装候选端到端真实验收后由 release 准备提交补全。已发布版本见下方 1.1.0 说明。
+> 状态：Sprint 05 Review/Retro 收口版本。插件版本 `1.2.0`，对应 `sprint-05-bridge-root-review-retro` tag。该版本已通过隔离安装候选、SMOKE 4c R1–R6 与 PO 手动端到端验收；公开 GitHub Release 资产是否发布由 PO 另行决定。
 
 ## 版本
 
-- **版本**：1.2.0（Codex CLI 插件，Sprint 05 候选）
+- **版本**：1.2.0（Codex CLI 插件）
 - **主题**：自动会话数据根与连续官方投递（PBI-15 / PBI-14）。
+- **实现源提交**：`e7ba853`；Sprint 收口 tag 在此基础上追加文档与 Scrum 收口，不改变插件运行代码。
 
-## 新增能力（候选）
+## 新增能力
 
 - 每个 Codex 原始会话自动选择并复用 bridge 数据根：新开或 resume 的会话无需手写 `CTC_BRIDGE_DIR`、threadId 或路径即可连接与收发；同一 thread 完全退出后 resume 复用原根与既有配对。
-- 默认数据根被其他 Codex 会话占用（含仅剩退役存档）时，connect 自动为当前会话启用 `bridge-threads\<threadId>` 新根并登记会话索引（`bridge-roots\` 目录，每会话一个文件、临时文件＋独占硬链接的原子发布、只增不改绑，多会话并发首连互不丢失，崩溃不留半写条目）；旧根数据与证据零改动。
+- 默认数据根被其他 Codex 会话占用（含仅剩退役存档）时，connect 自动为当前会话启用 `bridge-threads\<threadId>` 新根并登记会话索引；旧根数据与证据零改动。
+- 会话索引位于 `bridge-roots\`，每会话一个 JSON 文件，采用临时文件 + 独占 hard link 原子发布；只增不改绑，多会话并发首连互不丢失，崩溃不留半写最终条目。
 - Codex 侧 `send`/`reply`/`status`/`retire` 与三条 hook 按同一索引解析数据根；Claude 回复入口内嵌数据根，维持不变。
-- 数据面可观察的不一致给确定性诊断：wake 指向的消息在另一根时，原始会话收到"所在根＋该根服务的会话＋下一步"提示（不构成收信证明）；未领取 pending 在 `status` 中呈现数据面事实与未知/可能提示（hook 未信任/未重载不可检测，仅提示检查 `/hooks` 与退出-resume）。
-- `CTC_BRIDGE_DIR` 保留为显式测试/隔离覆盖：最高优先，且完全不读不写会话索引。
+- wake 指向另一 root 时给出确定性诊断，说明消息所在根、该根服务的 Codex 会话和下一步；诊断不构成收信证明。
+- pending 未领取时，status 呈现数据面事实与未知 / 可能提示；hook 未信任或未重载不可被产品检测，只提示检查 `/hooks` 与退出 / resume。
+- `CTC_BRIDGE_DIR` 保留为显式测试 / 隔离覆盖：最高优先，且完全不读不写会话索引。
 
 ## 已验证环境
 
 Windows 10 Pro 19045、PowerShell 5.1、Node.js v24.14.0、Codex CLI 0.153.4 / 0.154.0、Claude Code 2.1.263 / 2.1.268。
 
-## 验证摘要（待补全）
+## 验证摘要
 
-- 产品回归：76/76 通过（bridge/ 与 plugins/claudetocodex/bridge/ 双树同套）。
-- 安装候选与原始会话真实验收：待 PO 完成（SMOKE 4c R1–R6 格）。
+- 产品回归：**81/81 × 双树**（`bridge/` 与 `plugins/claudetocodex/bridge/` 同套通过）。
+- 并发索引：API 级双会话共存、真实 8 进程不同会话并发绑定零丢失、真实 8 进程同会话竞争收敛单绑定、不可读条目不覆盖均通过。
+- 安装候选：`claude-to-codex-plugin-1.2.0.zip`，SHA256 `8b97803af295926409195703b05d7d10796bce80219fa606327eeb43dd98afa0`；manifest 25 文件，`VERIFY=OK checked=24 extra=0`；解包候选 81/81 通过；包级技术验收 pass=8 / fail=0 / blocked=3，三项 blocked 均为须真实宿主与 PO 参与的检查。
+- 隔离宿主安装：插件 installed/enabled；安装路径位于隔离 `CODEX_HOME`；hooks 指向 `${PLUGIN_ROOT}/bridge/cli.mjs`；skill 可发现；无端点、配对、消息或凭证泄漏；日常 1.1.0 基线保持可用。
+- SMOKE 4c R1–R6：新会话自动 root、resume 复用、多目标同 root、跨 root 诊断、连续官方投递、默认 root 不改绑 / 重复 wake 抑制 / pending 单槽拒绝 / retire 隔离均通过。
+- PO 手动端到端：一个隔离 Codex 同时连接 BUYER / REVIEWER 两个 Claude，完成两轮交叉讨论及天气、数学、历史追问；原始 rollout 中 9 条完整 `Cross-session bridge message` 直接进入模型上下文，最终两个 pending 均为 `null`，未读取消息文件替代收信。PO 反馈整体满意。
+- 已知非阻塞问题：bridge 正文进入模型上下文后，Codex TUI 不一定显示原文，且模型可能未主动向 PO 报告；由 PBI-09 继续跟踪。
+
+## 边界与限制
+
+- 最低验证规模为一个 Codex + 两个 Claude；不承诺任意规模、广播、并发吞吐或全局顺序。
+- Windows-only；短文本 trim 后 1..2000 字符；串行逐事件注入。
+- 回执恒 `unverified`；不自动重试、不自动恢复、不代改宿主权限。
+- Claude 重启后旧端点失效；显式重连。新身份创建新配对；同名陈旧配对需按完整 pairId 显式退役。
+- 一个 bridge 数据根仍只服务一个 Codex 原始会话；本版本自动选择 / 复用 root，不做跨 root 合并或改绑。
+- 未验证所有宿主异常注入形态、任意跨版本升级路径或 CLI 未来版本兼容性。
+
+完整 Review / Retro / 证据索引见 `docs/scrum-sprint/sprint-05-bridge-root-consistency-review-retro.md`。
 
 ---
 
