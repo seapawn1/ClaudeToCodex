@@ -1,13 +1,19 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFile } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import test from 'node:test';
-import { bindThreadRoot, indexPath, knownRoots, locateMessage, otherRootsServing, readIndex, resolveRoot, rootOwner } from '../roots.mjs';
+import { bindThreadRoot, indexDir, knownRoots, locateMessage, otherRootsServing, readIndex, resolveRoot, rootOwner } from '../roots.mjs';
 
 // Sprint 05 / PBI-15: the session-root index and resolution policy. All cases
 // run against explicit temp paths and a fake env object - no process.env or
 // machine LOCALAPPDATA is touched, and no case relies on a real root.
+
+const execute = promisify(execFile);
+const bindChild = fileURLToPath(new URL('./bind-child.mjs', import.meta.url));
 
 const CODEX_A = 'aaaaaaaa-1111-4111-8111-111111111111';
 const CODEX_B = 'bbbbbbbb-2222-4222-8222-222222222222';
@@ -22,7 +28,7 @@ function fixture(t) {
     parent: join(base, 'ClaudeToCodex'),
     def: join(base, 'ClaudeToCodex', 'bridge'),
     threads: join(base, 'ClaudeToCodex', 'bridge-threads'),
-    indexFile: join(base, 'ClaudeToCodex', 'bridge-roots.json'),
+    indexDir: join(base, 'ClaudeToCodex', 'bridge-roots'),
   };
 }
 
@@ -108,38 +114,40 @@ test('rootOwner reads the codexId from legacy pair.json, pairs/ and pairs-retire
 
 test('bindThreadRoot registers a session and is idempotent for the same root', () => {
   const f = fixture(test);
-  const first = bindThreadRoot(CODEX_B, join(f.threads, CODEX_B), f.indexFile);
+  const first = bindThreadRoot(CODEX_B, join(f.threads, CODEX_B), f.indexDir);
   assert.equal(first.changed, true);
-  const again = bindThreadRoot(CODEX_B, join(f.threads, CODEX_B), f.indexFile);
+  const again = bindThreadRoot(CODEX_B, join(f.threads, CODEX_B), f.indexDir);
   assert.equal(again.changed, false);
-  const index = readIndex(f.indexFile);
+  const index = readIndex(f.indexDir);
   assert.equal(index.threads[CODEX_B].root, join(f.threads, CODEX_B));
   assert.ok(index.threads[CODEX_B].since, 'the binding records when it was made');
   // A second session can bind its own root in the same index.
-  bindThreadRoot(CODEX_A, f.def, f.indexFile);
-  assert.equal(Object.keys(readIndex(f.indexFile).threads).length, 2);
+  bindThreadRoot(CODEX_A, f.def, f.indexDir);
+  assert.equal(Object.keys(readIndex(f.indexDir).threads).length, 2);
 });
 
 test('bindThreadRoot refuses to rebind a session to a different root', () => {
   const f = fixture(test);
-  bindThreadRoot(CODEX_B, join(f.threads, CODEX_B), f.indexFile);
-  assert.throws(() => bindThreadRoot(CODEX_B, f.def, f.indexFile), /rebinding is refused/);
+  bindThreadRoot(CODEX_B, join(f.threads, CODEX_B), f.indexDir);
+  assert.throws(() => bindThreadRoot(CODEX_B, f.def, f.indexDir), /rebinding is refused/);
   // The refusal left the original binding untouched.
-  assert.equal(readIndex(f.indexFile).threads[CODEX_B].root, join(f.threads, CODEX_B));
+  assert.equal(readIndex(f.indexDir).threads[CODEX_B].root, join(f.threads, CODEX_B));
 });
 
 test('bindThreadRoot rejects non-UUID session ids', () => {
   const f = fixture(test);
-  assert.throws(() => bindThreadRoot('01a09805', f.def, f.indexFile), /exact Codex session UUID/);
-  assert.ok(!existsSync(f.indexFile), 'a rejected bind writes nothing');
+  assert.throws(() => bindThreadRoot('01a09805', f.def, f.indexDir), /exact Codex session UUID/);
+  assert.ok(!existsSync(f.indexDir), 'a rejected bind writes nothing');
 });
 
-test('readIndex returns an empty index for a missing file and rejects a malformed one', () => {
+test('an unreadable binding is skipped by readers and never overwritten by bind', () => {
   const f = fixture(test);
-  assert.deepEqual(readIndex(f.indexFile), { schema: 1, threads: {} });
-  mkdirSync(f.parent, { recursive: true });
-  writeFileSync(f.indexFile, '{}');
-  assert.throws(() => readIndex(f.indexFile), /unrecognized shape/);
+  mkdirSync(f.indexDir, { recursive: true });
+  writeFileSync(join(f.indexDir, `${CODEX_A}.json`), '{not json');
+  assert.deepEqual(readIndex(f.indexDir).threads, {}, 'a corrupt entry reads as absent');
+  // Repairing requires a conscious act: bind refuses rather than replacing it.
+  assert.throws(() => bindThreadRoot(CODEX_A, f.def, f.indexDir), /unreadable/);
+  assert.equal(readFileSync(join(f.indexDir, `${CODEX_A}.json`), 'utf8'), '{not json', 'the corrupt entry is untouched');
 });
 
 test('knownRoots lists the default root plus indexed roots, de-duplicated', () => {
@@ -179,10 +187,10 @@ test('locateMessage searches the default root even when it is not indexed', () =
   assert.equal(found.owner, CODEX_A);
 });
 
-test('indexPath derives from the parent unless CTC_ROOTS_FILE overrides it', () => {
-  assert.equal(indexPath({ CTC_ROOTS_FILE: 'C:\\elsewhere\\bridge-roots.json' }), 'C:\\elsewhere\\bridge-roots.json');
-  const derived = indexPath({ LOCALAPPDATA: 'C:\\Users\\t' });
-  assert.equal(derived, join('C:\\Users\\t', 'ClaudeToCodex', 'bridge-roots.json'));
+test('indexDir derives from the parent unless CTC_ROOTS_DIR overrides it', () => {
+  assert.equal(indexDir({ CTC_ROOTS_DIR: 'C:\\elsewhere\\bridge-roots' }), 'C:\\elsewhere\\bridge-roots');
+  const derived = indexDir({ LOCALAPPDATA: 'C:\\Users\\t' });
+  assert.equal(derived, join('C:\\Users\\t', 'ClaudeToCodex', 'bridge-roots'));
 });
 
 test('otherRootsServing reports roots serving the same Codex, excluding the caller\u2019s', () => {
@@ -203,10 +211,47 @@ test('otherRootsServing reports roots serving the same Codex, excluding the call
 });
 
 // The durable evidence rule in miniature: a binding written by bindThreadRoot
-// is on disk as complete JSON (temp+rename), never a truncated write.
-test('a written index file is complete JSON on disk', () => {
+// is on disk as complete JSON, never a truncated write.
+test('a written binding file is complete JSON on disk', () => {
   const f = fixture(test);
-  bindThreadRoot(CODEX_A, f.def, f.indexFile);
-  const raw = readFileSync(f.indexFile, 'utf8');
+  bindThreadRoot(CODEX_A, f.def, f.indexDir);
+  const raw = readFileSync(join(f.indexDir, `${CODEX_A}.json`), 'utf8');
   assert.doesNotThrow(() => JSON.parse(raw));
+});
+
+// SM review S05-SM-REVIEW-06: the lost-update contract. One index, many
+// sessions - a read-modify-write single file could drop one session's binding
+// when another session wrote between its read and its write; per-session
+// exclusive-create files cannot, and these tests pin that property both at
+// API level and across real concurrent processes.
+test('two sessions binding the same index both survive (lost-update contract)', () => {
+  const f = fixture(test);
+  bindThreadRoot(CODEX_A, f.def, f.indexDir);
+  bindThreadRoot(CODEX_B, join(f.threads, CODEX_B), f.indexDir);
+  const threads = readIndex(f.indexDir).threads;
+  assert.equal(threads[CODEX_A].root, f.def);
+  assert.equal(threads[CODEX_B].root, join(f.threads, CODEX_B));
+});
+
+test('real concurrent processes binding distinct sessions lose nothing', async () => {
+  const f = fixture(test);
+  const ids = Array.from({ length: 8 }, (_, i) => `${String(i).padStart(8, '0')}-2222-4222-8222-222222222222`);
+  const runs = await Promise.all(ids.map((tid, i) =>
+    execute('node', [bindChild, tid, join(f.threads, tid), f.indexDir], { windowsHide: true, timeout: 30000 })));
+  assert.ok(runs.every((r) => r.stdout.includes('"changed":true')));
+  const threads = readIndex(f.indexDir).threads;
+  for (const tid of ids) assert.equal(threads[tid].root, join(f.threads, tid));
+  assert.equal(readdirSync(f.indexDir).filter((f2) => f2.endsWith('.json')).length, 8, 'exactly one file per session');
+});
+
+test('real concurrent processes binding the same session settle on one binding', async () => {
+  const f = fixture(test);
+  const root = join(f.threads, CODEX_B);
+  const runs = await Promise.all(Array.from({ length: 8 }, () =>
+    execute('node', [bindChild, CODEX_B, root, f.indexDir], { windowsHide: true, timeout: 30000 })));
+  // Every racer either created the file or found the winner's identical entry.
+  assert.ok(runs.every((r) => r.stdout.includes('"ok":true')));
+  const threads = readIndex(f.indexDir).threads;
+  assert.equal(threads[CODEX_B].root, root);
+  assert.equal(readdirSync(f.indexDir).filter((f2) => f2.endsWith('.json')).length, 1);
 });

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import test from 'node:test';
 import { BridgeStore } from '../store.mjs';
+import { readIndex } from '../roots.mjs';
 
 // Sprint 05 / PBI-15 end-to-end resolution: connect without CTC_BRIDGE_DIR
 // against an occupied default root, then prove the Codex hook finds the
@@ -46,7 +47,7 @@ const paths = () => ({
   parent: join(base, 'ClaudeToCodex'),
   def: join(base, 'ClaudeToCodex', 'bridge'),
   rootB: join(base, 'ClaudeToCodex', 'bridge-threads', CODEX_B),
-  indexFile: join(base, 'ClaudeToCodex', 'bridge-roots.json'),
+  indexDir: join(base, 'ClaudeToCodex', 'bridge-roots'),
 });
 
 // Child env: private LOCALAPPDATA + index, Codex identity only, and no bridge
@@ -56,7 +57,7 @@ function childEnv(threadId, extra = {}) {
   const env = {
     ...process.env,
     LOCALAPPDATA: base,
-    CTC_ROOTS_FILE: paths().indexFile,
+    CTC_ROOTS_DIR: paths().indexDir,
     CODEX_THREAD_ID: threadId,
   };
   delete env.CTC_BRIDGE_DIR;
@@ -92,7 +93,7 @@ test.before(async () => {
 });
 
 test('connect adopts a per-thread root when the default root serves another Codex (S05-15-1)', async () => {
-  const { rootB, indexFile, def } = paths();
+  const { rootB, indexDir, def } = paths();
   const r = await runCli(['connect', '--name', 'cli room', '--sessions-dir', registry], childEnv(CODEX_B));
   assert.equal(r.code, 0, r.stderr);
   const out = JSON.parse(r.stdout);
@@ -105,7 +106,7 @@ test('connect adopts a per-thread root when the default root serves another Code
   assert.match(events, /"type":"root-bound"/);
   assert.match(events, /"source":"per-thread"/);
   // The index binds this session to that root - and only this session.
-  const index = JSON.parse(readFileSync(indexFile, 'utf8'));
+  const index = readIndex(indexDir);
   assert.equal(index.threads[CODEX_B].root, rootB);
   assert.deepEqual(Object.keys(index.threads), [CODEX_B]);
   // The incumbent's default root is untouched: no new pairs, no rebind.
@@ -189,11 +190,11 @@ test('reconnecting the same session reuses the same root and pair (resume-reuse 
 
 test('an explicit CTC_BRIDGE_DIR connect never touches the index (isolation stays isolated)', async () => {
   const isolated = mkdtempSync(join(tmpdir(), 'ctc-roots-env-'));
-  const isolatedIndex = join(isolated, 'bridge-roots.json');
+  const isolatedIndex = join(isolated, 'bridge-roots');
   try {
     const r = await runCli(
       ['connect', '--name', 'cli room', '--sessions-dir', registry],
-      childEnv(CODEX_B, { CTC_BRIDGE_DIR: isolated, CTC_ROOTS_FILE: isolatedIndex }),
+      childEnv(CODEX_B, { CTC_BRIDGE_DIR: isolated, CTC_ROOTS_DIR: isolatedIndex }),
     );
     assert.equal(r.code, 0, r.stderr);
     assert.equal(JSON.parse(r.stdout).bridgeRoot, isolated);

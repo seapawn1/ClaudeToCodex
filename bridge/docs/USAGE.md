@@ -23,7 +23,7 @@ node bridge/cli.mjs install
 数据目录（**自动按 Codex 会话选择与复用，无需手写路径或 ID**）。解析次序：
 
 1. 显式 `CTC_BRIDGE_DIR`——测试与隔离覆盖，最高优先；设置后完全绕过会话索引（不读不写）。
-2. 会话索引命中：`%LOCALAPPDATA%\ClaudeToCodex\bridge-roots.json`（`CTC_ROOTS_FILE` 可覆盖其位置）记录 codexThreadId→数据根；同一 thread 完全退出后 resume 自动复用原根。索引只在 connect 成功后登记，**只增不改绑**。
+2. 会话索引命中：`%LOCALAPPDATA%\ClaudeToCodex\bridge-roots\` 目录（每会话一个 JSON 文件；`CTC_ROOTS_DIR` 可覆盖其位置）记录 codexThreadId→数据根；同一 thread 完全退出后 resume 自动复用原根。索引只在 connect 成功后登记，**只增不改绑**；多会话并发首连各写各的文件，互不丢失。
 3. 默认根 `%LOCALAPPDATA%\ClaudeToCodex\bridge`：未被任何 Codex 占用、或已属当前会话（存量沿用，零数据迁移）时采用。
 4. 默认根被其他 Codex 占用（含仅剩退役存档）时，connect 自动为当前会话启用新根 `%LOCALAPPDATA%\ClaudeToCodex\bridge-threads\<threadId>` 并登记索引；不改绑、不迁移、不动旧根数据。
 

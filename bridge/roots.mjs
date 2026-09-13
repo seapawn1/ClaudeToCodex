@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { atomicWriteJson, readJson } from './store.mjs';
+import { join, resolve } from 'node:path';
+import { readJson } from './store.mjs';
 
 // Sprint 05 / PBI-15: per-Codex-session bridge roots. The 1.0.0 product had a
 // single default root resolved purely from the environment, so a Codex host
@@ -30,37 +30,72 @@ export const rootsParent = (env = process.env) => {
   return join(base, 'ClaudeToCodex');
 };
 
-// CTC_ROOTS_FILE overrides the index location for tests and isolated runs.
-export const indexPath = (env = process.env) => env.CTC_ROOTS_FILE ?? join(rootsParent(env), 'bridge-roots.json');
+// The index is one small JSON file per Codex session under bridge-roots\ - the
+// same exclusive-create-per-identity pattern as the pairs registry. Distinct
+// sessions bind distinct files, so two concurrent first connects can never
+// lose each other's binding; a single read-modify-write index file had exactly
+// that lost-update race (SM review S05-SM-REVIEW-06). The same session racing
+// itself settles idempotently or refuses a rebind - never overwrites.
+// CTC_ROOTS_DIR overrides the index directory for tests and isolated runs.
+export const indexDir = (env = process.env) => env.CTC_ROOTS_DIR ?? join(rootsParent(env), 'bridge-roots');
 
-export function readIndex(path = indexPath()) {
-  if (!existsSync(path)) return { schema: 1, threads: {} };
-  const raw = readJson(path);
-  if (raw?.schema !== 1 || typeof raw.threads !== 'object' || raw.threads === null || Array.isArray(raw.threads)) {
-    throw new Error(`Bridge root index at ${path} has an unrecognized shape. Repair it, or set CTC_BRIDGE_DIR to bypass index resolution.`);
+const sleepMs = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+export function readIndex(dir = indexDir()) {
+  const threads = {};
+  if (!existsSync(dir)) return { schema: 1, threads };
+  for (const file of readdirSync(dir).sort()) {
+    if (!file.endsWith('.json')) continue;
+    try {
+      const entry = readJson(join(dir, file));
+      if (typeof entry?.root === 'string') threads[file.slice(0, -'.json'.length).toLowerCase()] = entry;
+    } catch { /* an unreadable binding is skipped; bind reports it when it matters */ }
   }
-  return raw;
+  return { schema: 1, threads };
 }
 
-// Records which root a Codex session uses. Idempotent for the same root;
-// a different root for an already-bound session is refused outright because
-// rebinding would strand the old root's pairs, pending letters and evidence.
-export function bindThreadRoot(threadId, root, path = indexPath()) {
+// Records which root a Codex session uses, as bridge-roots\<threadId>.json.
+// Idempotent for the same root; a different root for an already-bound session
+// is refused outright because rebinding would strand the old root's pairs,
+// pending letters and evidence. Creation is exclusive (wx): concurrent binds
+// of the same session resolve against the winner; concurrent binds of
+// different sessions touch different files and cannot interfere.
+export function bindThreadRoot(threadId, root, dir = indexDir()) {
   const tid = String(threadId ?? '').toLowerCase();
   if (!UUID.test(tid)) throw new Error('A bridge root binds to an exact Codex session UUID.');
   const target = resolve(root);
-  const index = readIndex(path);
-  const existing = index.threads[tid];
-  if (existing) {
-    if (resolve(existing.root) !== target) {
-      throw new Error(`Codex session ${tid} is already bound to bridge root ${existing.root}; rebinding is refused. One root serves one Codex session, and old evidence stays where it is.`);
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, `${tid}.json`);
+  const unreadable = () => new Error(`Bridge root index entry ${path} is unreadable. Repair or consciously remove it; an unreadable binding is never overwritten automatically.`);
+  const settle = (entry) => {
+    if (typeof entry?.root !== 'string') throw unreadable();
+    if (resolve(entry.root) !== target) {
+      throw new Error(`Codex session ${tid} is already bound to bridge root ${entry.root}; rebinding is refused. One root serves one Codex session, and old evidence stays where it is.`);
     }
     return { root: target, index: path, changed: false };
+  };
+  const readEntry = () => {
+    try { return readJson(path); } catch (error) { if (error.code === 'ENOENT') return null; return undefined; }
+  };
+  let existing = readEntry();
+  if (existing === undefined) throw unreadable();
+  if (existing !== null) return settle(existing);
+  try {
+    writeFileSync(path, `${JSON.stringify({ root: target, since: new Date().toISOString() }, null, 2)}\n`, { flag: 'wx' });
+    return { root: target, index: path, changed: true };
+  } catch (error) {
+    if (error.code !== 'EEXIST') throw error;
   }
-  const updated = { schema: 1, threads: { ...index.threads, [tid]: { root: target, since: new Date().toISOString() } } };
-  mkdirSync(dirname(path), { recursive: true });
-  atomicWriteJson(path, updated);
-  return { root: target, index: path, changed: true };
+  // Lost the exclusive create to a concurrent bind of the same session: the
+  // winner's write lands within microseconds; retry the read briefly before
+  // calling the entry unreadable.
+  for (let attempt = 0; ; attempt++) {
+    existing = readEntry();
+    if (existing !== null && existing !== undefined) break;
+    if (attempt >= 50) throw unreadable();
+    sleepMs(2);
+  }
+  return settle(existing);
 }
 
 // Which Codex session a root currently serves: the codexId of its first pair
@@ -114,7 +149,7 @@ export function knownRoots({ env = process.env, index = null, defaultRootPath = 
   const out = [def];
   let idx = index;
   if (idx === null) {
-    try { idx = readIndex(indexPath(env)); } catch { idx = { schema: 1, threads: {} }; }
+    try { idx = readIndex(indexDir(env)); } catch { idx = { schema: 1, threads: {} }; }
   }
   for (const entry of Object.values(idx.threads)) {
     if (entry?.root) {

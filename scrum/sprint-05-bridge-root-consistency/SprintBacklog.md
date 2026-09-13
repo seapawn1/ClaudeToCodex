@@ -91,7 +91,7 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 #### 方案要点（Developer 决定，2026-09-13）
 
-- **全局会话-root 索引**：`%LOCALAPPDATA%\ClaudeToCodex\` 下固定位置记录 codexThreadId → 数据根映射；原子写（temp+rename），只登记不改绑（身份边界）。
+- **全局会话-root 索引**：`%LOCALAPPDATA%\ClaudeToCodex\bridge-roots\` 目录、每会话一个 JSON 文件（独占创建 wx），记录 codexThreadId → 数据根映射；只登记不改绑（身份边界），多会话并发首连各写各的文件、无读改写丢失窗口（SM 复核 S05-SM-REVIEW-06 后由单文件改为此形态）。
 - **解析次序**：显式 `CTC_BRIDGE_DIR` ＞ 索引命中 ＞ 默认根未占用或属己则采用 ＞ 新建 per-thread 根（沿用既有 `bridge-threads\<threadId>` 形态）并登记索引。
 - **存量默认根采用语义**：同身份首连（默认根既有 pairs 的 codexId 与当前 `CODEX_THREAD_ID` 一致）＝ 索引登记指向默认根，不迁移、不移动、不改写既有数据；异身份则当前会话让位新根，旧根只读留证。
 - **hook 侧**：按事件 `session_id` 经索引解析数据根；wake 指向的消息不在当前根时，枚举索引各根定位 pairId/messageId，给确定性诊断与恢复动作；hook 未信任 / 未重载只在发送侧 status 给"未知 / 可能"提示与下一步，不声称检测。
