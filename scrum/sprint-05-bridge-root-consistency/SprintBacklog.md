@@ -139,6 +139,6 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 - **2026-09-13 W7 隔离宿主安装事故与恢复（S05-SM-HOST-INSTALL-09 期间，已回报 SM：9f5ef8be；SM 事故指令：S05-INCIDENT-10）。**
   - 事故原因：Developer 在隔离安装首步误用 PowerShell 只读自动变量 `$home` 赋值——**赋值静默失败且不终止**，`$env:CODEX_HOME` 从未生效即执行 marketplace add（本地路径源）与 plugin add；cache 落在 `C:\Users\DELL\plugins\`（惰性杂散），注册写入 `.codex` 共享状态。随后误判为孤立杂散执行 plugin remove / marketplace remove（同样无 CODEX_HOME），**删除并注销了日常 1.1.0 安装**（`C:\Users\DELL\.codex\plugins\cache\claudetocodex-dev\claudetocodex\1.1.0`）。
   - 已恢复事实（SM 只读复核一致）：从 git tag `v1.1.0` `git archive` 原位恢复——19/19 文件、plugin.json=1.1.0、hooks.json 与 tag 哈希一致、在跑会话 hook 路径重新有效（SM 事后经官方 hook 路径收发正常佐证）；桥数据根与 pair 全程未动。
-  - 剩余风险与待决：插件注册已注销——**PO 将按 INSTALL.md 亲自执行恢复命令**（重装 1.1.0 注册），在此之前未来 resume/新会话不加载插件；`C:\Users\DELL\plugins` 杂散树**待 PO 明确确认后才可清理，不得自行删除**；隔离候选安装**继续暂停**。在 PO 完成恢复并确认前，Developer **禁止**任何改变 codex plugin/marketplace 状态、删除目录或重启宿主的操作（S05-INCIDENT-10 冻结令）。
+  - 剩余风险与待决（2026-09-13 更新，S05-RESTORE-11）：插件注册已恢复——**PO 授权 SM 代执行**重装并只读复核（installed、enabled、1.1.0、manifest 19 文件、hooks 在位）；`C:\Users\DELL\plugins` 杂散树仍未清理，**待 PO 明确确认后才可清理，不得自行删除**；隔离候选安装**继续暂停，待 PO 确认/授权**。在 PO 对上述两项给出确认前，Developer **禁止**任何改变 codex plugin/marketplace 状态、删除目录或重启宿主的操作（S05-INCIDENT-10 冻结令）。
   - 重做防护（获重新授权后的强制前置，逐条核验不过即中止）：1) 禁用 `$home` 等只读自动变量命名，环境赋值失败必须中断而非续行；2) 每条宿主状态命令**同一命令内显式设置并回显 `CODEX_HOME`**；3) 安装输出 `installedPath` 必须以隔离根为前缀才继续下一步；4) 任何状态命令前先做环境核验（echo 生效值）。
-- 待办：PO 亲自重装日常 1.1.0（注册恢复）并确认 → PO 确认后清理杂散树 → SM 重新授权后按上述防护重做隔离候选安装 → PO 亲自 host trust 与端到端真实验收（SMOKE 4c R1–R6 格）→ PO DoD 检视。
+- 待办：~~PO 亲自重装日常 1.1.0（注册恢复）~~（已由 PO 授权 SM 完成，S05-RESTORE-11）→ PO 确认后清理杂散树 → PO/SM 授权后按上述防护重做隔离候选安装 → PO 亲自 host trust 与端到端真实验收（SMOKE 4c R1–R6 格）→ PO DoD 检视。
