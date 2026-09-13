@@ -12,7 +12,7 @@
 | 4 | 安装后 Codex 原始会话经历过**完全退出并 `codex resume <threadId>` 重载**（运行中的会话不热加载 hook） | resume 后的会话为当前原始会话 |
 | 5 | Claude 侧接收策略已知：`crossSessionInbound` 为 `accept`（当前机器配置）时消息直接进入；为默认暂存策略时每条入站消息需 PO 手工批准并**记录批准时间** | `~/.claude/settings.json` 或首条消息行为 |
 | 6 | 发送前确认身份环境变量：Claude 会话内不得残留 `CODEX_THREAD_ID`；Codex 会话内有 `CODEX_THREAD_ID`。两者同设会被桥拒绝 | 会话内打印环境变量确认 |
-| 7 | 数据目录：首轮用默认 `%LOCALAPPDATA%\ClaudeToCodex\bridge`；重复轮用隔离目录（两个原始会话都从设置了 `CTC_BRIDGE_DIR=<隔离路径>` 的终端启动，hook 子进程才能继承同一根） | `node bridge/cli.mjs status` 显示同一 pair |
+| 7 | 数据目录：默认流程**无需设置任何环境变量**——connect/send/reply/status 与 hook 按 Codex 会话自动选择并复用数据根；显式隔离轮仍可用 `CTC_BRIDGE_DIR`（两个原始会话都从设置了该变量的终端启动，hook 子进程才能继承同一根；该模式下索引不读不写） | `node bridge/cli.mjs status` 的 `root.path` 与预期一致 |
 
 ## 2. 运行标识与标记约定
 
@@ -56,6 +56,19 @@
 | MT5 | 退役隔离 | 现场 | 停 A 后 B 全链路可用；旧端点发送/旧消息回复如实 send-error 无误投；`retire --pairId` 后同身份重建得新 pairId；旧消息回复被拒 | _待填_ |
 
 多目标轮的数据根建议用隔离 `CTC_BRIDGE_DIR`；`send --name` 歧义时报错列完整 pairId 与 retire 入口，按提示操作即可，不手写记忆 ID。
+
+## 4c. 数据根与连续投递附加格（S05 系，Sprint 05 起；判据同第 3 节）
+
+| 格号 | 场景 | 验证方式 | 判据要点 | 证据位置（填写） |
+|---|---|---|---|---|
+| R1 | 新会话自动根 | 现场 | 默认根被 incumbent Codex 占用时新开 Codex 会话 connect ≥1 个 Claude 并双向通信：全程无手写 `CTC_BRIDGE_DIR`/threadId/路径；`bridge-roots.json` 登记可查（root-bound 事件留痕）；旧根数据零改动 | _待填_ |
+| R2 | resume 复用 | 现场 | 同一 thread 完全退出后 resume：自动复用原根原 pair，既有 pending/消息/证据不丢、不产生重复身份 | _待填_ |
+| R3 | 多目标同根 | 现场 | 一个 Codex＋≥2 Claude：connect、按名发送、Claude reply、queue wake、hook 消费全部落在同一 per-Codex 根（可与 MT 系叠加） | _待填_ |
+| R4 | 跨根/不一致诊断 | 现场 | 人为构造不一致（如宿主以错误根 resume）：原始会话收到确定性诊断（消息所在根、该根服务的会话、下一步）；status `pendingNote` 为未知/可能措辞；均不声称收信 | _待填_ |
+| R5 | 连续官方投递（PBI-14 回归） | 现场 | ≥2 pair 各自连续 ≥2 条 Claude→Codex 回复：每条完整正文经 hook 入原始会话（第 3 节判据），pending 随领取清空，下一条不被首条阻塞 | _待填_ |
+| R6 | 冲突与边界 | 现场 | 默认根属他时不改绑不合并；`retire`/重叠保护/重复 wake 行为与说明一致 | _待填_ |
+
+S05 系数据根为自动选择（不设环境变量即真实路径）；`status` 的 `root` 字段记录当前服务根与来源。
 
 ## 5. 重复运行约定
 
