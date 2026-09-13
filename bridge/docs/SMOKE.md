@@ -13,6 +13,7 @@
 | 5 | Claude 侧接收策略已知：`crossSessionInbound` 为 `accept`（当前机器配置）时消息直接进入；为默认暂存策略时每条入站消息需 PO 手工批准并**记录批准时间** | `~/.claude/settings.json` 或首条消息行为 |
 | 6 | 发送前确认身份环境变量：Claude 会话内不得残留 `CODEX_THREAD_ID`；Codex 会话内有 `CODEX_THREAD_ID`。两者同设会被桥拒绝 | 会话内打印环境变量确认 |
 | 7 | 数据目录：默认流程**无需设置任何环境变量**——connect/send/reply/status 与 hook 按 Codex 会话自动选择并复用数据根；显式隔离轮仍可用 `CTC_BRIDGE_DIR`（两个原始会话都从设置了该变量的终端启动，hook 子进程才能继承同一根；该模式下索引不读不写） | `node bridge/cli.mjs status` 的 `root.path` 与预期一致 |
+| 8 | 测试会话启动环境（PO 约束，2026-09-13）：新建/恢复**测试用 Codex 会话**时命令末尾必须追加 `--profile glm`（否则无可用模型）；**测试用 Claude 会话**必须在项目身份正确的目录启动（`D:\ClaudeToCodex` 或 `D:\ClaudeToCodex\.claude\worktrees\<sprint worktree>`），不得在临时目录或无关项目启动 | 启动命令与启动目录核对入证据记录 |
 
 ## 2. 运行标识与标记约定
 
@@ -68,7 +69,7 @@
 | R5 | 连续官方投递（PBI-14 回归） | 现场 | ≥2 pair 各自连续 ≥2 条 Claude→Codex 回复：每条完整正文经 hook 入原始会话（第 3 节判据），pending 随领取清空，下一条不被首条阻塞 | _待填_ |
 | R6 | 冲突与边界 | 现场 | 默认根属他时不改绑不合并；`retire`/重叠保护/重复 wake 行为与说明一致 | _待填_ |
 
-S05 系数据根为自动选择（不设环境变量即真实路径）；`status` 的 `root` 字段记录当前服务根与来源。
+S05 系数据根为自动选择（不设环境变量即真实路径）；`status` 的 `root` 字段记录当前服务根与来源。S05 系测试会话一律遵守前置 8（Codex `--profile glm`、Claude 在项目目录启动）。
 
 ## 5. 重复运行约定
 
