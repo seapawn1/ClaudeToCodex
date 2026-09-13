@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { existsSync, linkSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { readJson } from './store.mjs';
@@ -57,8 +58,11 @@ export function readIndex(dir = indexDir()) {
 // Records which root a Codex session uses, as bridge-roots\<threadId>.json.
 // Idempotent for the same root; a different root for an already-bound session
 // is refused outright because rebinding would strand the old root's pairs,
-// pending letters and evidence. Creation is exclusive (wx): concurrent binds
-// of the same session resolve against the winner; concurrent binds of
+// pending letters and evidence. Publication is atomic AND exclusive: the entry
+// is written to a temp name and linked into place (a hard link fails with
+// EEXIST if a concurrent bind landed first), so the final file only ever
+// appears fully formed - a crash mid-write leaves an ignored temp orphan, never
+// a half-written binding (SM review S05-SM-REVIEW-08). Concurrent binds of
 // different sessions touch different files and cannot interfere.
 export function bindThreadRoot(threadId, root, dir = indexDir()) {
   const tid = String(threadId ?? '').toLowerCase();
@@ -80,15 +84,21 @@ export function bindThreadRoot(threadId, root, dir = indexDir()) {
   let existing = readEntry();
   if (existing === undefined) throw unreadable();
   if (existing !== null) return settle(existing);
+  const temp = `${path}.tmp-${randomUUID()}`;
   try {
-    writeFileSync(path, `${JSON.stringify({ root: target, since: new Date().toISOString() }, null, 2)}\n`, { flag: 'wx' });
-    return { root: target, index: path, changed: true };
-  } catch (error) {
-    if (error.code !== 'EEXIST') throw error;
+    writeFileSync(temp, `${JSON.stringify({ root: target, since: new Date().toISOString() }, null, 2)}\n`);
+    try {
+      linkSync(temp, path);
+      return { root: target, index: path, changed: true };
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+    }
+  } finally {
+    rmSync(temp, { force: true }); // published, failed, or orphaned by us: the temp never lingers
   }
   // Lost the exclusive create to a concurrent bind of the same session: the
-  // winner's write lands within microseconds; retry the read briefly before
-  // calling the entry unreadable.
+  // winner's entry is fully formed the instant it is visible (atomic link);
+  // retry briefly before calling it unreadable anyway.
   for (let attempt = 0; ; attempt++) {
     existing = readEntry();
     if (existing !== null && existing !== undefined) break;

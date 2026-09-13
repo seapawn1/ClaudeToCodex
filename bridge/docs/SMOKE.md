@@ -62,7 +62,7 @@
 
 | 格号 | 场景 | 验证方式 | 判据要点 | 证据位置（填写） |
 |---|---|---|---|---|
-| R1 | 新会话自动根 | 现场 | 默认根被 incumbent Codex 占用时新开 Codex 会话 connect ≥1 个 Claude 并双向通信：全程无手写 `CTC_BRIDGE_DIR`/threadId/路径；`bridge-roots.json` 登记可查（root-bound 事件留痕）；旧根数据零改动 | _待填_ |
+| R1 | 新会话自动根 | 现场 | 默认根被 incumbent Codex 占用时新开 Codex 会话 connect ≥1 个 Claude 并双向通信：全程无手写 `CTC_BRIDGE_DIR`/threadId/路径；`bridge-roots\<threadId>.json` 登记可查（root-bound 事件留痕）；旧根数据零改动 | _待填_ |
 | R2 | resume 复用 | 现场 | 同一 thread 完全退出后 resume：自动复用原根原 pair，既有 pending/消息/证据不丢、不产生重复身份 | _待填_ |
 | R3 | 多目标同根 | 现场 | 一个 Codex＋≥2 Claude：connect、按名发送、Claude reply、queue wake、hook 消费全部落在同一 per-Codex 根（可与 MT 系叠加） | _待填_ |
 | R4 | 跨根/不一致诊断 | 现场 | 人为构造不一致（如宿主以错误根 resume）：原始会话收到确定性诊断（消息所在根、该根服务的会话、下一步）；status `pendingNote` 为未知/可能措辞；均不声称收信 | _待填_ |

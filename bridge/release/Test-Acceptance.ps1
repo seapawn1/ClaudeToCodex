@@ -18,7 +18,10 @@ param(
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+# Git discovery instead of a fixed ..\.. walk: this script lives at
+# <repo>\plugins\claudetocodex\bridge\release\ and used to live at <repo>\bridge\release\.
+$repoRoot = (git -C $PSScriptRoot rev-parse --show-toplevel | Out-String).Trim()
+if (-not $repoRoot) { throw 'Not inside a git repository.' }
 $packageRun = [bool]$PluginDir
 $pluginDir = if ($packageRun) { (Resolve-Path $PluginDir).Path } else { Join-Path $repoRoot 'plugins\claudetocodex' }
 $pluginBridge = Join-Path $pluginDir 'bridge'
@@ -225,6 +228,19 @@ if (($store.code -eq 0) -and ($pipe.code -eq 0) -and ($installT.code -eq 0)) {
 } else {
   Add-Result 'AC-08-04' 'Message pipeline regression (simulated, shipped copy)' 'FAIL' @(
     "store fail=$($store.fail); pipe fail=$($pipe.fail); install fail=$($installT.fail)"
+  )
+}
+
+# ---------- S05-15: session-root resolution suite on the shipped copy ----------
+$rootsUnit = Run-NodeTests 'roots.test.mjs'; $rootsCli = Run-NodeTests 'roots-cli.test.mjs'
+if (($rootsUnit.code -eq 0) -and ($rootsCli.code -eq 0)) {
+  Add-Result 'S05-15' 'Session roots: index/policy units + no-env CLI flows (connect auto-root, hook resolves by session_id, cross-root wake diagnosis, honest unknowns)' 'PASS' @(
+    "roots pass=$($rootsUnit.pass); roots-cli pass=$($rootsCli.pass); parsed fail counts: $($rootsUnit.fail)/$($rootsCli.fail)",
+    'simulated level only: installed-candidate and original-session receipt remain the SM/PO rounds (SMOKE 4c R1-R6)'
+  )
+} else {
+  Add-Result 'S05-15' 'Session-root resolution suite (simulated, shipped copy)' 'FAIL' @(
+    "roots fail=$($rootsUnit.fail); roots-cli fail=$($rootsCli.fail)"
   )
 }
 

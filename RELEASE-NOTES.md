@@ -11,7 +11,7 @@
 ## 新增能力（候选）
 
 - 每个 Codex 原始会话自动选择并复用 bridge 数据根：新开或 resume 的会话无需手写 `CTC_BRIDGE_DIR`、threadId 或路径即可连接与收发；同一 thread 完全退出后 resume 复用原根与既有配对。
-- 默认数据根被其他 Codex 会话占用（含仅剩退役存档）时，connect 自动为当前会话启用 `bridge-threads\<threadId>` 新根并登记会话索引（`bridge-roots\` 目录，每会话一个文件、独占创建、只增不改绑，多会话并发首连互不丢失）；旧根数据与证据零改动。
+- 默认数据根被其他 Codex 会话占用（含仅剩退役存档）时，connect 自动为当前会话启用 `bridge-threads\<threadId>` 新根并登记会话索引（`bridge-roots\` 目录，每会话一个文件、临时文件＋独占硬链接的原子发布、只增不改绑，多会话并发首连互不丢失，崩溃不留半写条目）；旧根数据与证据零改动。
 - Codex 侧 `send`/`reply`/`status`/`retire` 与三条 hook 按同一索引解析数据根；Claude 回复入口内嵌数据根，维持不变。
 - 数据面可观察的不一致给确定性诊断：wake 指向的消息在另一根时，原始会话收到"所在根＋该根服务的会话＋下一步"提示（不构成收信证明）；未领取 pending 在 `status` 中呈现数据面事实与未知/可能提示（hook 未信任/未重载不可检测，仅提示检查 `/hooks` 与退出-resume）。
 - `CTC_BRIDGE_DIR` 保留为显式测试/隔离覆盖：最高优先，且完全不读不写会话索引。

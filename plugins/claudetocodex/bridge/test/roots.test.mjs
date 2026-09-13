@@ -219,6 +219,30 @@ test('a written binding file is complete JSON on disk', () => {
   assert.doesNotThrow(() => JSON.parse(raw));
 });
 
+// SM review S05-SM-REVIEW-08: publication must be atomic AND exclusive. The
+// entry is written to a temp name and hard-linked into place, so a crash
+// mid-write leaves only an ignored temp orphan - never a half-written binding -
+// and no temp ever lingers after a completed bind.
+test('a completed bind leaves exactly one file and no temp orphans', () => {
+  const f = fixture(test);
+  bindThreadRoot(CODEX_A, f.def, f.indexDir);
+  assert.deepEqual(readdirSync(f.indexDir), [`${CODEX_A}.json`]);
+});
+
+test('a crashed writer\u2019s temp orphan is ignored and does not block rebinding', () => {
+  const f = fixture(test);
+  mkdirSync(f.indexDir, { recursive: true });
+  // Simulate a process that died between the temp write and the link.
+  writeFileSync(join(f.indexDir, `${CODEX_A}.json.tmp-deadbeef`), '{"root": "C:\\partial');
+  const result = bindThreadRoot(CODEX_A, f.def, f.indexDir);
+  assert.equal(result.changed, true, 'the orphan never blocks a fresh bind');
+  assert.equal(readIndex(f.indexDir).threads[CODEX_A].root, f.def);
+  const names = readdirSync(f.indexDir);
+  assert.ok(names.includes(`${CODEX_A}.json`), 'the final entry exists');
+  // The planted orphan is left untouched; our own bind cleaned up after itself.
+  assert.deepEqual(names.filter((n) => n.includes('.tmp-')), [`${CODEX_A}.json.tmp-deadbeef`]);
+});
+
 // SM review S05-SM-REVIEW-06: the lost-update contract. One index, many
 // sessions - a read-modify-write single file could drop one session's binding
 // when another session wrote between its read and its write; per-session
