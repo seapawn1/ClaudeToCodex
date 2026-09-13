@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { atomicWriteJson, BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store.mjs';
 import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
-import { bindThreadRoot, locateMessage, resolveRoot } from './roots.mjs';
+import { bindThreadRoot, locateMessage, otherRootsServing, resolveRoot } from './roots.mjs';
 import { cliPath, commandString, repoRoot } from './entry.mjs';
 
 // Sprint 04 / PBI-11: connect upserts into a multi-pair registry, codex sends
@@ -182,7 +182,8 @@ async function main() {
     return;
   }
   if (command === 'status') {
-    store = sessionStore();
+    const resolution = resolveRoot({ threadId: process.env.CODEX_THREAD_ID ?? null });
+    store = new BridgeStore(resolution.root);
     const pairs = store.pairs().map((pair) => {
       const pendingPath = join(store.root, 'pending', pair.id, 'message.json');
       const pending = existsSync(pendingPath) ? readJson(pendingPath) : null;
@@ -193,16 +194,36 @@ async function main() {
       if (existsSync(pair.endpointPath)) {
         try { project = readJson(pair.endpointPath).cwd ?? null; } catch { project = null; }
       }
+      // Honest pending state (S05-15-5): a published letter with no receipt is
+      // simply unclaimed so far. The note names data-plane facts when there are
+      // any (another known root also serving this Codex session) and labels
+      // everything else possible/unknown - a hook that was never trusted or
+      // reloaded cannot be detected from here, and nothing here is a receipt.
+      let pendingClaimed = null;
+      let pendingNote = null;
+      if (pending) {
+        pendingClaimed = existsSync(join(store.root, 'receipts', `${pending.id}.json`));
+        if (!pendingClaimed) {
+          const others = otherRootsServing(pair.codexId, store.root);
+          pendingNote = `Published, no claim record yet.${others.length > 0 ? ` Data-plane fact: ${others.length === 1 ? 'another known root also' : `${others.length} other known roots`} serve this Codex session (${others.join('; ')}).` : ''} If it stays pending, possible causes - not detected from here: the receiving Codex session has not trusted/reloaded the bridge hooks since install, or it is running under a different bridge root. Check /hooks, then fully exit and resume the session.`;
+        }
+      }
       return {
         pairId: pair.id, target: pair.claudeName ?? null, claudeId: pair.claudeId, codexId: pair.codexId,
         createdAt: pair.createdAt ?? null, project, endpoint: pair.endpointPath, endpointOnDisk: existsSync(pair.endpointPath),
-        pendingMessageId: pending?.id ?? null,
+        pendingMessageId: pending?.id ?? null, pendingClaimed, pendingNote,
       };
     });
     const eventPath = join(store.root, 'events.jsonl');
     const events = existsSync(eventPath)
       ? readFileSync(eventPath, 'utf8').trim().split('\n').filter(Boolean).slice(-12).map(JSON.parse) : [];
-    console.log(JSON.stringify({ pairs, events }, null, 2));
+    console.log(JSON.stringify({
+      // Which root this status reads (S05-15-4): the resolved serving root,
+      // how it was chosen, and the Codex session context - an explicit env
+      // source means an isolation override, not an indexed product root.
+      root: { path: store.root, source: resolution.source, codexThread: process.env.CODEX_THREAD_ID ?? null },
+      pairs, events,
+    }, null, 2));
     return;
   }
   if (!['send', 'reply'].includes(command)) throw new Error(usage);

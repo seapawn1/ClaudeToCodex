@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { bindThreadRoot, indexPath, knownRoots, locateMessage, readIndex, resolveRoot, rootOwner } from '../roots.mjs';
+import { bindThreadRoot, indexPath, knownRoots, locateMessage, otherRootsServing, readIndex, resolveRoot, rootOwner } from '../roots.mjs';
 
 // Sprint 05 / PBI-15: the session-root index and resolution policy. All cases
 // run against explicit temp paths and a fake env object - no process.env or
@@ -183,6 +183,23 @@ test('indexPath derives from the parent unless CTC_ROOTS_FILE overrides it', () 
   assert.equal(indexPath({ CTC_ROOTS_FILE: 'C:\\elsewhere\\bridge-roots.json' }), 'C:\\elsewhere\\bridge-roots.json');
   const derived = indexPath({ LOCALAPPDATA: 'C:\\Users\\t' });
   assert.equal(derived, join('C:\\Users\\t', 'ClaudeToCodex', 'bridge-roots.json'));
+});
+
+test('otherRootsServing reports roots serving the same Codex, excluding the caller\u2019s', () => {
+  const f = fixture(test);
+  const rootB = join(f.threads, CODEX_B);
+  const rootB2 = join(f.threads, CODEX_B + '-2');
+  seedPair(rootB, CODEX_B);
+  seedPair(rootB2, CODEX_B, 'eeeeeeee-6666-4666-8666-666666666666');
+  seedPair(f.def, CODEX_A);
+  const index = { schema: 1, threads: {
+    [CODEX_B]: { root: rootB, since: '2026-09-01T00:00:00.000Z' },
+    [CODEX_A]: { root: rootB2, since: '2026-09-01T00:00:00.000Z' }, // indexed but serves B
+  } };
+  const opts = { env: noEnv, index, defaultRootPath: f.def };
+  const others = otherRootsServing(CODEX_B, rootB2, opts);
+  assert.deepEqual(others, [rootB], 'the root serving B, other than the excluded one');
+  assert.deepEqual(otherRootsServing(CODEX_A, f.def, opts), [], 'the only root serving A is the excluded default');
 });
 
 // The durable evidence rule in miniature: a binding written by bindThreadRoot

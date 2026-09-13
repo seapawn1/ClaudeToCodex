@@ -143,3 +143,14 @@ export function locateMessage(messageId, exceptRoot, { env = process.env, index 
   }
   return null;
 }
+
+// Other known roots that also serve this Codex session - a data-plane fact
+// worth surfacing next to an unclaimed pending letter (the session may be
+// live under a different root than the one holding the letter).
+export function otherRootsServing(codexId, exceptRoot, { env = process.env, index = null, defaultRootPath = null } = {}) {
+  const tid = String(codexId ?? '').toLowerCase();
+  if (!UUID.test(tid)) return [];
+  const skip = exceptRoot ? resolve(exceptRoot) : null;
+  return knownRoots({ env, index, defaultRootPath })
+    .filter((root) => root !== skip && rootOwner(root) === tid);
+}

@@ -203,3 +203,24 @@ test('an explicit CTC_BRIDGE_DIR connect never touches the index (isolation stay
     rmSync(isolated, { recursive: true, force: true });
   }
 });
+
+test('status names its root and gives the honest unclaimed-pending note (S05-15-4/5)', async () => {
+  const { rootB } = paths();
+  const store = new BridgeStore(rootB);
+  const pair = store.pairs().find((p) => p.codexId === CODEX_B);
+  const message = store.prepare(pair, 'claude', 'S05-ROOTS-CLI-STATUS-PENDING', null, pair.claudeId);
+  store.publish(message);
+  const r = await runCli(['status'], childEnv(CODEX_B));
+  assert.equal(r.code, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.equal(out.root.path, rootB);
+  assert.equal(out.root.source, 'index');
+  assert.equal(out.root.codexThread, CODEX_B);
+  const row = out.pairs.find((p) => p.pairId === pair.id);
+  assert.equal(row.pendingMessageId, message.id);
+  assert.equal(row.pendingClaimed, false);
+  assert.match(row.pendingNote, /possible causes - not detected from here/);
+  assert.match(row.pendingNote, /\/hooks/);
+  assert.match(row.pendingNote, /resume/);
+  assert.ok(!row.pendingNote.includes('received'), 'the note claims no receipt');
+});
