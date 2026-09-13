@@ -1,12 +1,12 @@
-# ClaudeToCodex 1.2.0 版本说明（Sprint 05 已验收收口）
+# ClaudeToCodex 1.2.0 版本说明（正式发布）
 
-> 状态：Sprint 05 Review/Retro 收口版本。插件版本 `1.2.0`，对应 `sprint-05-bridge-root-review-retro` tag。该版本已通过隔离安装候选、SMOKE 4c R1–R6 与 PO 手动端到端验收；公开 GitHub Release 资产是否发布由 PO 另行决定。
+> 状态：正式发布版本。该版本已通过隔离安装候选、SMOKE 4c R1–R6 与 PO 手动端到端验收；安装入口固定 `v1.2.0` tag。Sprint 过程收口另见 `sprint-05-bridge-root-review-retro`。
 
 ## 版本
 
 - **版本**：1.2.0（Codex CLI 插件）
 - **主题**：自动会话数据根与连续官方投递（PBI-15 / PBI-14）。
-- **实现源提交**：`e7ba853`；Sprint 收口 tag 在此基础上追加文档与 Scrum 收口，不改变插件运行代码。
+- **实现源提交**：`e7ba853`；v1.2.0 release-prep 仅在此基础上追加发布文档，不改变插件运行代码。
 
 ## 新增能力
 

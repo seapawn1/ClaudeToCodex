@@ -12,7 +12,7 @@
 ## 1. 安装插件
 
 ```powershell
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref sprint-05-bridge-root-review-retro
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.2.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
 
@@ -41,7 +41,7 @@ Codex 0.154 没有通用 `plugin update` 子命令。若已有 `claudetocodex-de
 ```powershell
 codex plugin remove claudetocodex@claudetocodex-dev
 codex plugin marketplace remove claudetocodex-dev
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref sprint-05-bridge-root-review-retro
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.2.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
 

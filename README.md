@@ -2,14 +2,14 @@
 
 运行于本机（Windows）的 Codex ↔ Claude Code 跨会话双向消息桥，以 **Codex CLI 插件**分发。安装并完成必要授权后，对 Codex 说「连接 Claude 会话 <名字>」即可开始互发工作消息、回复与追问；一个 Codex 会话可同时保持多个 Claude 会话，按名称选择目标，无需为换对象拆除另一条连接。
 
-## 当前已验证版本（1.2.0，Sprint 05 收口）
+## 正式获取（v1.2.0）
 
 ```powershell
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref sprint-05-bridge-root-review-retro
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.2.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
 
-> 该 ref 指向 Sprint 05 Review/Retro 收口提交，插件版本为 `1.2.0`。它已通过隔离安装候选、SMOKE 4c R1–R6 与 PO 手动端到端验收；公开 GitHub Release / release 资产是否发布由 PO 另行决定。
+> v1.2.0 是 Sprint 05 正式发布版本，已通过隔离安装候选、SMOKE 4c R1–R6 与 PO 手动端到端验收。Sprint 过程收口另有 `sprint-05-bridge-root-review-retro` tag。
 
 ## 使用四步
 
@@ -42,7 +42,8 @@ codex plugin add claudetocodex@claudetocodex-dev
 
 ## 版本与 Sprint 标签
 
-- **`sprint-05-bridge-root-review-retro`**：Sprint 05 收口 tag，对应 1.2.0 已验证插件版本和本 Review/Retro 文档。
+- **`v1.2.0`**：自动会话数据根与连续官方投递正式版本，发布物由 v1.2.0 提交构建并经 manifest / SHA256 追溯。
+- **`sprint-05-bridge-root-review-retro`**：Sprint 05 Review/Retro 收口 tag，保留完整过程与证据追溯。
 - **`v1.1.0`**：多配对正式发布版本，发布物由 v1.1.0 提交构建并经 manifest / SHA256 追溯。
 - **`sprint-04-multi-claude-review-retro`**：Sprint 04 Review/Retro 收口 tag。
 - **`v1.0.0`** 与 **`sprint-02-install-package-release-review-retro`**：1.0.0 历史发布与 Sprint 02 收口。
