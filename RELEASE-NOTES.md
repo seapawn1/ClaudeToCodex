@@ -1,3 +1,32 @@
+# ClaudeToCodex 1.2.0 版本说明（Sprint 05 候选，未发布）
+
+> 状态：Sprint 05 安装候选。以下"新增能力"为候选内容；"验证摘要"待 PO 完成
+> 安装候选端到端真实验收后由 release 准备提交补全。已发布版本见下方 1.1.0 说明。
+
+## 版本
+
+- **版本**：1.2.0（Codex CLI 插件，Sprint 05 候选）
+- **主题**：自动会话数据根与连续官方投递（PBI-15 / PBI-14）。
+
+## 新增能力（候选）
+
+- 每个 Codex 原始会话自动选择并复用 bridge 数据根：新开或 resume 的会话无需手写 `CTC_BRIDGE_DIR`、threadId 或路径即可连接与收发；同一 thread 完全退出后 resume 复用原根与既有配对。
+- 默认数据根被其他 Codex 会话占用（含仅剩退役存档）时，connect 自动为当前会话启用 `bridge-threads\<threadId>` 新根并登记会话索引（`bridge-roots.json`，只增不改绑）；旧根数据与证据零改动。
+- Codex 侧 `send`/`reply`/`status`/`retire` 与三条 hook 按同一索引解析数据根；Claude 回复入口内嵌数据根，维持不变。
+- 数据面可观察的不一致给确定性诊断：wake 指向的消息在另一根时，原始会话收到"所在根＋该根服务的会话＋下一步"提示（不构成收信证明）；未领取 pending 在 `status` 中呈现数据面事实与未知/可能提示（hook 未信任/未重载不可检测，仅提示检查 `/hooks` 与退出-resume）。
+- `CTC_BRIDGE_DIR` 保留为显式测试/隔离覆盖：最高优先，且完全不读不写会话索引。
+
+## 已验证环境
+
+Windows 10 Pro 19045、PowerShell 5.1、Node.js v24.14.0、Codex CLI 0.153.4 / 0.154.0、Claude Code 2.1.263 / 2.1.268。
+
+## 验证摘要（待补全）
+
+- 产品回归：76/76 通过（bridge/ 与 plugins/claudetocodex/bridge/ 双树同套）。
+- 安装候选与原始会话真实验收：待 PO 完成（SMOKE 4c R1–R6 格）。
+
+---
+
 # ClaudeToCodex 1.1.0 版本说明
 
 ## 版本
