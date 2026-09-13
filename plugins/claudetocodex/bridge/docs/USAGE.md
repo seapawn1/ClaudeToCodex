@@ -20,7 +20,14 @@ node bridge/cli.mjs install
 
 ## 2. 配置
 
-数据目录：默认 `%LOCALAPPDATA%\ClaudeToCodex\bridge`；设置环境变量 `CTC_BRIDGE_DIR` 可覆盖（隔离验证、重复运行时使用；注意相关原始会话与 hook 子进程都需在同一覆盖下运行）。目录内容：`pairs/`（配对注册表，每配对一文件）、`pair.json`（1.0.0 单配对数据，只读可见、同身份重连原位沿用）、`pairs-retired/`（退役配对存档，证据保留）、`endpoints/`（Claude 端点登记）、`messages/`（全部消息）、`pending/`（**每配对一个待收槽**，槽名为 pairId）、`claims/`、`receipts/`（消费记录）、`wire/`（管道发送正文与记录）、`events.jsonl`（事件流水）。
+数据目录（**自动按 Codex 会话选择与复用，无需手写路径或 ID**）。解析次序：
+
+1. 显式 `CTC_BRIDGE_DIR`——测试与隔离覆盖，最高优先；设置后完全绕过会话索引（不读不写）。
+2. 会话索引命中：`%LOCALAPPDATA%\ClaudeToCodex\bridge-roots.json`（`CTC_ROOTS_FILE` 可覆盖其位置）记录 codexThreadId→数据根；同一 thread 完全退出后 resume 自动复用原根。索引只在 connect 成功后登记，**只增不改绑**。
+3. 默认根 `%LOCALAPPDATA%\ClaudeToCodex\bridge`：未被任何 Codex 占用、或已属当前会话（存量沿用，零数据迁移）时采用。
+4. 默认根被其他 Codex 占用（含仅剩退役存档）时，connect 自动为当前会话启用新根 `%LOCALAPPDATA%\ClaudeToCodex\bridge-threads\<threadId>` 并登记索引；不改绑、不迁移、不动旧根数据。
+
+一个数据根仍只服务一个 Codex 原始会话。目录内容：`pairs/`（配对注册表，每配对一文件）、`pair.json`（1.0.0 单配对数据，只读可见、同身份重连原位沿用）、`pairs-retired/`（退役配对存档，证据保留）、`endpoints/`（Claude 端点登记）、`messages/`（全部消息）、`pending/`（**每配对一个待收槽**，槽名为 pairId）、`claims/`、`receipts/`（消费记录）、`wire/`（管道发送正文与记录）、`events.jsonl`（事件流水）。
 
 **连接**（推荐路径，在 Codex 会话内按名称选定一个正在运行的 Claude 会话）：
 
@@ -39,7 +46,7 @@ node bridge/cli.mjs connect --name <claude会话名的一部分>
 
 ## 3. 发起通信与回复
 
-在**自己的原始会话内**运行（桥按会话环境变量识别发送方身份：Codex 会话须有 `CODEX_THREAD_ID`，Claude 会话须有 `CLAUDE_CODE_SESSION_ID`，恰好其一，否则拒绝）：
+在**自己的原始会话内**运行（桥按会话环境变量识别发送方身份：Codex 会话须有 `CODEX_THREAD_ID`，Claude 会话须有 `CLAUDE_CODE_SESSION_ID`，恰好其一，否则拒绝）。Codex 侧的 `send`/`reply`/`status`/`retire` 与三条 hook 按同一会话索引自动解析数据根，无需设置任何环境变量；Claude 侧回复入口内嵌数据根，直接可用：
 
 ```powershell
 # Codex 发起新消息：多目标时必须指名（歧义会列出全部候选含完整 pairId 与处理建议）；
@@ -74,13 +81,14 @@ node bridge/cli.mjs status
 | `No connected target matches "<名>" ...` | 名称不存在：报错列出当前可选目标 |
 | `No bridge message with that id exists ...` | 回复的 messageId 在本数据根不存在：改用收到的消息内嵌回复入口（携带精确 id） |
 | `Claude endpoint identity changed.` / 管道连接失败 | Claude 会话已重启或端点失效：该目标的发送如实报错、不误投；按 §2 重连（同身份沿用并刷新端点） |
-| `This bridge data root already serves a different Codex session.` / `... retired pairs of a different Codex session ...` | 一个数据根一个 Codex：换用新的数据根（`CTC_BRIDGE_DIR`），旧根存档留证 |
-| Codex 侧收不到消息且无报错 | hook 未生效：确认 install 后走过 `/hooks` 信任与退出-resume 重载（§1 人工步骤） |
+| `This bridge data root already serves a different Codex session.` / `... retired pairs of a different Codex session ...` | 一个数据根一个 Codex：`connect` 已会自动为当前会话让位新根；此报错多见于手动 `pair`/`register` 路径——换用新的数据根（`CTC_BRIDGE_DIR`），旧根存档留证 |
+| Codex 侧收不到消息且无报错 | 先看 `status`：`pendingClaimed:false` 时按 `pendingNote` 处理——`/hooks` 重信任＋完全退出 resume（§1 人工步骤；hook 是否已信任/重载无法从产品侧检测，提示仅为可能性）；`pendingNote` 若列出"另一已知根也在服务本会话"，属数据面事实，按提示切根 |
+| 会话内出现 `Bridge wake points at message ... lives in another bridge root` | wake 指向的消息在另一数据根：诊断已写明该根路径与其服务的 Codex 会话——若属本会话，以该根 resume（必要时先 `/hooks` 重信任）；否则该消息属于另一会话。诊断不构成任何收信证明 |
 | Claude 侧消息迟迟不出现 | `crossSessionInbound` 默认暂存策略：检查是否在等待批准（§1 第 3 步） |
 
 ## 5. 已验证范围与未验证边界
 
-已验证范围（本 Increment 的结论边界）：同一 Windows 用户；一个 Codex 原始会话与**至少两个** Claude 原始会话共存（名称路由、回复归属、重叠来信三态、单目标隔离与退役边界、单目标免 `--name` 兼容、1.0.0 旧 `pair.json` 继续使用）；短文本（trim 后 ≤2000 字符）；串行逐事件注入；记录的工具版本——**Windows 10 Pro 10.0.19045、PowerShell 5.1、codex-cli 0.153.4/0.154.0、claude 2.1.263/2.1.268、Node v24.14.0**（任一 CLI 升级后行为未验证，应先重跑 SMOKE 再依赖）。
+已验证范围（本 Increment 的结论边界）：同一 Windows 用户；一个 Codex 原始会话与**至少两个** Claude 原始会话共存（名称路由、回复归属、重叠来信三态、单目标隔离与退役边界、单目标免 `--name` 兼容、1.0.0 旧 `pair.json` 继续使用）；**per-Codex 数据根自动选择与 resume 复用**（默认根被 incumbent 占用时自动让位 `bridge-threads\<threadId>` 新根、索引只增不改绑、存量默认根同身份零迁移沿用）；**跨根 wake 诊断与未领取 pending 的诚实提示**（提示不构成收信证明，hook 未信任/未重载仅标未知/可能）；短文本（trim 后 ≤2000 字符）；串行逐事件注入；记录的工具版本——**Windows 10 Pro 10.0.19045、PowerShell 5.1、codex-cli 0.153.4/0.154.0、claude 2.1.263/2.1.268、Node v24.14.0**（任一 CLI 升级后行为未验证，应先重跑 SMOKE 再依赖）。
 
 以下能力**未验证，本产品不提供也不得被暗示已完成**：
 
