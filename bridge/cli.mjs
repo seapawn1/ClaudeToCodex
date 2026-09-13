@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { atomicWriteJson, BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store.mjs';
 import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
+import { bindThreadRoot, locateMessage, resolveRoot } from './roots.mjs';
 import { cliPath, commandString, repoRoot } from './entry.mjs';
 
 // Sprint 04 / PBI-11: connect upserts into a multi-pair registry, codex sends
@@ -62,11 +63,20 @@ async function main() {
   });
   const [command] = positionals;
   if (positionals.length !== 1) throw new Error(usage);
-  const store = new BridgeStore();
+  // Root resolution (Sprint 05 / PBI-15): the product flows serve the root that
+  // belongs to the calling Codex original session - explicit CTC_BRIDGE_DIR,
+  // then an index binding, then the default root when free or already this
+  // session's. The low-level manual paths (install, register, pair, sessions)
+  // keep the plain default root with its CTC_BRIDGE_DIR override, exactly as
+  // documented since 1.0.0.
+  const sessionStore = () => new BridgeStore(resolveRoot({ threadId: process.env.CODEX_THREAD_ID ?? null }).root);
+  let store = new BridgeStore();
   if (command === 'hook') {
     let input = '';
     for await (const chunk of process.stdin) input += chunk;
-    process.stdout.write(`${JSON.stringify(handleHook(store, JSON.parse(input)))}\n`);
+    const event = JSON.parse(input);
+    store = new BridgeStore(resolveRoot({ threadId: event.session_id ?? null }).root);
+    process.stdout.write(`${JSON.stringify(handleHook(store, event, locateMessage))}\n`);
     return;
   }
   if (command === 'install') {
@@ -101,6 +111,13 @@ async function main() {
     if (!codexId || !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(codexId)) {
       throw new Error('connect must run inside the selected Codex session (CODEX_THREAD_ID missing).');
     }
+    // Root selection for THIS Codex session (S05-15): an index binding is
+    // reused; the default root is adopted when it serves nobody or already
+    // serves this session (incumbent adoption - no data moves); a default root
+    // owned by another Codex steers this session to its own per-thread root.
+    // The binding is append-only: one root per Codex session, never rebound.
+    const resolution = resolveRoot({ threadId: codexId });
+    store = new BridgeStore(resolution.root);
     // Synthesize the endpoint from the session registry: same-user DPAPI wrapping of
     // the registry peer key, so the Claude side never registers anything manually.
     // Registry key files are JSON ({peerToken, procStartFt, pidDomain}); only the
@@ -142,18 +159,30 @@ async function main() {
     // (endpoint refresh allowed); a different one becomes an additional target.
     // Existing pairs are never touched, so connecting B never disturbs A.
     const pair = store.pair(codexId, endpointPath, session.name);
+    // Registering the root binding only after a successful pairing keeps a
+    // failed connect from claiming a per-thread root; a first successful
+    // connect leaves the traceability record S05-15-4 asks for. An explicit
+    // CTC_BRIDGE_DIR is an isolation override: it bypasses the index for
+    // resolution and must not write it either, or isolated runs would leak
+    // bindings into the machine index (and collide with each other).
+    if (resolution.source !== 'env') {
+      const binding = bindThreadRoot(codexId, store.root);
+      if (binding.changed) store.event('root-bound', { codexId, root: store.root, source: resolution.source, index: binding.index });
+    }
     store.event('connect', { pairId: pair.id, claudeSession: session.sessionId, claudeName: session.name, codexId: pair.codexId, endpoint: endpointPath });
-    console.log(JSON.stringify({ pair, claudeSession: { sessionId: session.sessionId, name: session.name, status: session.status }, hint: `Send with: node "${cliPath()}" send --name <target> --body "..."` }, null, 2));
+    console.log(JSON.stringify({ pair, bridgeRoot: store.root, claudeSession: { sessionId: session.sessionId, name: session.name, status: session.status }, hint: `Send with: node "${cliPath()}" send --name <target> --body "..."` }, null, 2));
     return;
   }
   if (command === 'retire') {
     if (!values.pairId && !values.name) throw new Error('retire requires --pairId <uuid> or a unique --name.');
+    store = sessionStore();
     const pair = values.pairId ? store.pairById(values.pairId) : store.resolveTarget(values.name);
     if (!pair) throw new Error('No registered pair matches.');
     console.log(JSON.stringify(store.retire(pair.id), null, 2));
     return;
   }
   if (command === 'status') {
+    store = sessionStore();
     const pairs = store.pairs().map((pair) => {
       const pendingPath = join(store.root, 'pending', pair.id, 'message.json');
       const pending = existsSync(pendingPath) ? readJson(pendingPath) : null;
@@ -187,6 +216,7 @@ async function main() {
   // message they answer (S04-11-3); codex sends name an explicit target
   // (S04-11-2); claude sends resolve through their own session identity. There
   // is no "current" or "most recent" target anywhere on this path.
+  store = sessionStore();
   const who = store.caller();
   let pair;
   if (command === 'reply') {
