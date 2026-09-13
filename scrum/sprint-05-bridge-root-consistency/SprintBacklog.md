@@ -129,4 +129,8 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
   - W4：status 输出新增 `root`（path/source/codexThread，S05-15-4）与每配对 `pendingClaimed`/`pendingNote`——未领取 pending 的提示区分数据面事实（`otherRootsServing` 发现"另一已知根也在服务本 Codex"）与未知/可能（hook 未信任/未重载不可检测），无收信声称；发送侧回执语义未动（`receipt: unverified` 既有）。
   - W6：USAGE §2 重写为四级解析次序（显式 env＞索引＞默认根属己/未占用＞per-thread 让位）＋"只增不改绑、存量零迁移"；§3 注明 Codex 侧命令与 hook 免环境变量、Claude 回复入口内嵌根；§4 新增跨根诊断与 pendingNote 两行排查项；§5 已验证范围补数据根自动选择/resume 复用/诚实提示边界。SMOKE 前置 7 改为自动根＋显式隔离双模式，新增 4c 节 R1–R6 格（新会话自动根/resume 复用/多目标同根/不一致诊断/连续投递回归/冲突边界）。
   - W5：双树逐文件哈希核对一致后，plugins 树全套复跑 76/76 绿。
-- 下一步：W7（隔离安装候选：构建、manifest/元数据/生效 hooks/回复入口溯源验证，然后交 PO 亲自 host trust 与端到端验收）。
+- **2026-09-13 W7 Developer 侧完成（70ffa5d＝候选版本准备；d3456bf＝release 脚本仓库根修复；79f9f34＝验收 harness 纳入 S05 套件；均已推 origin）。**
+  - 候选产物：`claude-to-codex-plugin-1.2.0.zip`（SHA256 `1d425242ae446c994cb4ae7a155be42c37c4775c86648135da306a31d461d59f`，源提交 79f9f34，manifest 24 文件、VERIFY=OK checked=23 extra=0）。plugin.json→1.2.0（独立缓存目录，不动在用 1.1.0）；SKILL.md 边界更新为自动根语义；RELEASE-NOTES 增 1.2.0 候选节（标注未发布、验证摘要待 PO 验收后补全；README/INSTALL 仍指向已发布 v1.1.0）。
+  - 发现并修复真实缺陷：plugins 树 `Build-Release.ps1`/`Test-Acceptance.ps1` 以固定 `..\..` 推仓库根（1.0.0 布局残留），在 plugins 布局下 `git archive` pathspec 失败；改为 `git rev-parse --show-toplevel`。验收 harness 增加 S05-15 桶（roots 单测＋roots-cli 集成计入 shipped-copy 判定）。
+  - 包级技术验收（repo harness 对解包候选）：**pass=8 fail=0 blocked=3**——blocked 为真实宿主隔离安装、真实 hook 执行、真实 skill 发现三项，按设计归 SM/PO 轮。
+- 待办：隔离宿主安装（isolated CODEX_HOME，保持日常 1.1.0 安装与在用桥原状）→ PO 亲自 host trust 与端到端真实验收（SMOKE 4c R1–R6 格）→ PO DoD 检视。
