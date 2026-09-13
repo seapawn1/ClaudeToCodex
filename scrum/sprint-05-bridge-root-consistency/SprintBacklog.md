@@ -125,4 +125,8 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
   - hook：按事件 `session_id` 解析根；**带 wake 的事件不再被"根属他 session"门静默**（9-13 事故形态），`take()` 的收件人过滤仍保证不误投；wake 找不到消息时经 `locateMessage` 给跨根确定性诊断（事件 `wake-foreign-root` 记录 livesIn/servesCodex，systemMessage 给下一步且不声称收信），全无所知时如实 unknown＋`/hooks` 重信任与退出-resume 提示；无 wake 事件的门行为不变。
   - 集成测试覆盖：默认根被占用时 connect 自动启用 per-thread 根且不动旧根；hook 仅凭 `session_id` 从 per-thread 根领取注入（含 pending 释放与 receipt）；跨根 wake 诊断（含不声称收信）；无处可寻的 wake＝诚实 unknown；无 wake 外来 session 仍静默；同会话重连复用同根同 pair 且不重复 root-bound；显式 env 不写索引。
   - 未做（后续工作项）：W4 status 根身份与 pending 提示、W5 双树同步与全量复跑、W6 文档、W7 安装候选。
-- 下一步：W4（status/发送侧诚实提示与根身份呈现）。
+- **2026-09-13 W4+W5+W6 完成（dcaec01＝W4；81d1616＝文档；3ed61c1＝双树同步）。全套 76/76 绿 × 双树（bridge/ 与 plugins/claudetocodex/bridge/），共享文件集哈希逐一致。**
+  - W4：status 输出新增 `root`（path/source/codexThread，S05-15-4）与每配对 `pendingClaimed`/`pendingNote`——未领取 pending 的提示区分数据面事实（`otherRootsServing` 发现"另一已知根也在服务本 Codex"）与未知/可能（hook 未信任/未重载不可检测），无收信声称；发送侧回执语义未动（`receipt: unverified` 既有）。
+  - W6：USAGE §2 重写为四级解析次序（显式 env＞索引＞默认根属己/未占用＞per-thread 让位）＋"只增不改绑、存量零迁移"；§3 注明 Codex 侧命令与 hook 免环境变量、Claude 回复入口内嵌根；§4 新增跨根诊断与 pendingNote 两行排查项；§5 已验证范围补数据根自动选择/resume 复用/诚实提示边界。SMOKE 前置 7 改为自动根＋显式隔离双模式，新增 4c 节 R1–R6 格（新会话自动根/resume 复用/多目标同根/不一致诊断/连续投递回归/冲突边界）。
+  - W5：双树逐文件哈希核对一致后，plugins 树全套复跑 76/76 绿。
+- 下一步：W7（隔离安装候选：构建、manifest/元数据/生效 hooks/回复入口溯源验证，然后交 PO 亲自 host trust 与端到端验收）。
