@@ -18,7 +18,10 @@ param(
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+# Git discovery instead of a fixed ..\.. walk: this script lives at
+# <repo>\plugins\claudetocodex\bridge\release\ and used to live at <repo>\bridge\release\.
+$repoRoot = (git -C $PSScriptRoot rev-parse --show-toplevel | Out-String).Trim()
+if (-not $repoRoot) { throw 'Not inside a git repository.' }
 $packageRun = [bool]$PluginDir
 $pluginDir = if ($packageRun) { (Resolve-Path $PluginDir).Path } else { Join-Path $repoRoot 'plugins\claudetocodex' }
 $pluginBridge = Join-Path $pluginDir 'bridge'

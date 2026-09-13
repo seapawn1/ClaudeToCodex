@@ -12,7 +12,11 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+# The script may sit at <repo>\bridge\release\ (1.0.0 layout) or
+# <repo>\plugins\claudetocodex\bridge\release\ (current layout); git's own
+# discovery finds the repository root from either, instead of a fixed ..\...
+$repoRoot = (git -C $PSScriptRoot rev-parse --show-toplevel | Out-String).Trim()
+if (-not $repoRoot) { throw 'Not inside a git repository.' }
 $productName = "claude-to-codex$(if ($Mode -eq 'plugin') { '-plugin' })-$Version"
 if (-not $OutDir) { $OutDir = Join-Path $env:TEMP "claude-to-codex-release-$Version" }
 
