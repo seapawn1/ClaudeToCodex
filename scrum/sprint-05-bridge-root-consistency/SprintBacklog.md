@@ -79,7 +79,7 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 ## 第三部分：Developer 工作区
 
-本部分由 Developer 自行维护。当前仅保留流程要求，不预设实现方案、工作项拆解或施工顺序。
+本部分由 Developer 自行维护：流程要求、方案要点、工作项拆解与进展证据。承诺基线：ab0a650；施工分支：`worktree-sprint05-dev`（独立提交，SM 合入）。
 
 - 开工前阅读并遵循 Scrum 方法论：以经验过程控制、透明、检视和适应为工作基础；尊重 PO、Developer、SM 的角色边界和五个价值观；Sprint Backlog 的 How 由 Developer 自主管理。
 - 开始工作前完整重读本文件、[Product Backlog](../ProductBacklog.md) 和相关使用 / 冒烟文档；范围或验收疑问先向 SM 提出。
@@ -89,4 +89,33 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 ### 工作项与进展
 
-待 Developer 审阅后填写。
+#### 方案要点（Developer 决定，2026-09-13）
+
+- **全局会话-root 索引**：`%LOCALAPPDATA%\ClaudeToCodex\` 下固定位置记录 codexThreadId → 数据根映射；原子写（temp+rename），只登记不改绑（身份边界）。
+- **解析次序**：显式 `CTC_BRIDGE_DIR` ＞ 索引命中 ＞ 默认根未占用或属己则采用 ＞ 新建 per-thread 根（沿用既有 `bridge-threads\<threadId>` 形态）并登记索引。
+- **存量默认根采用语义**：同身份首连（默认根既有 pairs 的 codexId 与当前 `CODEX_THREAD_ID` 一致）＝ 索引登记指向默认根，不迁移、不移动、不改写既有数据；异身份则当前会话让位新根，旧根只读留证。
+- **hook 侧**：按事件 `session_id` 经索引解析数据根；wake 指向的消息不在当前根时，枚举索引各根定位 pairId/messageId，给确定性诊断与恢复动作；hook 未信任 / 未重载只在发送侧 status 给"未知 / 可能"提示与下一步，不声称检测。
+- **Claude reply 入口维持现状**：`renderPeer` 已内嵌数据根与命令路径，不改。
+
+#### 工作项、估计与顺序
+
+| 项 | 内容 | 估计 | 完成判据 |
+|---|---|---|---|
+| W1 | 实机首验（只读取证，先于编码） | ≤0.5h | C2a/b/c 全过或触发上报 |
+| W2+W3 | 根解析模块＋索引＋connect 冲突让位＋hook 按会话解析与跨根诊断 | 3–4h | 索引模块单测绿后接入 cli.mjs；三事件路径覆盖 |
+| W4 | status / 发送侧诚实提示与根身份呈现 | 1h | 措辞为未知 / 可能、不误报 |
+| W5 | 单测：解析矩阵＋领取回归＋既有测试全绿（双树同跑） | 2h | `node --test` 全绿 |
+| W6 | USAGE §2 数据根语义重写＋SMOKE 增格＋双树同步 | 1–1.5h | `bridge/` 与 `plugins/claudetocodex/bridge/` 逐文件一致 |
+| W7 | 隔离安装候选验证＋真实验收编排（PO 步骤由 PO 亲自完成） | 2–4h（含 PO 参与） | 候选门（manifest/元数据/生效 hooks/回复入口溯源）通过后交 PO 验收 |
+
+**证据口径（沿用既有约定）**：入站判定只认接收方原始会话事件＋唯一标记；`submitted:true`、pipe 写入、落盘时间为过程证据；fixture → 宿主加载 → 实际执行 → 原会话收信四层不混用；SM 独立复核。
+
+**可回滚纪律**：每工作项独立提交；索引模块先单测绿再接入 CLI；任意时刻树面干净可退。
+
+#### 进展记录
+
+- **2026-09-13 W1 实机首验完成：C2a/C2b/C2c 全部通过，无阻碍。**
+  - C2a（线程标识跨 resume 稳定）：thread `01a09805-…` 全目录仅一个 rollout 文件 `~/.codex/sessions/2026/09/13/rollout-2026-09-13T07-47-55-01a09805-….jsonl`（创建 2026-09-12T23:47:55Z，末次写入 2026-09-13 16:59 本地，仍在追加），单条 `session_meta` 且 id 即该 thread。结合 Product Backlog PBI-15 备志记录的完全退出与正确根 resume：恢复后 08:12Z 起 connect（pair 09b2323f/085fe1b3，后 12e71e8f/05cb5a3f、faf7fa45）均在同一根通过"一根一 Codex"身份校验成功——证明 resume 后 `CODEX_THREAD_ID` 与退出前一致，resume 未另建 rollout 文件。
+  - C2b（三类 hook 事件均带 session_id）：两个在用根的 `receipts/` 实录三类消费——bridge-threads\01a09805 根：3dcdd392=UserPromptSubmit、128331e5=PostToolUse、dd92a1f1=Stop；默认根：d02f3d39=UserPromptSubmit（08:50Z）、3f50df61=Stop（08:09Z）。每条 receipt 的存在即证明 `take()` 的 `message.to.sessionId === event.session_id` 过滤通过。本日 Developer 两回复（a6082f04、a56ff39a）经官方 UserPromptSubmit 入站。
+  - C2c（数据根清点）：`%LOCALAPPDATA%\ClaudeToCodex\` 下默认根 `bridge` 今日仍有活跃消费（08:50/08:54Z）——现役占用者真实存在，S05-15-1 冲突前提成立；`bridge-threads\01a09805`（本 Sprint 在用）；另有 15+ 历史 / 测试 / 归档根。无既有索引类文件、无命名冲突；索引落点（父级 `roots-index.json` 或 `bridge-threads\index.json`）在 W2 定稿。
+- 下一步：W2+W3（根解析模块＋索引＋hook 解析）。
