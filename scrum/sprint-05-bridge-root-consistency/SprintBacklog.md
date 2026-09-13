@@ -2,7 +2,7 @@
 
 - 创建：2026-09-13（Sprint Planning 草案）。
 - 范围：PO 认同以 PBI-15 的自动会话数据根与 Hook 一致性作为价值主线，并将 PBI-14 作为连续官方投递回归；Product Backlog 中 PBI-14 的严重缺陷定位和排序保持不变。
-- 状态：Sprint Planning 已收口：Developer 已阅读 Scrum 方法论、复核最终版并承诺交付；C1 / W1 待启动，施工从实机首验开始。
+- 状态：Sprint Goal 与 Increment 已实现；SM 技术复核、隔离安装检查、R1–R6 真实验证与 PO 手动端到端均已完成，PO 反馈整体满意且无 Sprint 05 阻塞。待办为 Sprint Review / Retro / 发布决策收口；PBI-09 呈现与主动报告问题已记录到 Product Backlog。
 - 参与者：PO、SM / Codex；Developer 已参与 Planning 复核并承诺交付。
 - 节奏：按 PO 决定，不设固定天数或 human timebox；以 Sprint Goal、Increment 和 DoD 检视收口，采用本项目的人与 AI 协作节奏。
 
@@ -141,4 +141,9 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
   - 已恢复事实（SM 只读复核一致）：从 git tag `v1.1.0` `git archive` 原位恢复——19/19 文件、plugin.json=1.1.0、hooks.json 与 tag 哈希一致、在跑会话 hook 路径重新有效（SM 事后经官方 hook 路径收发正常佐证）；桥数据根与 pair 全程未动。
   - 剩余风险与待决：插件注册已注销——**PO 将按 INSTALL.md 亲自执行恢复命令**（重装 1.1.0 注册），在此之前未来 resume/新会话不加载插件；`C:\Users\DELL\plugins` 杂散树**待 PO 明确确认后才可清理，不得自行删除**；隔离候选安装**继续暂停**。在 PO 完成恢复并确认前，Developer **禁止**任何改变 codex plugin/marketplace 状态、删除目录或重启宿主的操作（S05-INCIDENT-10 冻结令）。
   - 重做防护（获重新授权后的强制前置，逐条核验不过即中止）：1) 禁用 `$home` 等只读自动变量命名，环境赋值失败必须中断而非续行；2) 每条宿主状态命令**同一命令内显式设置并回显 `CODEX_HOME`**；3) 安装输出 `installedPath` 必须以隔离根为前缀才继续下一步；4) 任何状态命令前先做环境核验（echo 生效值）。
-- 待办：PO 亲自重装日常 1.1.0（注册恢复）并确认 → PO 确认后清理杂散树 → SM 重新授权后按上述防护重做隔离候选安装 → PO 亲自 host trust 与端到端真实验收（SMOKE 4c R1–R6 格）→ PO DoD 检视。
+- **2026-09-13 事故恢复与隔离安装重做完成。** PO 授权 SM 代恢复日常 1.1.0 注册；`codex plugin list` 确认 `claudetocodex@claudetocodex-dev installed, enabled 1.1.0`，日常安装保持不动。PO 随后授权清理 `C:\Users\DELL\plugins` 杂散树；SM 先核验目标路径与日常 1.1.0 存在，再移动到项目安全边界后逐文件清理，最终原杂散路径不存在。隔离 1.2.0 候选按防护重装：显式 `CODEX_HOME`、installedPath 前缀校验、模型配置结构化抽取并补齐 `codex-models.json`；安装级检查记录于 `%LOCALAPPDATA%\ClaudeToCodex\s05-host\evidence\isolated-install-sm-check.json`。
+- **2026-09-13 SMOKE 4c R1–R6 真实验收通过。** SM 在隔离原始 Codex thread `01a09aae-cfdf-7972-a1d6-91fc5aba39df` 上完成：新会话自动 per-thread root、同 thread resume 复用、Alpha/Beta 多目标同根、跨 root wake 诊断、两 pair 各连续两轮官方入站、默认 root 不改绑 / 仅追加诊断事件、重复 wake 抑制、Gamma pending 单槽拒绝、Gamma 显式退役且 Beta 继续通信。证据见 [PO E2E Record](coordination/po-e2e-record.md)。
+- **2026-09-13 PO 手动端到端验收通过（无 Sprint 05 阻塞）。** PO 在隔离 thread `01a09ac9-ba1c-7d62-9fc5-d0d1777e3f9b` 中自行操作 BUYER / REVIEWER 两个 Claude，完成两轮发布评审交叉讨论及天气、数学、历史追问。SM 复核原始 rollout：9 条完整 `Cross-session bridge message` 直接进入模型上下文，最终两个 pending 均为 `null`，未读取 bridge 消息文件替代收信。证据见 [PO Manual E2E Result](coordination/po-manual-e2e-result.md)。
+  - PO 反馈整体满意；发现的非阻塞问题：bridge 正文已进入模型上下文但 Codex 未主动向 PO 报告，用户需再次催问后获得准确转述。该问题已补充至 Product Backlog PBI-09，属于消息呈现 / 行动提示与前端可见性，不否定 Sprint 05 root 一致性传输链路。
+  - 手动测试中 Codex 曾尝试 `Start-Sleep` 等待，PO 纠正；手动剧本已补充“禁止轮询，结束回合等待 hook 注入”。
+- 待办：举行 Sprint Review → Sprint Retrospective → 蒸馏 Sprint 05 Review/Retro 文档并清理一次性过程材料 → PO 决定 1.2.0 发布 / 推送。
