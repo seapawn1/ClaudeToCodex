@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { atomicWriteJson, BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store.mjs';
 import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
+import { bindThreadRoot, locateMessage, otherRootsServing, resolveRoot } from './roots.mjs';
 import { cliPath, commandString, repoRoot } from './entry.mjs';
 
 // Sprint 04 / PBI-11: connect upserts into a multi-pair registry, codex sends
@@ -62,11 +63,20 @@ async function main() {
   });
   const [command] = positionals;
   if (positionals.length !== 1) throw new Error(usage);
-  const store = new BridgeStore();
+  // Root resolution (Sprint 05 / PBI-15): the product flows serve the root that
+  // belongs to the calling Codex original session - explicit CTC_BRIDGE_DIR,
+  // then an index binding, then the default root when free or already this
+  // session's. The low-level manual paths (install, register, pair, sessions)
+  // keep the plain default root with its CTC_BRIDGE_DIR override, exactly as
+  // documented since 1.0.0.
+  const sessionStore = () => new BridgeStore(resolveRoot({ threadId: process.env.CODEX_THREAD_ID ?? null }).root);
+  let store = new BridgeStore();
   if (command === 'hook') {
     let input = '';
     for await (const chunk of process.stdin) input += chunk;
-    process.stdout.write(`${JSON.stringify(handleHook(store, JSON.parse(input)))}\n`);
+    const event = JSON.parse(input);
+    store = new BridgeStore(resolveRoot({ threadId: event.session_id ?? null }).root);
+    process.stdout.write(`${JSON.stringify(handleHook(store, event, locateMessage))}\n`);
     return;
   }
   if (command === 'install') {
@@ -101,6 +111,13 @@ async function main() {
     if (!codexId || !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(codexId)) {
       throw new Error('connect must run inside the selected Codex session (CODEX_THREAD_ID missing).');
     }
+    // Root selection for THIS Codex session (S05-15): an index binding is
+    // reused; the default root is adopted when it serves nobody or already
+    // serves this session (incumbent adoption - no data moves); a default root
+    // owned by another Codex steers this session to its own per-thread root.
+    // The binding is append-only: one root per Codex session, never rebound.
+    const resolution = resolveRoot({ threadId: codexId });
+    store = new BridgeStore(resolution.root);
     // Synthesize the endpoint from the session registry: same-user DPAPI wrapping of
     // the registry peer key, so the Claude side never registers anything manually.
     // Registry key files are JSON ({peerToken, procStartFt, pidDomain}); only the
@@ -142,18 +159,31 @@ async function main() {
     // (endpoint refresh allowed); a different one becomes an additional target.
     // Existing pairs are never touched, so connecting B never disturbs A.
     const pair = store.pair(codexId, endpointPath, session.name);
+    // Registering the root binding only after a successful pairing keeps a
+    // failed connect from claiming a per-thread root; a first successful
+    // connect leaves the traceability record S05-15-4 asks for. An explicit
+    // CTC_BRIDGE_DIR is an isolation override: it bypasses the index for
+    // resolution and must not write it either, or isolated runs would leak
+    // bindings into the machine index (and collide with each other).
+    if (resolution.source !== 'env') {
+      const binding = bindThreadRoot(codexId, store.root);
+      if (binding.changed) store.event('root-bound', { codexId, root: store.root, source: resolution.source, index: binding.index });
+    }
     store.event('connect', { pairId: pair.id, claudeSession: session.sessionId, claudeName: session.name, codexId: pair.codexId, endpoint: endpointPath });
-    console.log(JSON.stringify({ pair, claudeSession: { sessionId: session.sessionId, name: session.name, status: session.status }, hint: `Send with: node "${cliPath()}" send --name <target> --body "..."` }, null, 2));
+    console.log(JSON.stringify({ pair, bridgeRoot: store.root, claudeSession: { sessionId: session.sessionId, name: session.name, status: session.status }, hint: `Send with: node "${cliPath()}" send --name <target> --body "..."` }, null, 2));
     return;
   }
   if (command === 'retire') {
     if (!values.pairId && !values.name) throw new Error('retire requires --pairId <uuid> or a unique --name.');
+    store = sessionStore();
     const pair = values.pairId ? store.pairById(values.pairId) : store.resolveTarget(values.name);
     if (!pair) throw new Error('No registered pair matches.');
     console.log(JSON.stringify(store.retire(pair.id), null, 2));
     return;
   }
   if (command === 'status') {
+    const resolution = resolveRoot({ threadId: process.env.CODEX_THREAD_ID ?? null });
+    store = new BridgeStore(resolution.root);
     const pairs = store.pairs().map((pair) => {
       const pendingPath = join(store.root, 'pending', pair.id, 'message.json');
       const pending = existsSync(pendingPath) ? readJson(pendingPath) : null;
@@ -164,16 +194,36 @@ async function main() {
       if (existsSync(pair.endpointPath)) {
         try { project = readJson(pair.endpointPath).cwd ?? null; } catch { project = null; }
       }
+      // Honest pending state (S05-15-5): a published letter with no receipt is
+      // simply unclaimed so far. The note names data-plane facts when there are
+      // any (another known root also serving this Codex session) and labels
+      // everything else possible/unknown - a hook that was never trusted or
+      // reloaded cannot be detected from here, and nothing here is a receipt.
+      let pendingClaimed = null;
+      let pendingNote = null;
+      if (pending) {
+        pendingClaimed = existsSync(join(store.root, 'receipts', `${pending.id}.json`));
+        if (!pendingClaimed) {
+          const others = otherRootsServing(pair.codexId, store.root);
+          pendingNote = `Published, no claim record yet.${others.length > 0 ? ` Data-plane fact: ${others.length === 1 ? 'another known root also' : `${others.length} other known roots`} serve this Codex session (${others.join('; ')}).` : ''} If it stays pending, possible causes - not detected from here: the receiving Codex session has not trusted/reloaded the bridge hooks since install, or it is running under a different bridge root. Check /hooks, then fully exit and resume the session.`;
+        }
+      }
       return {
         pairId: pair.id, target: pair.claudeName ?? null, claudeId: pair.claudeId, codexId: pair.codexId,
         createdAt: pair.createdAt ?? null, project, endpoint: pair.endpointPath, endpointOnDisk: existsSync(pair.endpointPath),
-        pendingMessageId: pending?.id ?? null,
+        pendingMessageId: pending?.id ?? null, pendingClaimed, pendingNote,
       };
     });
     const eventPath = join(store.root, 'events.jsonl');
     const events = existsSync(eventPath)
       ? readFileSync(eventPath, 'utf8').trim().split('\n').filter(Boolean).slice(-12).map(JSON.parse) : [];
-    console.log(JSON.stringify({ pairs, events }, null, 2));
+    console.log(JSON.stringify({
+      // Which root this status reads (S05-15-4): the resolved serving root,
+      // how it was chosen, and the Codex session context - an explicit env
+      // source means an isolation override, not an indexed product root.
+      root: { path: store.root, source: resolution.source, codexThread: process.env.CODEX_THREAD_ID ?? null },
+      pairs, events,
+    }, null, 2));
     return;
   }
   if (!['send', 'reply'].includes(command)) throw new Error(usage);
@@ -187,6 +237,7 @@ async function main() {
   // message they answer (S04-11-3); codex sends name an explicit target
   // (S04-11-2); claude sends resolve through their own session identity. There
   // is no "current" or "most recent" target anywhere on this path.
+  store = sessionStore();
   const who = store.caller();
   let pair;
   if (command === 'reply') {

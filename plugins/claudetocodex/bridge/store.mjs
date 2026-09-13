@@ -529,15 +529,13 @@ export function wakeText(pairId, messageId) {
   return `[CTC-WAKE ${id(pairId)} ${id(messageId)}]`;
 }
 
-export function handleHook(store, event) {
+// Optional third parameter (wired by the CLI hook entry): a data-plane locator
+// (messageId, exceptRoot) => { root, message, owner } | null used to diagnose
+// wakes whose message this root cannot account for (S05-15-5). Without it the
+// hook still works and simply reports the generic unknown.
+export function handleHook(store, event, locate = null) {
   if (!['UserPromptSubmit', 'PostToolUse', 'Stop'].includes(event.hook_event_name)) return {};
   if (event.agent_id) return {};
-  let pairs;
-  try { pairs = store.pairs(); } catch (error) { if (error.code === 'ENOENT') return {}; throw error; }
-  // One bridge root serves one Codex original session; every pair shares its
-  // codexId. An empty registry still lets stranded letters of retired pairs
-  // through (their addressing, not the registry, decides delivery).
-  if (pairs.length > 0 && !pairs.some((pair) => pair.codexId === event.session_id)) return {};
   let wake = null;
   if (event.hook_event_name === 'UserPromptSubmit') {
     const match = /^\[CTC-WAKE ([0-9a-f-]{36}) ([0-9a-f-]{36})\]$/i.exec((event.prompt ?? '').trim());
@@ -545,6 +543,19 @@ export function handleHook(store, event) {
     // Malformed wake-shaped text counts as ordinary input, never an error.
     if (match && UUID.test(match[1]) && UUID.test(match[2])) wake = match;
   }
+  if (!wake) {
+    let pairs;
+    try { pairs = store.pairs(); } catch (error) { if (error.code === 'ENOENT') return {}; throw error; }
+    // One bridge root serves one Codex original session; every pair shares its
+    // codexId. An empty registry still lets stranded letters of retired pairs
+    // through (their addressing, not the registry, decides delivery).
+    if (pairs.length > 0 && !pairs.some((pair) => pair.codexId === event.session_id)) return {};
+  }
+  // A wake is followed even when this root serves a different Codex session:
+  // the 9-13 incident showed exactly that shape (hook on the default root, the
+  // woken pair and its pending letter in another root) and silence was the
+  // defect. take() still only delivers letters addressed to event.session_id,
+  // so opening the wake path to a foreign session can never misdeliver.
   const message = store.take(event, wake?.[1] ?? null);
   if (message) {
     const body = renderPeer(message, store.root);
@@ -557,13 +568,26 @@ export function handleHook(store, event) {
     // pair still gets its repeat wakes blocked instead of a missing-pending
     // notice (SM review 8a03ed6b-3 - no regression from the 1.0.0 behaviour).
     const pair = store.pairById(wake[1]) ?? store.retiredPairById(wake[1]);
-    let original;
-    try { original = store.message(wake[2]); } catch (error) { if (error.code === 'ENOENT') return {}; throw error; }
-    if (pair && original.pairId === pair.id && original.to.sessionId === event.session_id && store.consumed(original.id)) {
+    let original = null;
+    try { original = store.message(wake[2]); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (pair && original && original.pairId === pair.id && original.to.sessionId === event.session_id && store.consumed(original.id)) {
       store.event('wake-suppressed', { messageId: original.id, turnId: event.turn_id ?? null });
       return { decision: 'block', reason: 'This bridge message was already supplied to the conversation.' };
     }
-    return { systemMessage: 'Bridge wake has no pending body or completed consumption record. Inspect bridge status.' };
+    // Diagnosis reports data-plane facts only: either the message lives in
+    // another root this machine knows, or it is unknown everywhere known. It
+    // never states that the original session received anything, and it never
+    // claims to detect an untrusted/unreloaded hook (which cannot run here).
+    if (locate) {
+      let foreign = null;
+      try { foreign = locate(wake[2], store.root); } catch { /* diagnosis degrades to the honest unknown */ }
+      if (foreign) {
+        store.event('wake-foreign-root', { messageId: wake[2], pairId: wake[1], livesIn: foreign.root, servesCodex: foreign.owner ?? null });
+        const serving = foreign.owner ? ` (that root serves Codex session ${foreign.owner})` : '';
+        return { systemMessage: `Bridge wake points at message ${wake[2]}, which lives in another bridge root: ${foreign.root}${serving}. This session's hook serves ${store.root}. If that root belongs to this Codex session, fully exit and resume it so its hook serves that root (re-trust the bridge hooks via /hooks if their definitions changed); otherwise the message belongs to another Codex session. No receipt is claimed here.` };
+      }
+    }
+    return { systemMessage: `Bridge wake ${wake[0]} has no pending body or consumption record in this root, and no other known root holds that message. Inspect bridge status; if hook definitions changed, re-trust them via /hooks and fully exit + resume the session. Whether the original session received anything: unknown.` };
   }
   return {};
 }
