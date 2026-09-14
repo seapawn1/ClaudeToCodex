@@ -2,13 +2,13 @@
 
 - 创建：2026-09-14；拆分自原“日常桥接体验与连接控制”Planning 稿。
 - 范围：PO 决定聚焦 PBI-09；PBI-10 / 13 拆至 [Sprint 06](../sprint-06-connection-control/SprintBacklog.md)，PBI-12 拆至 [Sprint 07](../sprint-07-target-identification/SprintBacklog.md)。
-- 状态：Sprint Planning 进行中；Developer HOW v03 已完成并经 SM 核对，待 PO 检视后共同定稿。
+- 状态：Sprint Planning 已于 2026-09-14 定稿关闭；Developer 已获施工授权，开发进行中。
 - 参与者：PO、SM / Codex、Developer / Claude Code。
 - 节奏：按 PO 决定，不设固定 timebox；以 Sprint Goal、AC 与 DoD 收口。
 
 ## 第一部分：Sprint Goal 与 DoD
 
-### Sprint Goal（Planning 审阅稿）
+### Sprint Goal（定稿）
 
 > 让 PO 在 Codex 侧等待 Claude 答复时，直接看到可读的到达内容并自然继续协作；空闲到达自动触发下一次处理，工作中收信不破坏模型 / 工具边界，完整往返无需催问、人工搬运或翻查数据文件。
 
@@ -43,7 +43,7 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 - 自动启动或终止进程、自动恢复、广播、自动重试、送达回执、跨机器 / 跨平台能力。
 - PBI-03 的完整投递状态语义；本次仍须诚实区分已知与未知，不得把连接存在、领取或 `submitted:true` 表述为原会话收信。
 
-### 验收标准（Planning 审阅稿）
+### 验收标准（定稿）
 
 以下编号沿用拆分前稿，便于追溯历史讨论与证据。
 
@@ -73,7 +73,7 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 本部分由 Developer 自行维护。拆分后须从原 v2.3 HOW 中移除 10 / 12 / 13 的施工承诺，保留 09 所需路线、验证和容量，并对本文件前两部分做反例审阅。
 
-### 基本 HOW（v03，2026-09-14 Developer 按拆分范围同步；SM 已核对，待 PO 检视后定稿）
+### 基本 HOW（v03，2026-09-14 Developer 按拆分范围同步；Planning 定稿）
 
 定位：本 Sprint 仅 PBI-09。原 v2.x 中 10 / 12 / 13 的研究、切片与验证承诺已随拆分移至 Sprint 06 / 07 种子，此处不再保留；其编号与结论在各自 Sprint Planning 时重估。落稿不代表定稿或施工授权（沿用收口约定）。
 
@@ -105,4 +105,4 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 ### 工作项与进展
 
-- 2026-09-14：v03 落稿；Developer 已完成前两部分反例审阅与 06 / 07 种子检查，SM 核对并修正“双 hook 共存安全”为待验证目标。待 PO 检视后共同定稿；旧 worktree `s03-planning-dev-20260914` 中未提交的 v2.2 / v2.3 为历史底稿，定稿后清理。
+- 2026-09-14：v03 落稿；Developer 完成前两部分反例审阅与 06 / 07 种子检查，SM 核对并修正“双 hook 共存安全”为待验证目标。PO 接受当前方案，Planning 定稿关闭并授权 Developer 施工；旧 worktree `s03-planning-dev-20260914` 中未提交的 v2.2 / v2.3 为历史底稿，可清理。
