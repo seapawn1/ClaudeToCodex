@@ -1,5 +1,7 @@
 # Memory Index
 
+- [Sprint discovery working agreement](sprint-discovery-working-agreement.md) — user-story evidence and standing triggers for Empathize, Ideate and prototype testing
+- [Sprint Planning participation](sprint-planning-participation.md) — early PO involvement and continuous three-way discussion; Developers own the HOW
 - [Sprint acceptance responsibility](sprint-acceptance-responsibility.md) — independently verify final-candidate AC evidence; keep technical acceptance and PO experience distinct
 - [Codex↔Claude test pair harness](codex-claude-test-pair-harness.md) — verified launch, isolation, pairing, topology, and original-frame evidence procedure
 - [Background Claude session startup](background-claude-session-startup.md) — PO intent for Codex-managed peer setup; use the modern harness procedure

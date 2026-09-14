@@ -6,8 +6,11 @@ Primary documents are `README.md`, `INSTALL.md`, `RELEASE-NOTES.md`, `bridge/doc
 
 Sprint 05 delivered and accepted the per-Codex root Increment: automatic root selection/reuse, multi-pair continuous official delivery, cross-root diagnosis, honest pending status, atomic exclusive per-session indexing, and isolated-candidate validation. Its sole active summary is `docs/scrum-sprint/sprint-05-bridge-root-consistency-review-retro.md`. Sprint 04 and earlier reviews remain historical summaries.
 
+Sprint 03 Planning resumed on 2026-09-14 against `main` / `v1.2.0` (`15309b2`), with the previously selected PBI-09/10/12/13. Active record: `scrum/sprint-03-usability-polish/SprintBacklog.md`. The PO participates during exploration of key experience choices, research needs and Ideate opportunities. Developers author a basic HOW as discussion material, and the PO, SM and Developers inspect the supplements and alternatives together before finalization. Product implementation has not started; after finalization, Developers lead execution and adapt their plan, the SM follows the Goal and impediments and independently checks AC evidence, and the PO participates in value decisions and end-to-end acceptance. Review/Retro follow the team's cadence. See `memory/sprint-planning-participation.md`.
+
 ## Durable working rules
 
+- Follow `memory/sprint-discovery-working-agreement.md` for user-story evidence and when to use Empathize, Ideate and prototype tests. This standing rule is maintained in project memory.
 - Scrum boundaries: the PO orders value and makes acceptance/release decisions; Developers own implementation and the Sprint Backlog plan; the SM independently verifies acceptance evidence and removes impediments.
 - Acceptance evidence: check every AC and applicable DoD against the final installed candidate. Developer reports and test counts are inputs, not acceptance substitutes.
 - Delivery evidence: `submitted:true`, pipe writes, message files, and a lone `context-prepared` are process evidence. Receipt requires the receiving original session's full inbound frame plus automatic message/pair/conversation/reply linkage.
