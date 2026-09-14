@@ -36,7 +36,7 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 本节只保留未完成事项。编号用于追溯，不表示优先级；以下条目围绕当前 Product Goal 持续精化，已交付能力见第三节。最终排序由 PO 决定，工作量和实现方式由 Developer 评估。各项验收标准写在备注中，并须同时满足 Definition of Output Done；尚待明确的范围继续精化。
 
-2026-09-12，PO 确认 Sprint 03 范围纳入 PBI-09、PBI-10、PBI-12、PBI-13：PBI-12 先解决多个候选中辨认并选对当前目标，PBI-11 的多个配对同时保持留在 Sprint 04。范围决定不等于新的验收细节已全部确认、Developer 已承诺容量或产品已完成。该范围的拆分记录见 [原 Sprint 03 拆分记录](sprint-03-usability-polish/SprintBacklog.md)；后续验收与执行以各新 Sprint Backlog 为准。
+2026-09-12，PO 确认 Sprint 03 范围纳入 PBI-09、PBI-10、PBI-12、PBI-13：PBI-12 先解决多个候选中辨认并选对当前目标，PBI-11 的多个配对同时保持留在 Sprint 04。范围决定不等于新的验收细节已全部确认、Developer 已承诺容量或产品已完成。拆分前完整 Planning 稿与 HOW v2.1 保留在提交 `a25860f`；后续验收与执行以各新 Sprint Backlog 为准。
 
 2026-09-13，PO 决定先推进 Sprint 04，并指定 Developer：以 1.0.0 为基线，先验证独立原型，再进行隔离真实会话测试与候选插件验收。日常插件安装、共享配置和在用桥保持原状；需要 PO 参与时由 SM 汇报。Sprint 03 的完整体验改进不再是 Sprint 04 的前置依赖。
 
