@@ -192,17 +192,45 @@ test('wake order reversed from creation order still delivers every message exact
   assert.ok(store.consumed(newer.id));
 });
 
-test('a repeated wake is suppressed and never re-injects the same message', async (t) => {
+test('a repeated wake on the same turn is allowed as a noop (I2b same-turn fix)', async (t) => {
   const { store, pairA } = setup(t);
   const letter = incoming(store, pairA, 'to be delivered once');
-  const first = handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, letter.id) }));
-  assert.match(first.hookSpecificOutput.additionalContext, /to be delivered once/);
-  const repeat = handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, letter.id) }));
+  // I2: the readable queue text carries the body, so the injection layer
+  // (additionalContext) supplies only the reply entry, never the body again.
+  const prompt = wakeText(pairA.id, letter.id, 'to be delivered once', letter.createdAt);
+  const first = handleHook(store, hookEvent('UserPromptSubmit', { prompt }));
+  assert.ok(first.hookSpecificOutput.additionalContext.includes('reply --to'));
+  assert.equal(first.hookSpecificOutput.additionalContext.includes('to be delivered once'), false, 'body must not be re-injected when the queue text already carries it');
+  // I2b: same turn (same turn_id 'test-turn') consumed wake → allow + noop, not block.
+  const repeat = handleHook(store, hookEvent('UserPromptSubmit', { prompt }));
+  assert.deepEqual(repeat, {});
+  const events = readFileSync(join(store.root, 'events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.equal(events.filter((e) => e.type === 'context-prepared').length, 1);
+  assert.equal(events.filter((e) => e.type === 'wake-same-turn-noop').length, 1);
+});
+
+test('a repeated wake across different turns is still suppressed (I2b cross-turn regression)', async (t) => {
+  const { store, pairA } = setup(t);
+  const letter = incoming(store, pairA, 'cross turn suppressed');
+  handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, letter.id, 'cross turn suppressed', letter.createdAt) }));
+  // I2b: different turn_id → suppress as before (S03-09-5 anti-dup).
+  const repeat = handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, letter.id, 'cross turn suppressed', letter.createdAt), turn_id: 'different-turn' }));
   assert.equal(repeat.decision, 'block');
   assert.match(repeat.reason, /already supplied to the conversation/);
   const events = readFileSync(join(store.root, 'events.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
-  assert.equal(events.filter((e) => e.type === 'context-prepared').length, 1);
   assert.equal(events.filter((e) => e.type === 'wake-suppressed').length, 1);
+  assert.equal(events.filter((e) => e.type === 'wake-suppressed')[0].receiptTurnId, 'test-turn');
+});
+
+test('a repeated wake with missing turnId is conservatively suppressed (I2b null-turnId path)', async (t) => {
+  const { store, pairA } = setup(t);
+  const letter = incoming(store, pairA, 'null turn suppressed');
+  // First call without turn_id: receipt.turnId = null.
+  handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, letter.id, 'null turn suppressed', letter.createdAt), turn_id: undefined }));
+  // Second call also without turn_id: both null → conservative suppress (cannot prove same-turn).
+  const repeat = handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, letter.id, 'null turn suppressed', letter.createdAt), turn_id: undefined }));
+  assert.equal(repeat.decision, 'block');
+  assert.match(repeat.reason, /already supplied to the conversation/);
 });
 
 test('a wake for an already-consumed target still delivers another pending target (no stranded letters)', async (t) => {
@@ -304,8 +332,8 @@ test('the real retire/publish window is reproduced and cannot strand or misroute
   assert.equal(delivered.id, staged.id);
   const receipt = JSON.parse(readFileSync(join(store.root, 'receipts', `${staged.id}.json`), 'utf8'));
   assert.equal(receipt.pairRetired, true);
-  // A repeat wake for the consumed retired letter is still suppressed.
-  const repeat = handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, staged.id) }));
+  // A repeat wake for the consumed retired letter across a new turn is still suppressed (I2b cross-turn).
+  const repeat = handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, staged.id, 'raced into the slot', staged.createdAt), turn_id: 'retire-repeat-turn' }));
   assert.equal(repeat.decision, 'block');
   assert.match(repeat.reason, /already supplied/);
   // Post-retirement, a NEW letter for the retired pair is refused at prepare.
@@ -477,7 +505,8 @@ test('Stop creates a continuation only for new messages, including after an earl
   assert.deepEqual(handleHook(store, hookEvent('Stop', { stop_hook_active: true })), {});
   const next = incoming(store, pairA, 'A different new message.');
   assert.ok(handleHook(store, hookEvent('Stop', { stop_hook_active: true })).reason.includes(next.body));
-  assert.equal(handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, first.id) })).decision, 'block');
+  // I2b: same turn consumed wake → noop (the Stop hook on the same turn already delivered it).
+  assert.deepEqual(handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, first.id, first.body, first.createdAt) })), {});
 });
 
 test('normal prompts and other sessions are not blocked or mistaken for bridge wakes', (t) => {
@@ -527,9 +556,13 @@ test('CLI sends a Claude message through the shared inbox and one exact queue wa
   assert.equal(result.status, 0, result.stderr);
   const sent = JSON.parse(result.stdout);
   assert.equal(sent.receipt, 'unverified');
-  assert.deepEqual(readJson(capture), ['queue', '--thread', codexId, '--message', wakeText(pairA.id, sent.messageId)]);
+  const msg = store.message(sent.messageId);
+  assert.deepEqual(readJson(capture), ['queue', '--thread', codexId, '--message', wakeText(pairA.id, sent.messageId, msg.body, msg.createdAt)]);
   assert.ok(existsSync(join(root, 'pending', pairA.id, 'message.json')));
-  assert.ok(handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, sent.messageId) })).hookSpecificOutput.additionalContext.includes('A short question.'));
+  // I2: the readable queue text carries the body; the injection layer returns
+  // only the reply entry (no duplicate body injection).
+  const hookResult = handleHook(store, hookEvent('UserPromptSubmit', { prompt: wakeText(pairA.id, sent.messageId, msg.body, msg.createdAt) }));
+  assert.ok(hookResult.hookSpecificOutput.additionalContext.includes('reply --to'), 'reply entry must be present at injection layer');
 });
 
 test('CLI reply from the Claude session queues exactly one wake for the original Codex thread', { skip: process.platform !== 'win32' }, (t) => {
@@ -546,7 +579,8 @@ test('CLI reply from the Claude session queues exactly one wake for the original
   assert.equal(result.status, 0, result.stderr);
   const sent = JSON.parse(result.stdout);
   assert.equal(sent.conversationId, question.conversationId);
-  assert.deepEqual(readJson(capture), ['queue', '--thread', codexId, '--message', wakeText(pairA.id, sent.messageId)]);
+  const msg = store.message(sent.messageId);
+  assert.deepEqual(readJson(capture), ['queue', '--thread', codexId, '--message', wakeText(pairA.id, sent.messageId, msg.body, msg.createdAt)]);
 });
 
 test('a changed Claude endpoint identity is rejected before any pipe write', (t) => {
