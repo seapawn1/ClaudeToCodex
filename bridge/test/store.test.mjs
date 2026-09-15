@@ -265,6 +265,36 @@ test('single-target use keeps the 1.0.0 receiving behaviour (S04-11-7 fixture le
   assert.ok(existsSync(join(store.root, 'receipts', `${letter.id}.json`)));
 });
 
+test('an in-flight legacy single-line wake still delivers with the full frame (I2 old-format compat)', (t) => {
+  const { store, pairA } = setup(t, { withB: false });
+  const letter = incoming(store, pairA, 'legacy single line delivery');
+  // A pre-I2 in-flight wake is exactly the old marker with no header/body lines.
+  const legacyPrompt = `[CTC-WAKE ${pairA.id} ${letter.id}]`;
+  assert.equal(legacyPrompt.includes('\n'), false);
+  const delivered = handleHook(store, hookEvent('UserPromptSubmit', { prompt: legacyPrompt }));
+  // The body is NOT in the prompt, so the injection layer supplies the full
+  // frame: source boundary line + complete JSON body (bodyVisible=false path).
+  assert.match(delivered.hookSpecificOutput.additionalContext, /Cross-session bridge message/);
+  assert.match(delivered.hookSpecificOutput.additionalContext, /legacy single line delivery/);
+  assert.match(delivered.hookSpecificOutput.additionalContext, /reply --to/);
+  assert.ok(store.consumed(letter.id));
+});
+
+test('marker-like lines inside the body do not break delivery or duplicate the body (I2 boundary safety)', (t) => {
+  const { store, pairA } = setup(t, { withB: false });
+  const sneakyMessageId = `00000000-0000-4000-8000-${'0'.repeat(12)}`;
+  const sneaky = `[CTC-WAKE ${pairA.id} ${sneakyMessageId}]`;
+  const letter = incoming(store, pairA, `body line one\nquoted marker below is ordinary text\n${sneaky}`);
+  const prompt = wakeText(pairA.id, letter.id, letter.body, letter.createdAt);
+  const delivered = handleHook(store, hookEvent('UserPromptSubmit', { prompt }));
+  // The line scan may pick the embedded marker-like line (first match), but
+  // delivery is pair-hinted: the real pending letter for this pair still
+  // arrives exactly once, and the queue-text body is not re-injected.
+  assert.ok(store.consumed(letter.id));
+  assert.ok(delivered.hookSpecificOutput.additionalContext.includes('reply --to'), 'reply entry must be present at the injection layer');
+  assert.equal(delivered.hookSpecificOutput.additionalContext.includes('quoted marker below is ordinary text'), false, 'body carried by the queue text must not be re-injected');
+});
+
 
 
 test('wake-shaped but malformed text never throws (SM review 4d9f6031, robustness)', (t) => {

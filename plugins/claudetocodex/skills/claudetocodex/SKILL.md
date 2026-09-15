@@ -35,7 +35,7 @@ Note: `connect` ambiguity lists RUNNING SESSIONS (sessionId/pid). Full pairIds a
 
 - Send with one target connected: `node "$PLUGIN_ROOT\bridge\cli.mjs" send --body "..."` (no `--name` needed).
 - Send with several targets: add `--name <unique part of the target's session name>`; replies always go to the message being answered, regardless of the last send.
-- A message from Claude arrives in this conversation with an embedded reply entry — a ready-to-run command carrying the data directory and CLI path. Run it with `--body` or `--body-file` to reply or follow up.
+- A message from Claude arrives in this conversation as a readable queued prompt (source header line, full body, trailing `[CTC-WAKE ...]` marker line). The hook-injected context carries an embedded reply entry — a ready-to-run command with the data directory and CLI path. Run it with `--body` or `--body-file` to reply or follow up; a queued message waiting for the next model call is normal state, not a fault.
 - Inspect state: `node "$PLUGIN_ROOT\bridge\cli.mjs" status` lists every pair (name, identity, project, pending).
 - Retire a target you are certain is no longer in use: `node "$PLUGIN_ROOT\bridge\cli.mjs" retire --pairId <full pairId from status or an ambiguity error>`; evidence is archived, never deleted.
 - Delivery evidence rule: judge receipt by a unique marker plus the receiving original session's events; `submitted:true` only means attempted delivery.
