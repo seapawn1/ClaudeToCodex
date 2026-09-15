@@ -275,9 +275,12 @@ async function main() {
   try {
     if (message.to.tool === 'codex') {
       store.publish(message);
+      // I2: pass the message body and creation timestamp into the readable
+      // queue text so the Codex side receives a human-readable prompt instead
+      // of the old single-line [CTC-WAKE ...] marker.
       const result = await execute('powershell.exe', [
         '-NoProfile', '-File', join(directory, 'delivery', 'BridgeQueue.ps1'),
-        '-ThreadId', pair.codexId, '-Wake', wakeText(pair.id, message.id),
+        '-ThreadId', pair.codexId, '-Wake', wakeText(pair.id, message.id, message.body, message.createdAt),
       ], { windowsHide: true, timeout: 15000 });
       store.event('wake-submitted', { messageId: message.id, output: result.stdout.trim() });
     } else {

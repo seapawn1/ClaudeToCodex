@@ -5,7 +5,6 @@ param(
     [string]$ThreadId,
 
     [Parameter(Mandatory = $true)]
-    [ValidatePattern('^\[CTC-WAKE [0-9a-fA-F-]{36} [0-9a-fA-F-]{36}\]$')]
     [string]$Wake
 )
 
