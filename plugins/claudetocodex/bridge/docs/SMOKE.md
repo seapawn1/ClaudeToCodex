@@ -75,11 +75,11 @@ S05 系数据根为自动选择（不设环境变量即真实路径）；`status
 
 | 格号 | 场景 | 验证方式 | 判据要点 | 证据位置（填写） |
 |---|---|---|---|---|
-| S03-1 | 可读排队到达 | 现场 | 空闲 Codex 收到 Claude 消息：排队文本为 头行 `[Source: bridge message \| <时间>]` + 完整正文 + 独立 `[CTC-WAKE ...]` 标记行，线程历史可见、无截断无报错；hook 注入层含可执行回复入口且不重复注入正文 | _待填_ |
-| S03-2 | 同轮双 hook 放行 | 现场 | 项目级+插件级双注册形态下同一条消息同轮被两个 handler 处理：第二个 handler 放行（`wake-same-turn-noop` 事件），模型正常运行不空结束（2026-09-14 事故为回归锚点） | _待填_ |
-| S03-3 | 跨轮重复抑制 | 现场 | 已消费消息在**新一轮**的重复唤醒仍被抑制（`wake-suppressed` 事件），正文不重复注入 | _待填_ |
-| S03-4 | 忙碌多条堆叠 | 现场 | Codex 工作中两条 Claude 消息先后排队：当前调用完整不破坏，随后调用前逐条进入，排队行堆叠仍可读 | _待填_ |
-| S03-5 | 在途旧格式兼容 | 现场 | 升级前遗留的单行 `[CTC-WAKE ...]` 唤醒仍可解析投递（fallback 全文匹配） | _待填_ |
+| S03-1 | 可读排队到达 | 现场 | 空闲 Codex 收到 Claude 消息：排队文本为 头行 `[Source: bridge message \| <时间>]` + 完整正文 + 独立 `[CTC-WAKE ...]` 标记行，线程历史可见、无截断无报错；hook 注入层含可执行回复入口且不重复注入正文 | PASS — I7 `b022e48b` / `02074f66`：Source 头行 + 完整正文 + 尾部 marker；reply 入口在注入层，正文不重复。见 Sprint 03 Review。 |
+| S03-2 | 同轮双 hook 放行 | 现场 | 项目级+插件级双注册形态下同一条消息同轮被两个 handler 处理：第二个 handler 放行（`wake-same-turn-noop` 事件），模型正常运行不空结束（2026-09-14 事故为回归锚点） | PASS — I7 真实双 hook 形态：第二个 handler 同轮 `wake-same-turn-noop`，模型正常续跑。见 Sprint 03 Review。 |
+| S03-3 | 跨轮重复抑制 | 现场 | 已消费消息在**新一轮**的重复唤醒仍被抑制（`wake-suppressed` 事件），正文不重复注入 | PASS — I7 `0f3bec2c` / `489c3905` / `02074f66` 在新 turn `wake-suppressed`，正文不重复注入。见 Sprint 03 Review。 |
+| S03-4 | 忙碌多条堆叠 | 现场 | Codex 工作中两条 Claude 消息先后排队：当前调用完整不破坏，随后调用前逐条进入，排队行堆叠仍可读 | PASS — I7 `0f3bec2c` / `489c3905` 在 busy turn 排队，当前调用完整，随后逐条经 PostToolUse 进入。见 Sprint 03 Review。 |
+| S03-5 | 在途旧格式兼容 | 现场 | 升级前遗留的单行 `[CTC-WAKE ...]` 唤醒仍可解析投递（fallback 全文匹配） | PASS with note — `053c2528` 旧单行 marker 兼容投递完整 frame；send-error / 手工恢复为测试偏差，非候选缺陷。见 Sprint 03 Review。 |
 
 S03 系在安装候选上执行；S03-2 的双注册形态以宿主实际注册为准记录，不人为构造未声明的 hook。
 

@@ -1,4 +1,4 @@
-# ClaudeToCodex 1.2.0 安装与使用（Codex CLI 插件）
+# ClaudeToCodex 1.3.0 安装与使用（Codex CLI 插件）
 
 首用路径：**安装插件 → 必要授权 → 按名称连接 Claude 会话 → 交流**。Claude 侧无需安装任何东西；你不需要复制会话 ID、登记端点或管理桥数据目录。
 
@@ -12,7 +12,7 @@
 ## 1. 安装插件
 
 ```powershell
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.2.0
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.3.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
 
@@ -34,18 +34,18 @@ codex plugin add claudetocodex@claudetocodex-dev
 
 对 Codex 自然语言下达任务、回复或追问。Claude 来信以可读排队消息到达（来源头行 + 完整正文 + 独立标记行），自带可执行回复入口；回复沿被回复消息回到原目标，不随最近一次发送切换。另一目标不会收到误投事件。任务运行中到达的消息先排队、不打断当前调用，随后调用前进入上下文——**排队中是正常状态，不是故障**。
 
-## 从 1.1.0 更新
+## 从 1.2.0 更新
 
 Codex 0.154 没有通用 `plugin update` 子命令。若已有 `claudetocodex-dev` marketplace，可按包管理习惯移除后重新添加，或直接更新该 marketplace 指向的 ref 后移除 / 重装插件：
 
 ```powershell
 codex plugin remove claudetocodex@claudetocodex-dev
 codex plugin marketplace remove claudetocodex-dev
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.2.0
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.3.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
 
-保留 `%LOCALAPPDATA%\ClaudeToCodex` 下的桥数据，除非明确要抛弃历史证据。1.2.0 会按 Codex 会话自动选择数据根，无需手工迁移。安装路径变化后如 `/hooks` 要求重新信任，按提示人工确认并完全退出 / resume 会话。
+保留 `%LOCALAPPDATA%\ClaudeToCodex` 下的桥数据，除非明确要抛弃历史证据。1.3.0 沿用按 Codex 会话自动选择数据根的能力，无需手工迁移。安装路径变化后如 `/hooks` 要求重新信任，按提示人工确认并完全退出 / resume 会话。
 
 ## 排查与内部命令
 

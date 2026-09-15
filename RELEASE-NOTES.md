@@ -1,3 +1,42 @@
+# ClaudeToCodex 1.3.0 版本说明（正式发布）
+
+> 状态：正式发布版本。该版本已通过隔离安装候选、SM 真实宿主验证和 PO 手动端到端验收；安装入口固定 `v1.3.0` tag。Sprint 过程收口另有 `sprint-03-readable-arrival-review-retro` tag。
+
+## 版本
+
+- **版本**：1.3.0（Codex CLI 插件）
+- **主题**：可读到达与自动继续（PBI-09）。
+- **实现源提交**：`04f002e`；1.3.0 收口提交仅追加版本、Review / Retro、Backlog 与记忆等发布材料，不改变已验收运行时代码。
+
+## 新增能力
+
+- Claude→Codex 排队唤醒改为多行可读消息：来源头行、完整正文、独立尾部 `[CTC-WAKE ...]` 标记行。
+- hook 注入层保留可执行回复入口；正文已在排队文本中时不再重复注入。
+- 空闲到达自动触发下一次 Codex 处理；工作中到达先排队，不破坏当前模型调用或工具执行，并在随后调用前进入上下文。
+- 同轮双 hook 重复处理放行并记录 noop；跨轮重复唤醒继续抑制。
+- 在途旧单行 wake marker 继续兼容。
+- 采用尾部 marker 规则：正文内嵌的完整有效 marker（包括指向其他 pair 的伪造 marker）不得劫持路由；跨 pair 伪造 marker 与堆叠真实 wakeText 均有回归。
+
+## 已验证环境
+
+Windows 10 Pro 19045、PowerShell 5.1、Node.js v24.14.0、Codex CLI 0.154.0、Claude Code 2.1.268。
+
+## 验证摘要
+
+- 产品回归：**87/87 × 双树**（`bridge/` 与 `plugins/claudetocodex/bridge/` 同套通过）。
+- 隔离安装候选：`claude-to-codex-plugin-1.2.0.zip`（sourceCommit `04f002e`），SHA256 `892d029962f063c4a56faa9464188596cff2e2a5fccaa942e14a5f4a153e74aa`；安装缓存关键文件 hash 与 manifest 匹配，缓存树 87/87 通过。
+- SM 真实宿主验证：S03-1 可读排队、S03-2 同轮双 hook 放行、S03-3 跨轮重复抑制、S03-4 忙碌两条堆叠、S03-5 旧单行兼容均 PASS；S03-5 的 send-error / 手工恢复记录为测试偏差，候选按兼容路径投递完整 frame。
+- PO 手动 E2E：真实四段往返请求、回复、追问、再答自动关联；PO 无需催问复述、人工搬运或读取 bridge 数据文件，并明确表示验收通过。
+- 完整 Review / Retro / 证据索引见 `docs/scrum-sprint/sprint-03-readable-arrival-review-retro.md`。
+
+## 边界与限制
+
+- Windows-only；短文本 trim 后 1..2000 字符；串行逐事件注入；回执仍为 `unverified`。
+- 不承诺广播、自动重试、自动恢复、自动启动 / 终止进程、跨机器或跨平台能力。
+- 正文内容不解析、不改写；marker 解析仅识别锚定整行格式，并按尾部 marker 规则处理。
+- 未验证任意宿主异常注入形态、任意跨版本升级路径或未来 CLI 兼容性。
+
+---
 # ClaudeToCodex 1.2.0 版本说明（正式发布）
 
 > 状态：正式发布版本。该版本已通过隔离安装候选、SMOKE 4c R1–R6 与 PO 手动端到端验收；安装入口固定 `v1.2.0` tag。Sprint 过程收口另见 `sprint-05-bridge-root-review-retro`。

@@ -2,14 +2,14 @@
 
 运行于本机（Windows）的 Codex ↔ Claude Code 跨会话双向消息桥，以 **Codex CLI 插件**分发。安装并完成必要授权后，对 Codex 说「连接 Claude 会话 <名字>」即可开始互发工作消息、回复与追问；一个 Codex 会话可同时保持多个 Claude 会话，按名称选择目标，无需为换对象拆除另一条连接。
 
-## 正式获取（v1.2.0）
+## 正式获取（v1.3.0）
 
 ```powershell
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.2.0
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.3.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
 
-> v1.2.0 是 Sprint 05 正式发布版本，已通过隔离安装候选、SMOKE 4c R1–R6 与 PO 手动端到端验收。Sprint 过程收口另有 `sprint-05-bridge-root-review-retro` tag。
+> v1.3.0 是 Sprint 03 正式发布版本，已通过隔离安装候选、SM 真实宿主验证和 PO 手动端到端验收。Sprint 过程收口另有 `sprint-03-readable-arrival-review-retro` tag。
 
 ## 使用四步
 
@@ -27,20 +27,26 @@ codex plugin add claudetocodex@claudetocodex-dev
 - 一个 Codex 原始会话对至少两个 Claude 原始会话：配对共存、按名路由、回复归属、每配对待收槽、相近来信、显式退役/重建、单目标与 legacy `pair.json` 兼容。
 - Sprint 05 起，per-Codex 数据根自动选择与 resume 复用；默认 root 属于其他 Codex 时自动让位新 root；Claude→Codex 连续官方投递、pending 清空、跨 root wake 诊断和并发首连索引安全已验证。
 - 短文本 trim 后 1..2000 字符；串行逐事件注入；回执恒 `unverified`；不承诺任意规模、广播、并发吞吐、自动重试或自动恢复。
-- Sprint 03 候选（PBI-09，待验收发布）：Claude→Codex 排队唤醒为多行可读消息（来源头行 + 完整正文 + 独立标记行），回复入口由 hook 注入层提供、正文不重复注入；同轮双 hook 重复处理放行（留可观测事件），跨轮真重复唤醒仍抑制；在途旧单行 wake 兼容。多行格式已在隔离安装候选上经 TE1 首验（2026-09-15，SM 独立验证）。
+- Sprint 03 起，Claude→Codex 排队唤醒为多行可读消息（来源头行 + 完整正文 + 独立尾部标记行），回复入口由 hook 注入层提供、正文不重复注入；空闲到达自动继续，工作中排队不打断当前调用；同轮双 hook 重复处理放行，跨轮真重复唤醒仍抑制；在途旧单行 wake 兼容，正文伪造 marker 不劫持路由。PO 已完成真实四段往返验收。
 
 ## 文档
 
 - [INSTALL.md](INSTALL.md)：安装、升级注意与使用。
-- [RELEASE-NOTES.md](RELEASE-NOTES.md)：1.2.0 Sprint 05 验证与历史版本。
+- [RELEASE-NOTES.md](RELEASE-NOTES.md)：1.3.0 Sprint 03 验证与历史版本。
 - [bridge/docs/USAGE.md](bridge/docs/USAGE.md)：完整使用与排查。
 - [bridge/docs/SMOKE.md](bridge/docs/SMOKE.md)：端到端冒烟与证据规则。
+- [Sprint 03 Review](docs/scrum-sprint/sprint-03-readable-arrival-review-retro.md)：可读到达与自动继续 Increment 验收、回顾与追溯。
+
 - [Sprint 05 Review](docs/scrum-sprint/sprint-05-bridge-root-consistency-review-retro.md)：自动数据根与连续投递 Increment 验收、回顾与追溯。
 - [Sprint 04 Review](docs/scrum-sprint/sprint-04-multi-claude-sessions-review-retro.md)：多配对 Increment 验收、价值检视与回顾。
 - [Sprint 02 Review](docs/scrum-sprint/sprint-02-install-package-release-review.md)：1.0.0 插件发布回顾。
 - [Product Backlog](scrum/ProductBacklog.md)：产品目标、DoD 与后续待办。
 
 ## 版本与 Sprint 标签
+
+- **`v1.3.0`**：可读到达与自动继续正式版本，发布物由 v1.3.0 收口提交构建并经 manifest / SHA256 追溯。
+
+- **`sprint-03-readable-arrival-review-retro`**：Sprint 03 Review/Retro 收口 tag，与 v1.3.0 指向同一提交。
 
 - **`v1.2.0`**：自动会话数据根与连续官方投递正式版本，发布物由 v1.2.0 提交构建并经 manifest / SHA256 追溯。
 - **`sprint-05-bridge-root-review-retro`**：Sprint 05 Review/Retro 收口 tag，保留完整过程与证据追溯。
