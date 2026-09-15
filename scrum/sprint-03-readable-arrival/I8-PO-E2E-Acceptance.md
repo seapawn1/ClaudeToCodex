@@ -1,9 +1,9 @@
-# Sprint 03 I8：PO 手动端到端验收方案
+﻿# Sprint 03 I8：PO 手动端到端验收方案
 
 - 日期：2026-09-15
-- 状态：待 PO 执行
+- 状态：PASS（2026-09-16，PO 验收通过）
 - 目的：验证 Sprint Goal v2 的真实协作价值，而不是重复 I7 技术测试矩阵。
-- 候选：安装候选 sourceCommit `04f002e`；实现记录分支 HEAD `e3c8e63`，未合并 `main`。
+- 候选：安装候选 sourceCommit `04f002e`；实现记录分支 `s03-implementation-dev-20260915`，未合并 `main`。
 - 参与者：PO 执行真实体验；SM 准备环境并记录证据；Developer 不参与实现，除非 I8 失败后返修。
 
 ## 1. 验收问题
@@ -147,16 +147,30 @@ PO 完成后填写以下观察。可用“是 / 否 / 说明”。
 
 | # | 观察 | 结果 | 备注 |
 |---|---|---|---|
-| 1 | 我直接理解了 Claude 的答复 |  |  |
-| 2 | 我没有让 Codex 复述 Claude 回复 |  |  |
-| 3 | 我没有人工搬运文本 |  |  |
-| 4 | 我没有翻查数据文件 |  |  |
-| 5 | 空闲回复自动推动下一次处理 |  |  |
-| 6 | 工作中到达没有打断当前任务 |  |  |
-| 7 | 排队 / 到达状态没有被误报为故障 |  |  |
-| 8 | 来源、正文、回复去向可信 |  |  |
-| 9 | Claude 侧没有回退 |  |  |
-| 10 | 我愿意在日常协作中继续使用此体验 |  |  |
+| 1 | 我直接理解了 Claude 的答复 | 是 | PO 明确确认直接理解答复 |
+| 2 | 我没有让 Codex 复述 Claude 回复 | 是 | PO 明确确认无需复述 |
+| 3 | 我没有人工搬运文本 | 是 | 四段链路由 bridge 自动关联 |
+| 4 | 我没有翻查数据文件 | 是 | PO 只在 I8 Codex 窗口操作 |
+| 5 | 空闲回复自动推动下一次处理 | 是 | 事件链含 wake-submitted 与 context-prepared |
+| 6 | 工作中到达没有打断当前任务 | 通过 | I8 整体无异常；专项边界由 I7 S03-4 PASS 覆盖 |
+| 7 | 排队 / 到达状态没有被误报为故障 | 是 | PO 整体验收通过 |
+| 8 | 来源、正文、回复去向可信 | 是 | PO 能辨认外来答复；replyTo 链完整 |
+| 9 | Claude 侧没有回退 | 是 | PO 整体验收通过 |
+| 10 | 我愿意在日常协作中继续使用此体验 | 是 | PO 明确表示“整体非常好，验收通过” |
+
+### I8 结果：PASS（2026-09-16）
+
+- PO 明确结论：**“整体非常好，我验收通过了。”**
+- 首答观察：直接理解 Claude 答复；能辨认这是 Claude 的外来答复而非 Codex 自编；没有同一大段正文重复注入造成阅读干扰。
+- 追问观察：追问自然发出；Claude 收到并理解上下文；PO 不需要手动复制首轮回复。
+- 真实四段链路：
+  - 请求 `6693e12f-62a4-4db9-81f9-100b530437c5`（Codex → Claude）
+  - 回复 `ea40d45d-8ad9-462a-a953-b17e14022fbe`（Claude → Codex，replyTo 请求）
+  - 追问 `0df90299-369c-400a-8958-92ca0ae891b4`（Codex → Claude）
+  - 再答 `e65ea5c5-35c2-48e3-b8eb-288d362033e0`（Claude → Codex，replyTo 追问）
+- SM 原始事件证据：两次 Claude→Codex 到达均有 `created → published → wake-submitted → context-prepared`，并伴随同轮 `wake-same-turn-noop`；重复唤醒在新 turn 被 `wake-suppressed`，receiptTurnId 可追溯。
+- 环境：安装候选 sourceCommit `04f002e`；I8 Codex thread `01a0a5c1-d151-79a1-8682-dd16aab0237b`；Claude `172e752e-9956-408c-979f-87ea5049e4fa`；pair `6a4c614d-f36a-4236-8b9a-91e21912b932`。
+- 工作中到达未在 I8 中单独复测；该判据由 I7 S03-4 两条真实 PostToolUse 到达证据覆盖，且 I8 整体体验无异常。
 
 ## 5. I8 PASS 判定
 

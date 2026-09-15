@@ -2,7 +2,7 @@
 
 - 创建：2026-09-14；拆分自原"日常桥接体验与连接控制"Planning 稿。
 - 范围：PO 决定聚焦 PBI-09；PBI-10 / 13 拆至 [Sprint 06](../sprint-06-connection-control/SprintBacklog.md)，PBI-12 拆至 [Sprint 07](../sprint-07-target-identification/SprintBacklog.md)。
-- 状态：施工进行中——实现分支 `s03-implementation-dev-20260915`（HEAD `02cbaf1`，未合并 main）。I0/I2/I2b/I6/I7 完成；安装候选 sourceCommit `04f002e`（隔离缓存 hash 核对一致）。S03-1..5 现场格与 S03-09-6 四段往返技术验证 PASS（SM 真实会话证据，见工作项与进展）。剩余 I8（PO 手动 E2E）与 SM AC 独立核对。
+- 状态：Increment 已通过 PO I8 验收——实现分支 `s03-implementation-dev-20260915` 保持隔离，未合并 main；安装候选 sourceCommit `04f002e`。I0/I2/I2b/I6/I7/I8 完成，S03-09-1..7 与 Output/Outcome DoD 均判定 PASS。剩余 Sprint Review、Retro 与合并 / 发布决策。
 - 参与者：PO（主持人）、SM / Codex、Developer / Claude Code。
 - 节奏：按 PO 决定，不设固定 timebox；以 Sprint Goal、AC 与 DoD 收口。
 
@@ -86,6 +86,22 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 3. **09-4/I8 证据采集**：工作中到达时，记录 PO 前端实际看到什么（只记录不判定 pass/fail）。
 4. **09-1 回归确认**：I2 瘦身后，回复入口仍在注入层完整保留。
 5. **I6 回归场景**：忙碌时多条到达排队堆叠仍可读。
+
+### 最终 SM 验收核对（2026-09-16，安装候选 `04f002e`）
+
+| 判据 | 结果 | 证据摘要 |
+|---|---|---|
+| S03-09-1 呈现结构 | PASS | I7/I8 真实会话呈现 Source 头行、完整正文、独立 marker；reply entry 在 hook 注入层，正文不重复 |
+| S03-09-2 来源边界 | PASS | Codex 侧保留简短来源声明；PO 能辨认外来答复；对端内容未提升为 PO 指令 |
+| S03-09-3 唤醒与提示 | PASS | 排队 / 到达未误报故障；唤醒、已处理、重复抑制语义可理解 |
+| S03-09-4 原会话行为 | PASS | 空闲到达自动触发；I7 S03-4 两条消息在 busy turn 的 PostToolUse 边界进入且不破坏当前调用 |
+| S03-09-5 兼容与防重复 | PASS | I7 S03-3 跨轮 `wake-suppressed` 含 receiptTurnId；I7 S03-5 marker-only 兼容；I8 无重复注入体验 |
+| S03-09-6 真实往返 | PASS | I8 四段链 `6693e12f → ea40d45d → 0df90299 → e65ea5c5`，replyTo / pair 关联完整 |
+| S03-09-7 到达即可理解答复 | PASS | PO 确认直接理解、来源可辨认、无重复干扰、无需复述 / 搬运 / 查文件，并整体验收通过 |
+| Output Done | PASS | `04f002e` 安装候选经隔离缓存 hash、hooks、manifest、缓存内 87/87 测试与真实会话验证 |
+| Outcome Done | PASS | PO 在 I8 真实使用中确认 Goal v2 价值实现，明确验收通过 |
+
+结论：PBI-09 Increment 达成 Sprint 03 验收要求。Sprint 03 待召开 Review 与 Retro；实现分支在 Review / PO 合并决策前不合并 `main`。
 
 ### Planning 证据与决定（2026-09-14，v2 更新）
 
@@ -268,3 +284,4 @@ TE1 失败立即回三方重议；降级方案 B 也须由 PO 决定，不得静
 - 2026-09-15（I7 隔离安装核对，SM 授权后执行）：全新隔离 home `C:\Users\DELL\.claude\jobs\abaad007\tmp\s03-i7-isolated-home`（不复用 TE1 home）。安装命令：`CODEX_HOME=<隔离home>` 下 `codex plugin marketplace add <worktree>` + `codex plugin add claudetocodex@claudetocodex-dev`；installedPath `<隔离home>\plugins\cache\claudetocodex-dev\claudetocodex\1.2.0`，23 文件（插件树；manifest/RELEASE-NOTES 不入缓存属安装器常态）。核对：缓存 store.mjs SHA256 `8315ea61…` = 候选 v2 manifest 值；BridgeQueue.ps1、entry.mjs hash 同 MATCH；plugin.json version 1.2.0；hooks.json 三条（UserPromptSubmit/PostToolUse/Stop）均 `node "${PLUGIN_ROOT}/bridge/cli.mjs" hook`；尾部 marker 修复（store.mjs:577）与 I2b noop（:647）缓存在位；**安装缓存目录内全量测试 87/87 绿**（node --test test/*.test.mjs，执行目录=缓存 bridge/）。**BLOCKED**：S03-1..5 现场格需真实宿主会话与 PO hook trust（宿主交互），不得绕过——待 PO/SM 安排。
 - 2026-09-15（S03 现场格证据，第 1/2 批）：SM 在全新隔离 home + `04f002e` 候选 + 真实会话完成 S03-1..3，全 PASS。环境：Codex `01a0a583…`、Claude `7507d698…`、pair `36ae4c88…`、bridge root `01a0a583…`。S03-1 PASS（`b022e48b`/`02074f66`：Source 头行+完整正文+尾部 marker；事件链 created→published→wake-submitted→context-prepared；正文不重复注入）。S03-2 PASS（两条消息均有 same-turn noop 事件——双 handler 同轮放行实证）。S03-3 PASS（`0f3bec2c`/`489c3905`/`02074f66` 在新 turn 均 wake-suppressed，含 current turnId 与 receiptTurnId 字段）。S03-4/S03-5 证据待 SM 第 2 批。
 - 2026-09-15（S03 现场格证据，第 2/2 批 + 09-6）：**S03-4 PASS**（`0f3bec2c`=STACK-A、`489c3905`=STACK-B 在 busy turn `01a0a595` 内先排队，随后分别在不同 PostToolUse 边界 context-prepared；当前调用未破坏、逐条可读）。**S03-5 PASS with note**（`053c2528` 为测试操作误用主树 pre-I2 CLI 产生的旧单行 marker，随后手动恢复；候选 hook 按 marker-only 兼容路径投递完整 frame——send-error/手工恢复记录为**测试偏差，非候选缺陷**）。**S03-09-6 PASS**（`7339696d`→`b022e48b`→`b3b34b83`→`053c2528` 四段链闭合，conversationId 一致；`00e79075` 确认头行/marker/正文未截断）。**I7 现场格全部完成；S03-5 的测试偏差如实留痕。**
+- 2026-09-16（I8 PASS）：PO 在安装候选 `04f002e` 上完成真实四段往返 `6693e12f`（请求）→ `ea40d45d`（回复）→ `0df90299`（追问）→ `e65ea5c5`（再答）。PO 确认：直接理解 Claude 答复、能辨认外来来源、无正文重复干扰；追问自然、Claude 理解上下文、无需手动复制。SM 记录两次 Claude→Codex 到达均有 `created → published → wake-submitted → context-prepared`，同轮重复 hook 为 noop，跨轮重复被抑制。PO 最终结论：**“整体非常好，我验收通过了。”** S03-09-1..7 与 DoD 全部 PASS；剩余 Review / Retro / 合并发布决策。
