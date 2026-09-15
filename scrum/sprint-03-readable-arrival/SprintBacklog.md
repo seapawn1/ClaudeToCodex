@@ -227,6 +227,7 @@ DoD 映射：
 施工前独立预研：无。PO 已取消独立 Prototype to Decide；以下作为施工内首验：
 
 - TE1：宿主 UserPromptSubmit 对多行排队文本的行为——是否可见、截断、重排或报错。
+  - 结果（2026-09-15，SM 独立验证）：**PASS**。隔离 Codex home + 安装候选 7052c60 + 专用 Claude 会话（S03-TE1-Claude-7052c60，22a9051c）完成真实双向往返。Codex 线程历史直接捕获新多行排队格式：头行 `[Source: bridge message | <timestamp>]`、完整 10+ 行正文、独立 `[CTC-WAKE <pairId> <messageId>]` marker 行；无截断、无报错。事件链 `created → published → wake-submitted → context-prepared` 证明空闲自动触发成功。消息链 `d6c1f91d`（Codex→Claude 请求）→ `1f0c2e43`（Claude→Codex 回复，多行正文）→ `a9d58b11`（Codex→Claude 追问确认）完成请求—回复—追问闭环；replyTo 关联完整。TE1 Claude 独立确认双侧入站帧字段和正文逐字可读。方案 A（多行可读 + 行扫描）在真实宿主可行，无需降级方案 B。
 - TE2：在途旧格式样本量，影响 I6 回归时间。
 - TE3：`turnId=null` 的实际比例与事件可观测性。
 
