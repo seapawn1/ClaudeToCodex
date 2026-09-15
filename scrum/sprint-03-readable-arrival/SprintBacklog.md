@@ -2,7 +2,7 @@
 
 - 创建：2026-09-14；拆分自原"日常桥接体验与连接控制"Planning 稿。
 - 范围：PO 决定聚焦 PBI-09；PBI-10 / 13 拆至 [Sprint 06](../sprint-06-connection-control/SprintBacklog.md)，PBI-12 拆至 [Sprint 07](../sprint-07-target-identification/SprintBacklog.md)。
-- 状态：Sprint Planning 已于 2026-09-15 定稿关闭；Goal v2、AC v2 与 HOW v04.1 经 Developer 落盘复核通过。Developer 已获施工授权，未写代码。
+- 状态：施工进行中——实现分支 `s03-implementation-dev-20260915`（HEAD `02cbaf1`，未合并 main）。I0/I2/I2b/I6/I7 完成；安装候选 sourceCommit `04f002e`（隔离缓存 hash 核对一致）。S03-1..5 现场格与 S03-09-6 四段往返技术验证 PASS（SM 真实会话证据，见工作项与进展）。剩余 I8（PO 手动 E2E）与 SM AC 独立核对。
 - 参与者：PO（主持人）、SM / Codex、Developer / Claude Code。
 - 节奏：按 PO 决定，不设固定 timebox；以 Sprint Goal、AC 与 DoD 收口。
 
@@ -117,7 +117,7 @@ Increment 已集成到产品中，可通过标准产品入口使用，通过与�
 
 ### 基本 HOW（v04.1，2026-09-15 定稿；Developer 主导，SM 二审与落盘复核通过）
 
-定位：本 Sprint 仅 PBI-09。Developer 依据 Goal v2、AC v2 与 Empathize/Define 证据主导技术方案；SM 对抗审阅通过。v04.1 修正了 v04 中"回复入口放入排队文本"的层级错误，明确回复入口只在 hook 注入层。落稿不代表已实现；Developer 未写代码。
+定位：本 Sprint 仅 PBI-09。Developer 依据 Goal v2、AC v2 与 Empathize/Define 证据主导技术方案；SM 对抗审阅通过。v04.1 修正了 v04 中"回复入口放入排队文本"的层级错误，明确回复入口只在 hook 注入层。**施工现状（2026-09-15）**：I0/I2/I2b/I6/I7 已在实现分支完成（HEAD `02cbaf1`）；SM 对抗复核发现的跨 pair marker 误路由已修复（`04f002e`，尾部 marker 规则）并以双回归钉死；安装候选经隔离 home 安装核对（缓存 hash 一致）与真实会话现场验证（S03-1..5、09-6 全 PASS）。剩余 I8（PO 手动 E2E）。
 
 **基线事实（I0，已完成）**：Node v24.14.0、codex-cli 0.154.0、Claude Code 2.1.268；源基线 main `15309b2`，拆分提交 `6986df8`（Planning 基线 `a25860f`）。日常插件缓存仅 1.2.0。日常环境存在项目级 + 插件级双 hook 注册；I2b 的目标是让该共存形态功能安全，不能当作已具备能力。
 
