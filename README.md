@@ -27,7 +27,7 @@ codex plugin add claudetocodex@claudetocodex-dev
 - 一个 Codex 原始会话对至少两个 Claude 原始会话：配对共存、按名路由、回复归属、每配对待收槽、相近来信、显式退役/重建、单目标与 legacy `pair.json` 兼容。
 - Sprint 05 起，per-Codex 数据根自动选择与 resume 复用；默认 root 属于其他 Codex 时自动让位新 root；Claude→Codex 连续官方投递、pending 清空、跨 root wake 诊断和并发首连索引安全已验证。
 - 短文本 trim 后 1..2000 字符；串行逐事件注入；回执恒 `unverified`；不承诺任意规模、广播、并发吞吐、自动重试或自动恢复。
-- 已知非阻塞体验问题：Codex 前端不总是展开 bridge 原文，且模型可能需要 PO 催问后才主动转述；由 PBI-09 跟踪。
+- Sprint 03 候选（PBI-09，待验收发布）：Claude→Codex 排队唤醒为多行可读消息（来源头行 + 完整正文 + 独立标记行），回复入口由 hook 注入层提供、正文不重复注入；同轮双 hook 重复处理放行（留可观测事件），跨轮真重复唤醒仍抑制；在途旧单行 wake 兼容。多行格式已在隔离安装候选上经 TE1 首验（2026-09-15，SM 独立验证）。
 
 ## 文档
 

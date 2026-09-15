@@ -574,9 +574,25 @@ export function handleHook(store, event, locate = null) {
     // remaining compatible with legacy single-line [CTC-WAKE ...].
     const prompt = event.prompt ?? '';
     const WAKE_RE = /^\[CTC-WAKE ([0-9a-f-]{36}) ([0-9a-f-]{36})\]$/i;
+    // Trailing-marker rule: wakeText always emits the real marker as the LAST
+    // line, so any marker-shaped line inside the body precedes it. Taking the
+    // LAST match keeps a body-embedded marker that names a DIFFERENT pair from
+    // hijacking the pair routing hint and consuming that pair's pending letter
+    // (SM adversarial review 2026-09-15: cross-pair misroute reproduced with
+    // first-match). A single-line legacy prompt has exactly one match, so
+    // first == last and old-format behaviour is unchanged.
+    //
+    // Host invariant (S03-4 stacking semantics): the Codex host submits each
+    // queued item as its OWN UserPromptSubmit (one marker per prompt) — TE1's
+    // message chain d6c1f91d/1f0c2e43/a9d58b11 and S05 R5 continuous delivery
+    // each entered via separate hook events. Should a host ever stack two real
+    // wake texts into one prompt, the trailing rule stays deterministic: the
+    // LAST marker routes this delivery, every remaining pending letter keeps
+    // its FIFO slot and enters on the next delivery opportunity — nothing is
+    // lost, duplicated, or misrouted.
     for (const line of prompt.split('\n')) {
       const m = WAKE_RE.exec(line.trim());
-      if (m && UUID.test(m[1]) && UUID.test(m[2])) { wake = m; break; }
+      if (m && UUID.test(m[1]) && UUID.test(m[2])) wake = m;
     }
     // Legacy fallback: in-flight old-format single-line full-string match
     if (!wake) {
