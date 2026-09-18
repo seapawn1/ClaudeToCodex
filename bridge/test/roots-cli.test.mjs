@@ -12,8 +12,9 @@ import { readIndex } from '../roots.mjs';
 // Sprint 05 / PBI-15 end-to-end resolution: connect without CTC_BRIDGE_DIR
 // against an occupied default root, then prove the Codex hook finds the
 // per-thread root by the event's session_id alone - the exact mechanism the
-// 9-13 incident broke. The children get a private LOCALAPPDATA and index file
-// so no machine state is touched.
+// 9-13 incident broke. The children get a private data base dir (both the
+// Windows and the POSIX location rules) and index file so no machine state is
+// touched.
 
 const execute = promisify(execFile);
 const cli = fileURLToPath(new URL('../cli.mjs', import.meta.url));
@@ -34,12 +35,15 @@ test.after(() => {
 });
 
 function writeSession(pid, name, sessionId) {
+  // Platform-native endpoint shape: named pipe on Windows, absolute UDS path
+  // elsewhere. connect never dials it here; it only has to validate.
+  const socket = process.platform === 'win32' ? '\\\\.\\pipe\\LOCAL\\ctc-roots-cli-pipe' : join(registry, 'ctc-roots-cli.sock');
   writeFileSync(join(registry, `${pid}.json`), JSON.stringify({
-    pid, sessionId, name, messagingSocketPath: '\\\\.\\pipe\\LOCAL\\ctc-roots-cli-pipe',
-    status: 'idle', cwd: 'C:\\nowhere', startedAt: Date.now(), updatedAt: Date.now(),
+    pid, sessionId, name, messagingSocketPath: socket,
+    status: 'idle', cwd: '/nowhere', startedAt: Date.now(), updatedAt: Date.now(),
   }));
   writeFileSync(join(registry, `${pid}.abcdef.key`), JSON.stringify({
-    peerToken: 'token-roots-cli', procStartFt: 134333582258617163, pidDomain: 'win32:test',
+    peerToken: 'token-roots-cli', procStartFt: 134333582258617163, pidDomain: 'test',
   }));
 }
 
@@ -50,13 +54,15 @@ const paths = () => ({
   indexDir: join(base, 'ClaudeToCodex', 'bridge-roots'),
 });
 
-// Child env: private LOCALAPPDATA + index, Codex identity only, and no bridge
-// env - the whole point is exercising the no-CTC_BRIDGE_DIR path. Explicit
-// overrides arrive via `extra` after the deletes so they truly win.
+// Child env: private data base dir (both platform rules) + index, Codex
+// identity only, and no bridge env - the whole point is exercising the
+// no-CTC_BRIDGE_DIR path. Explicit overrides arrive via `extra` after the
+// deletes so they truly win.
 function childEnv(threadId, extra = {}) {
   const env = {
     ...process.env,
     LOCALAPPDATA: base,
+    XDG_DATA_HOME: base,
     CTC_ROOTS_DIR: paths().indexDir,
     CODEX_THREAD_ID: threadId,
   };

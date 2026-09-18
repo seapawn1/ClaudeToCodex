@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { delimiter, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import test from 'node:test';
 import { BridgeStore, handleHook, readJson, renderPeer, wakeText } from '../store.mjs';
@@ -357,8 +357,11 @@ test('reply guidance carries the isolated CODEX_HOME when the sender runs under 
   const daily = renderPeer(letter, store.root, null);
   assert.doesNotMatch(daily, /CODEX_HOME/);
   assert.match(daily, /CTC_BRIDGE_DIR/);
-  const isolated = renderPeer(letter, store.root, 'C:\\isolated\\codex-home');
-  assert.match(isolated, /\$env:CODEX_HOME='C:\\isolated\\codex-home'; /);
+  // D-D: the embedded env prefix is executable in the platform's shell dialect.
+  const isolatedHome = process.platform === 'win32' ? 'C:\\isolated\\codex-home' : '/isolated/codex-home';
+  const isolated = renderPeer(letter, store.root, isolatedHome);
+  if (process.platform === 'win32') assert.match(isolated, /\$env:CODEX_HOME='C:\\isolated\\codex-home'; /);
+  else assert.match(isolated, /CODEX_HOME='\/isolated\/codex-home' /);
   assert.match(isolated, new RegExp(`reply --to ${letter.id}`));
 });
 
@@ -614,14 +617,27 @@ test('concurrent hook processes claim a pending message only once', async (t) =>
   assert.ok(store.consumed(message.id));
 });
 
-test('CLI sends a Claude message through the shared inbox and one exact queue wake', { skip: process.platform !== 'win32' }, (t) => {
+// A fake `codex` first on the child PATH so the queue wake can be captured
+// verbatim: a PowerShell shim on Windows, a shebang Node script on POSIX
+// (D-G - the product now calls the binary directly, no PowerShell wrapper).
+function writeCodexShim(root) {
+  if (process.platform === 'win32') {
+    writeFileSync(join(root, 'codex.ps1'), '[IO.File]::WriteAllText($env:CTC_QUEUE_CAPTURE, ($args | ConvertTo-Json -Compress))\nexit 0\n');
+  } else {
+    const shim = join(root, 'codex');
+    writeFileSync(shim, '#!/usr/bin/env node\nimport { writeFileSync } from \'node:fs\';\nwriteFileSync(process.env.CTC_QUEUE_CAPTURE, JSON.stringify(process.argv.slice(2)), { flag: \'w\' });\n');
+    chmodSync(shim, 0o755);
+  }
+}
+
+test('CLI sends a Claude message through the shared inbox and one exact queue wake', (t) => {
   const { root, store, pairA } = setup(t, { withB: false });
   const capture = join(root, 'queue.json');
-  writeFileSync(join(root, 'codex.ps1'), '[IO.File]::WriteAllText($env:CTC_QUEUE_CAPTURE, ($args | ConvertTo-Json -Compress))\nexit 0\n');
+  writeCodexShim(root);
   const env = { ...process.env, CTC_BRIDGE_DIR: root, CLAUDE_CODE_SESSION_ID: claudeA };
   delete env.CODEX_THREAD_ID;
   for (const key of Object.keys(env)) if (key.toLowerCase() === 'path') delete env[key];
-  env.PATH = `${root};${process.env.PATH}`;
+  env.PATH = `${root}${delimiter}${process.env.PATH}`;
   env.CTC_QUEUE_CAPTURE = capture;
   const result = spawnSync(process.execPath, [cli, 'send', '--body', 'A short question.'], { env, encoding: 'utf8', timeout: 10000 });
   assert.equal(result.status, 0, result.stderr);
@@ -636,15 +652,15 @@ test('CLI sends a Claude message through the shared inbox and one exact queue wa
   assert.ok(hookResult.hookSpecificOutput.additionalContext.includes('reply --to'), 'reply entry must be present at injection layer');
 });
 
-test('CLI reply from the Claude session queues exactly one wake for the original Codex thread', { skip: process.platform !== 'win32' }, (t) => {
+test('CLI reply from the Claude session queues exactly one wake for the original Codex thread', (t) => {
   const { root, store, pairA } = setup(t, { withB: false });
   const question = store.prepare(pairA, 'codex', 'Which detail is missing?', null, codexId);
   const capture = join(root, 'reply-queue.json');
-  writeFileSync(join(root, 'codex.ps1'), '[IO.File]::WriteAllText($env:CTC_QUEUE_CAPTURE, ($args | ConvertTo-Json -Compress))\nexit 0\n');
+  writeCodexShim(root);
   const env = { ...process.env, CTC_BRIDGE_DIR: root, CLAUDE_CODE_SESSION_ID: claudeA };
   delete env.CODEX_THREAD_ID;
   for (const key of Object.keys(env)) if (key.toLowerCase() === 'path') delete env[key];
-  env.PATH = `${root};${process.env.PATH}`;
+  env.PATH = `${root}${delimiter}${process.env.PATH}`;
   env.CTC_QUEUE_CAPTURE = capture;
   const result = spawnSync(process.execPath, [cli, 'reply', '--to', question.id, '--body', 'The requested format.'], { env, encoding: 'utf8', timeout: 10000 });
   assert.equal(result.status, 0, result.stderr);

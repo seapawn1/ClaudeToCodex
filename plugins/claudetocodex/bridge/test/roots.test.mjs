@@ -45,12 +45,15 @@ const noEnv = {};
 test('explicit CTC_BRIDGE_DIR wins over index and everything else', () => {
   const f = fixture(test);
   const index = { schema: 1, threads: { [CODEX_A]: { root: f.def, since: '2026-09-01T00:00:00.000Z' } } };
+  // A native absolute path per platform: path.resolve() keeps either shape
+  // untouched instead of folding a foreign drive path into a relative one.
+  const explicit = process.platform === 'win32' ? 'C:\\explicit\\root' : '/explicit/root';
   const resolved = resolveRoot({
-    threadId: CODEX_A, env: { CTC_BRIDGE_DIR: 'C:\\explicit\\root' },
+    threadId: CODEX_A, env: { CTC_BRIDGE_DIR: explicit },
     index, defaultRootPath: f.def, threadsParent: f.parent,
   });
   assert.equal(resolved.source, 'env');
-  assert.equal(resolved.root, 'C:\\explicit\\root');
+  assert.equal(resolved.root, explicit);
 });
 
 test('an index binding is reused before anything else is considered', () => {
@@ -188,9 +191,17 @@ test('locateMessage searches the default root even when it is not indexed', () =
 });
 
 test('indexDir derives from the parent unless CTC_ROOTS_DIR overrides it', () => {
-  assert.equal(indexDir({ CTC_ROOTS_DIR: 'C:\\elsewhere\\bridge-roots' }), 'C:\\elsewhere\\bridge-roots');
-  const derived = indexDir({ LOCALAPPDATA: 'C:\\Users\\t' });
-  assert.equal(derived, join('C:\\Users\\t', 'ClaudeToCodex', 'bridge-roots'));
+  // Platform-native override and derivation fixtures (D-C: %LOCALAPPDATA% on
+  // Windows, XDG_DATA_HOME elsewhere).
+  if (process.platform === 'win32') {
+    assert.equal(indexDir({ CTC_ROOTS_DIR: 'C:\\elsewhere\\bridge-roots' }), 'C:\\elsewhere\\bridge-roots');
+    const derived = indexDir({ LOCALAPPDATA: 'C:\\Users\\t' });
+    assert.equal(derived, join('C:\\Users\\t', 'ClaudeToCodex', 'bridge-roots'));
+  } else {
+    assert.equal(indexDir({ CTC_ROOTS_DIR: '/elsewhere/bridge-roots' }), '/elsewhere/bridge-roots');
+    const derived = indexDir({ XDG_DATA_HOME: '/xdg/t' });
+    assert.equal(derived, join('/xdg/t', 'ClaudeToCodex', 'bridge-roots'));
+  }
 });
 
 test('otherRootsServing reports roots serving the same Codex, excluding the caller\u2019s', () => {

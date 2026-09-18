@@ -78,6 +78,9 @@ export function selectSession(name, dir = sessionsDir()) {
 export function peerTokenForSession(sessionId, dir = sessionsDir()) {
   const needle = String(sessionId ?? '').toLowerCase();
   let sawDead = false;
+  if (!existsSync(dir)) {
+    throw new Error(`No Claude session record in the registry matches session ${needle}; the session likely exited.`);
+  }
   for (const file of readdirSync(dir)) {
     if (!file.endsWith('.json')) continue;
     const pid = Number.parseInt(file, 10);
