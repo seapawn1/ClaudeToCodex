@@ -7,6 +7,7 @@ import { atomicWriteJson, BridgeStore, handleHook, readJson, renderPeer, wakeTex
 import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
 import { bindThreadRoot, locateMessage, otherRootsServing, resolveRoot } from './roots.mjs';
 import { cliPath, commandString, repoRoot } from './entry.mjs';
+import { sendClaudeMessage } from './delivery/transport.mjs';
 
 // Sprint 04 / PBI-11: connect upserts into a multi-pair registry, codex sends
 // take an explicit --name target (the single-target 1.0.0 shape without --name
@@ -290,12 +291,16 @@ async function main() {
       // codexHome passes through when this send runs inside an isolated-home
       // Codex session, so the peer's reply wake reaches the right session.
       writeFileSync(wirePath, renderPeer(message, store.root, process.env.CODEX_HOME ?? null), { flag: 'wx' });
-      await execute('powershell.exe', [
-        '-NoProfile', '-File', join(directory, 'delivery', 'Send-ClaudePipe.ps1'),
-        '-EndpointPath', pair.endpointPath, '-ReplyThreadId', pair.codexId,
-        '-MessageFile', wirePath, '-MessageId', message.id,
-        '-RecordPath', join(store.root, 'wire', `${message.id}.send.json`),
-      ], { windowsHide: true, timeout: 15000 });
+      // Sprint 08 / D-A: the unified Node transport replaces the PowerShell
+      // client - same endpoint validation, auth+frame wire behavior, and
+      // wire/<id>.send.json double-write contract.
+      await sendClaudeMessage({
+        endpointPath: pair.endpointPath,
+        replyThreadId: pair.codexId,
+        messageFile: wirePath,
+        messageId: message.id,
+        recordPath: join(store.root, 'wire', `${message.id}.send.json`),
+      });
       store.event('pipe-written', { messageId: message.id });
     }
   } catch (error) {
