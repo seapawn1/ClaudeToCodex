@@ -17,6 +17,10 @@ import { buildZip, parseZip } from '../release/zip.mjs';
 const build = fileURLToPath(new URL('../release/build-release.mjs', import.meta.url));
 const verify = fileURLToPath(new URL('../release/verify-release.mjs', import.meta.url));
 const run = (script, args) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8', timeout: 60000 });
+// The build tool's contract is "content from a git checkout" - when this
+// suite runs from an installed (non-repo) plugin cache, building is out of
+// scope, not broken.
+const inRepo = { skip: spawnSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8', cwd: fileURLToPath(new URL('../release', import.meta.url)) }).status === 0 ? false : 'release build requires a git checkout; running from an installed plugin cache' };
 
 test('zip writer: UTF-8 flag, timestamps, CRC - round-trip and external validation', () => {
   // Zip timestamps are zone-less local fields (like other writers); construct
@@ -55,7 +59,7 @@ test('zip writer: UTF-8 flag, timestamps, CRC - round-trip and external validati
   assert.equal(probe.stdout.includes('PYTHON_ZIP_OK'), true);
 });
 
-test('build + verify: real candidate from HEAD, manifest schema parity, package content change', (t) => {
+test('build + verify: real candidate from HEAD, manifest schema parity, package content change', inRepo, (t) => {
   const outDir = mkdtempSync(join(tmpdir(), 'ctc-release-test-'));
   t.after(() => rmSync(outDir, { recursive: true, force: true }));
   const version = '0.0.0-w7a';
@@ -107,7 +111,7 @@ test('build + verify: real candidate from HEAD, manifest schema parity, package 
   assert.equal(probe.status, 0, probe.stderr);
 });
 
-test('verify fails loudly on tampered content (extracted-root mode)', (t) => {
+test('verify fails loudly on tampered content (extracted-root mode)', inRepo, (t) => {
   const outDir = mkdtempSync(join(tmpdir(), 'ctc-release-tamper-'));
   t.after(() => rmSync(outDir, { recursive: true, force: true }));
   const version = '0.0.0-w7a-tamper';
