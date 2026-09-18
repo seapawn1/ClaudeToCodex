@@ -11,3 +11,4 @@
 - [Sprint 04 retrospective](sprint-04-retrospective.md) — installed-candidate-first validation, original-frame boundaries, scope-cost escalation
 - [Sprint 05 retrospective](sprint-05-retrospective.md) — empirical root reproduction, host-state guards, atomic per-session indexes, context-vs-visibility evidence
 - [Sprint 03 retrospective](sprint-03-retrospective.md) — PO empathy correction, adversarial marker boundaries, operational freeze, and layered acceptance evidence
+- [Cross-platform assumptions verify early](cross-platform-assumptions-verify-early.md) — probe launcher/path assumptions on both platforms at implementation time; unverified = explicit proof gap
