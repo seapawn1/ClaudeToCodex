@@ -9,6 +9,10 @@
 - 篡改路径：解压根内改一字节 → `MISMATCH`＋exit 1；zip 载荷翻转字节 → parser 拒绝（CRC/inflate/结构错误，不误过）。
 - 字节稳定性：同输入同字节（deflate level 9 固定）。
 
+## 修正（SM 复核 M-1 后，2026-09-18）
+
+原文"字节稳定性：同输入同字节"对**发布构建**不成立——初版 zip entry 时间戳取 stage 文件 mtime（构建时刻），同源重建整包 SHA 必然不同，当时只是"内容可复现"。已修复：**所有 entry 时间戳固定为源 commit 的提交时刻（UTC 分量）**，同 commit 重建在任何时区/任何时刻产出字节一致的 zip；release.test 新增跨时区重建字节一致断言（TZ=UTC ↔ TZ=Asia/Shanghai 两次构建 SHA 相同）。声明口径改为：**按源 commit 字节可复现**。
+
 ## 新旧 manifest 结构对照（PBI-18-4 素材）
 
 - **manifest.json 字段集与 1.3.0 完全一致**（release.test #2 断言锁定）：顶层 `product/version/sourceRef/sourceCommit/commitDate/fileCount/files`；`files[]` 项 `path/sha256/bytes`；`fileCount=files.length+1`（含 manifest.json 自身）。

@@ -16,7 +16,7 @@ import { buildZip, parseZip } from '../release/zip.mjs';
 
 const build = fileURLToPath(new URL('../release/build-release.mjs', import.meta.url));
 const verify = fileURLToPath(new URL('../release/verify-release.mjs', import.meta.url));
-const run = (script, args) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8', timeout: 60000 });
+const run = (script, args, extraEnv = {}) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8', timeout: 60000, env: { ...process.env, ...extraEnv } });
 // The build tool's contract is "content from a git checkout" - when this
 // suite runs from an installed (non-repo) plugin cache, building is out of
 // scope, not broken.
@@ -43,6 +43,11 @@ test('zip writer: UTF-8 flag, timestamps, CRC - round-trip and external validati
   }
   // Byte-stable: same input, same archive.
   assert.deepEqual(buildZip(entries), zip);
+  // UTC mode reads the instant's UTC components, so a fixed timestamp yields
+  // identical bytes and identical recorded times on any build machine.
+  const utcStamp = new Date('2026-09-18T12:34:56Z');
+  assert.deepEqual(buildZip([{ name: 'u.txt', data: 'u', mtime: utcStamp }], { utc: true }),
+    buildZip([{ name: 'u.txt', data: 'u', mtime: utcStamp }], { utc: true }));
   // External validator: structure, CRCs, timestamps, names all legible to an
   // independent zip implementation.
   const probe = spawnSync('python3', ['-c', [
@@ -99,6 +104,17 @@ test('build + verify: real candidate from HEAD, manifest schema parity, package 
   const sha = createHash('sha256').update(readFileSync(zipPath)).digest('hex');
   const sidecar = readFileSync(join(outDir, `claude-to-codex-plugin-${version}.zip.sha256`), 'utf8');
   assert.match(sidecar, new RegExp(`^${sha}  claude-to-codex-plugin-${version}\\.zip`));
+
+  // SM M-1: byte-reproducible per source commit - rebuilding the same ref in
+  // a different timezone (and at a different wall-clock time) yields the same
+  // archive bytes, because every entry timestamp is the commit's UTC instant.
+  const outDir2 = mkdtempSync(join(tmpdir(), 'ctc-release-repro-'));
+  t.after(() => rmSync(outDir2, { recursive: true, force: true }));
+  const rebuilt = run(build, ['--version', version, '--out-dir', outDir2, '--mode', 'plugin'],
+    { ...process.env, TZ: process.env.TZ === 'Asia/Shanghai' ? 'UTC' : 'Asia/Shanghai' });
+  assert.equal(rebuilt.status, 0, rebuilt.stderr);
+  const sha2 = createHash('sha256').update(readFileSync(join(outDir2, `claude-to-codex-plugin-${version}.zip`))).digest('hex');
+  assert.equal(sha2, sha, 'rebuild in a different timezone must be byte-identical');
 
   // External validator over the real package.
   const probe = spawnSync('python3', ['-c', [

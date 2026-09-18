@@ -12,7 +12,7 @@
 // exactly the committed tree - no working-tree drift.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -116,14 +116,15 @@ const manifest = {
 };
 writeFileSync(join(stage, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 // The zip reads staged files back so the manifest's hash coverage and the
-// archive content provably come from the same bytes.
-const zipEntries = [...entries.map(({ path, data }) => {
-  const target = join(stage, path);
-  return { name: path, data, mtime: statSync(target).mtime };
-}), { name: 'manifest.json', data: readFileSync(join(stage, 'manifest.json')), mtime: statSync(join(stage, 'manifest.json')).mtime }];
+// archive content provably come from the same bytes. Every entry carries the
+// source commit's UTC timestamp, so rebuilding the same ref yields the same
+// archive bytes on any machine (byte-reproducible per source commit).
+const commitStamp = new Date(commitDate);
+const zipEntries = entries.map(({ path, data }) => ({ name: path, data, mtime: commitStamp }))
+  .concat([{ name: 'manifest.json', data: readFileSync(join(stage, 'manifest.json')), mtime: commitStamp }]);
 
 const zipPath = join(outDir, `${productName}.zip`);
-writeFileSync(zipPath, buildZip(zipEntries));
+writeFileSync(zipPath, buildZip(zipEntries, { utc: true }));
 const zipHash = createHash('sha256').update(readFileSync(zipPath)).digest('hex');
 writeFileSync(join(outDir, `${productName}.zip.sha256`), `${zipHash}  ${productName}.zip\n`);
 

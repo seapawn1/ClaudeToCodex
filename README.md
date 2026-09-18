@@ -2,12 +2,16 @@
 
 运行于本机（Windows 与 WSL2/Linux，同一 OS 用户）的 Codex ↔ Claude Code 跨会话双向消息桥，以 **Codex CLI 插件**分发。安装并完成必要授权后，对 Codex 说「连接 Claude 会话 <名字>」即可开始互发工作消息、回复与追问；一个 Codex 会话可同时保持多个 Claude 会话，按名称选择目标，无需为换对象拆除另一条连接。
 
-## 正式获取（v1.3.0）
+## 获取
+
+**当前公开正式版本是 v1.3.0，仅支持 Windows**：
 
 ```powershell
 codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.3.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
+
+**WSL2/Linux 支持属于 Sprint 08 未发布候选**：上方 `--ref v1.3.0` 不含 Linux 能力，Linux 用户暂无公开安装入口；公开安装命令将随正式发布（版本与发布时点由 PO 决定）更新。内部验收使用冻结来源的隔离安装（见 [INSTALL.md](INSTALL.md) 的候选安装说明）。
 
 > v1.3.0 是 Sprint 03 正式发布版本，已通过隔离安装候选、SM 真实宿主验证和 PO 手动端到端验收。Sprint 过程收口另有 `sprint-03-readable-arrival-review-retro` tag。
 

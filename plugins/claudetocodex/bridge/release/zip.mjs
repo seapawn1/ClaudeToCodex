@@ -18,18 +18,27 @@ export class ZipError extends Error {}
 
 // DOS date/time (2-second granularity, 1980 epoch). Values before 1980 clamp
 // to the epoch, which is what other writers do rather than wrapping around.
-export function dosDateTime(date) {
-  const year = Math.max(1980, date.getFullYear());
+// utc=true reads the UTC components instead of the local ones, so a fixed
+// instant produces the same archive bytes on any build machine.
+export function dosDateTime(date, utc = false) {
+  const year = Math.max(1980, utc ? date.getUTCFullYear() : date.getFullYear());
+  const month = utc ? date.getUTCMonth() : date.getMonth();
+  const day = utc ? date.getUTCDate() : date.getDate();
+  const hours = utc ? date.getUTCHours() : date.getHours();
+  const minutes = utc ? date.getUTCMinutes() : date.getMinutes();
+  const seconds = utc ? date.getUTCSeconds() : date.getSeconds();
   return {
-    time: (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2),
-    date: ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate(),
+    time: (hours << 11) | (minutes << 5) | Math.floor(seconds / 2),
+    date: ((year - 1980) << 9) | ((month + 1) << 5) | day,
   };
 }
 
 // entries: [{ name, data (Buffer | string), mtime?: Date }] - a stable input
 // order produces a byte-stable archive (deflate is deterministic for a fixed
-// level and input).
-export function buildZip(entries) {
+// level and input). With { utc: true } every timestamp is taken from the UTC
+// components, making the archive byte-reproducible for a fixed instant
+// regardless of the build machine's timezone.
+export function buildZip(entries, { utc = false } = {}) {
   if (entries.length > 0xffff) throw new ZipError('Too many entries for a non-zip64 archive.');
   const parts = [];
   const centralParts = [];
@@ -39,7 +48,7 @@ export function buildZip(entries) {
     const data = Buffer.isBuffer(entry.data) ? entry.data : Buffer.from(entry.data, 'utf8');
     const deflated = deflateRawSync(data, { level: 9 });
     const crc = nodeCrc32(data) >>> 0;
-    const { time, date } = dosDateTime(entry.mtime ?? new Date());
+    const { time, date } = dosDateTime(entry.mtime ?? new Date(), utc);
 
     const local = Buffer.alloc(30);
     local.writeUInt32LE(LOCAL_SIG, 0);
