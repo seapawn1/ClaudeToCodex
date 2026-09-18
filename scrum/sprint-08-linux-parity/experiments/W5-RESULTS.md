@@ -3,6 +3,10 @@
 - 日期：2026-09-18。执行：Developer。依赖：W1–W4。
 - **退出判据达成（Linux 验收环境）**：全量 `node --test bridge/test/*.test.mjs` ＝ **110 tests / 110 pass / 0 fail / 0 skip**（基线 87：72/10/5）。
 
+## 修正（SM 复核 F-3 后，2026-09-18）
+
+原表格⑥行"零残留 skip 达成"**仅对 Linux 验收环境成立，不得读作双平台完成**。SM Windows 提前试跑（`SM-W1-W5-REVIEW.md`）：**90 pass / 9 fail / 11 explicit skip**——2 fail＝Windows queue 启动缺陷（F-1），7 fail＝transport.test fixture 仅生成 Unix socket 路径的平台缺口；11 skip 为显式平台分支（非迁移残留）。两项修复均已在本 Sprint 修复批次处理：F-1 平台启动方案（win32 内联 powershell `& codex`）、transport fixture 平台化；修复后的 Windows 全量结果见 WC 记录。D-H⑥ 的"双平台"口径以 W10 Windows 回归的如实计数为准。
+
 ## 各项移植
 
 | D-H | 内容 | 处理 |

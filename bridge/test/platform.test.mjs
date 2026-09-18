@@ -17,6 +17,10 @@ test('D-C data base dir: XDG data home on POSIX, one rule for store and roots', 
   // The env-parameterized helpers stay test-only surfaces: the real lookup
   // reads the live process env.
   assert.equal(dataBaseDir({ XDG_DATA_HOME: '' }), join(homedir(), '.local', 'share', 'ClaudeToCodex'));
+  // SM F-2: per the XDG spec a relative path is invalid, not honored - unset,
+  // empty, and relative all fall back to the default.
+  assert.equal(dataBaseDir({ XDG_DATA_HOME: 'relative/path' }), join(homedir(), '.local', 'share', 'ClaudeToCodex'));
+  assert.equal(dataBaseDir({ XDG_DATA_HOME: './also-relative' }), join(homedir(), '.local', 'share', 'ClaudeToCodex'));
   assert.equal(rootsParent({ XDG_DATA_HOME: '/xdg/data' }), dataBaseDir({ XDG_DATA_HOME: '/xdg/data' }));
 });
 

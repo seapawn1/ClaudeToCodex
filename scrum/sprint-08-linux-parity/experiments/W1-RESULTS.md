@@ -26,6 +26,7 @@ HOW §4 W1 的回滚决断点未触发。执行方式：Windows 侧 node（v24.1
 
 1. **Linux UDS connect 语义（修正测试设计）**：`listen(1)` 实际容纳 2 个排队连接（实测），第 3 个经 libuv 呈现 **EAGAIN 错误**而非挂起——内核级 connect 挂起在本机不可稳定制造。⑥ 号测试改为确定性 EAGAIN 分类测试（注释内记录依据）。
 2. **connect 超时定时器的阻塞路径证明缺口**：Linux 如上不可达；Windows 需"创建管道实例但不 ConnectNamedPipe"的原生服务端（PowerShell 可做，但本工作树会话的 guard 钩子拒绝 powershell.exe/cmd.exe interop）。现状：定时器代码在位、budget 看门狗已真实覆盖、"connect 超时消息文案"经代码路径静态可核；阻塞路径留待 W10 Windows 回归补证（届时由 Operator 在 Windows 侧直接执行，不经 interop）。此为记录在案的证明缺口，非探针失败（探针判据＝连接/写帧/认证，全过）。
+   - **口径修正（SM F-4）**：W1 Windows 探针只覆盖**健康服务端**上的连接/写帧/认证，**不含**阻塞服务端变体；阻塞路径的实证属 W10（transport.test 相关注释已同步修正）。原文"届时补证"表述保留，但不得引用 W1 探针作为阻塞路径证据。
 3. **interop 途径**：powershell.exe/cmd.exe 被会话 guard 拒绝；`node.exe`（Windows PATH 残留）直调可用，UNC cwd 映射使 Windows 侧 node 可直接 import 工作树模块——W10 Windows 侧执行可复用此途径。
 
 ## 对后续切片的输入

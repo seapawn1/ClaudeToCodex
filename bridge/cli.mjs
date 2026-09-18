@@ -321,14 +321,25 @@ async function main() {
       store.publish(message);
       // I2: pass the message body and creation timestamp into the readable
       // queue text so the Codex side receives a human-readable prompt instead
-      // of the old single-line [CTC-WAKE ...] marker. Sprint 08 / D-G: the
-      // wake goes straight to the codex binary (was BridgeQueue.ps1); stdout
-      // is recorded as process evidence, never as receipt.
+      // of the old single-line [CTC-WAKE ...] marker. Sprint 08 / D-G + SM
+      // F-1: per-platform launch. POSIX execs the codex binary directly;
+      // Windows npm installs only .ps1/.cmd shims (execFile gets ENOENT/
+      // EINVAL/EFTYPE on them), so the wake goes through one minimal inline
+      // powershell call - `& codex` resolves the shim exactly as the retired
+      // BridgeQueue.ps1 did. Thread id and wake text travel via process
+      // environment (multi-line safe, never on the command line); stdout
+      // stays process evidence, never a receipt.
       try {
-        const result = await execute('codex', [
-          'queue', '--thread', pair.codexId, '--message',
-          wakeText(pair.id, message.id, message.body, message.createdAt),
-        ], { windowsHide: true, timeout: 15000 });
+        const wake = wakeText(pair.id, message.id, message.body, message.createdAt);
+        const result = process.platform === 'win32'
+          ? await execute('powershell.exe', [
+            '-NoProfile', '-Command',
+            '& codex queue --thread $env:CTC_QUEUE_THREAD --message $env:CTC_QUEUE_WAKE',
+          ], {
+            windowsHide: true, timeout: 15000,
+            env: { ...process.env, CTC_QUEUE_THREAD: pair.codexId, CTC_QUEUE_WAKE: wake },
+          })
+          : await execute('codex', ['queue', '--thread', pair.codexId, '--message', wake], { windowsHide: true, timeout: 15000 });
         store.event('wake-submitted', { messageId: message.id, output: result.stdout.trim() });
       } catch (error) {
         throw new Error(`Bridge queue submission failed: ${(error.stderr || error.stdout || error.message || '').toString().trim()}`);

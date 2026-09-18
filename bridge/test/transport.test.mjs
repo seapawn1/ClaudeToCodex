@@ -33,10 +33,18 @@ function fixture(t) {
   return directory;
 }
 
+// Platform-native endpoint fixture (named pipe on Windows, UDS elsewhere),
+// unique per server so parallel tests never collide.
+function nativePath(directory, name = 'peer') {
+  return process.platform === 'win32'
+    ? `\\\\.\\pipe\\ctc-transport-${name}-${randomUUID().slice(0, 8)}`
+    : join(directory, `${name}.sock`);
+}
+
 // A line-collecting socket server with per-line arrival timestamps and the raw
 // byte stream, so tests can assert framing bytes, not just parsed values.
-function lineServer(directory, { onLine } = {}) {
-  const socketPath = join(directory, 'peer.sock');
+function lineServer(directory, { name = 'peer', onLine } = {}) {
+  const socketPath = nativePath(directory, name);
   const sockets = new Set();
   const lines = [];
   const arrivals = [];
@@ -168,22 +176,29 @@ test('② attempt evidence: the not-completed record exists before any network I
   await server.close();
 });
 
-test('⑤ ENOENT: missing socket file is classified honestly and leaves evidence', async (t) => {
+test('⑤ ENOENT: a missing endpoint is classified honestly and leaves evidence', async (t) => {
   const directory = fixture(t);
+  // POSIX: a path under a directory that does not exist. Windows: a pipe name
+  // no server ever created (the same kernel "nothing there" condition).
+  const deadPath = process.platform === 'win32'
+    ? `\\\\.\\pipe\\ctc-transport-gone-${randomUUID().slice(0, 8)}`
+    : join(directory, 'gone', 'peer.sock');
   await assert.rejects(
-    deliver(directory, { socketPath: join(directory, 'gone', 'peer.sock') }),
+    deliver(directory, { socketPath: deadPath }),
     (error) => {
-      assert.match(error.message, /Claude pipe write failed: .*ENOENT/);
+      assert.match(error.message, /Claude pipe write failed: /);
+      assert.doesNotMatch(error.message, /budget/);
       return true;
     },
   );
   const record = onlyRecord(directory);
   assert.equal(record.pipeWrite, 'not-completed');
   assert.equal(record.receipt, 'unverified');
-  assert.ok(record.error.includes('ENOENT'));
+  assert.ok(record.error);
+  if (process.platform !== 'win32') assert.ok(record.error.includes('ENOENT'));
 });
 
-test('⑤ ECONNREFUSED: stale socket file is classified honestly, one attempt only', async (t) => {
+test('⑤ ECONNREFUSED: stale socket file is classified honestly, one attempt only', { skip: process.platform === 'win32' ? 'POSIX-only stale-file analog; Windows dead endpoints are covered by the ENOENT case' : false }, async (t) => {
   const directory = fixture(t);
   // A regular file at the socket path yields ECONNREFUSED on connect.
   writeFileSync(join(directory, 'peer.sock'), '');
@@ -226,9 +241,10 @@ test('④⑤ full-backlog socket: the surfaced connect failure is classified hon
   // while queued (accept not required) or, once the backlog is full, surfaces
   // EAGAIN through libuv's retry loop - a real kernel connect hang is not
   // manufacturable here. So this exercises the reachable branch (a busy socket
-  // that never accepts) and asserts the honest fast failure; the self-built
-  // connect timeout's blocking-path proof runs in the W1 Windows pipe probe,
-  // where a server that never calls ConnectNamedPipe hangs clients reliably.
+  // that never accepts) and asserts the honest fast failure. The self-built
+  // connect timeout's BLOCKING-path proof is deferred to W10 (a Windows pipe
+  // server that creates the instance but never calls ConnectNamedPipe); the
+  // W1 probe covered connect/write/auth on a healthy server only.
   const hangScript = join(directory, 'hang.py');
   writeFileSync(hangScript, [
     'import socket, sys, time',
@@ -295,6 +311,7 @@ test('endpoint and argument validation reject bad input before any record is wri
     replyThreadId: codexId, messageFile: bodyPath, messageId: randomUUID(), recordPath,
     tokenLoader: async () => fixtureToken,
   };
+  const validShape = process.platform === 'win32' ? '\\\\.\\pipe\\ctc-valid-shape' : '/valid/path';
 
   // tokenProtected is required only on Windows (D-B: Linux stores no secret).
   const overrides = [{ schema: 2 }, { sessionId: 'not-a-uuid' }, { socket: '' }];
@@ -302,7 +319,7 @@ test('endpoint and argument validation reject bad input before any record is wri
   for (const override of overrides) {
     const endpointPath = join(directory, 'endpoints', 'bad.json');
     writeFileSync(endpointPath, JSON.stringify({
-      schema: 1, sessionId: claudeId, socket: '/valid/path', tokenProtected: 'x', ...override,
+      schema: 1, sessionId: claudeId, socket: validShape, tokenProtected: 'x', ...override,
     }));
     await assert.rejects(sendClaudeMessage({ ...base, endpointPath }), /Invalid Claude endpoint registration/);
   }
@@ -314,7 +331,7 @@ test('endpoint and argument validation reject bad input before any record is wri
   }));
   await assert.rejects(sendClaudeMessage({ ...base, endpointPath: wrongPath }), /Invalid Claude endpoint registration/);
   // Non-UUID ids and empty message text are rejected like the old client.
-  const goodEndpoint = endpointFile(directory, '/valid/path');
+  const goodEndpoint = endpointFile(directory, validShape);
   await assert.rejects(sendClaudeMessage({ ...base, endpointPath: goodEndpoint, replyThreadId: 'nope' }), /Expected an exact thread UUID/);
   await assert.rejects(sendClaudeMessage({ ...base, endpointPath: goodEndpoint, messageId: 'nope' }), /Expected an exact message UUID/);
   const emptyBody = join(directory, 'empty.txt');

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { commandString } from './entry.mjs';
 
 // Sprint 04 / PBI-11: the 1.0.0 single-pair store extended to a multi-pair
@@ -22,8 +22,10 @@ export const dataBaseDir = (env = process.env) => {
   if (process.platform === 'win32') {
     return join(env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'ClaudeToCodex');
   }
-  // XDG spec: unset or empty both mean the ~/.local/share default.
-  return join(env.XDG_DATA_HOME || join(homedir(), '.local', 'share'), 'ClaudeToCodex');
+  // XDG spec: unset, empty, OR relative values all mean the ~/.local/share
+  // default (relative paths in XDG_DATA_HOME are invalid, not honored).
+  const xdg = env.XDG_DATA_HOME;
+  return join(xdg && isAbsolute(xdg) ? xdg : join(homedir(), '.local', 'share'), 'ClaudeToCodex');
 };
 
 export const defaultRoot = () => process.env.CTC_BRIDGE_DIR ?? join(dataBaseDir(), 'bridge');

@@ -235,3 +235,25 @@ test('D-F selectSession: the socket shape must be platform-native', posixOnly, a
   write('\\\\.\\pipe\\windows-shape');
   assert.throws(() => selectSession('w2-race-target', directory), /no Unix domain socket endpoint/);
 });
+
+test('SM F-5: duplicate live records for one sessionId resolve to the newest updatedAt, deterministically', posixOnly, async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'ctc-token-dup-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  // Two LIVE processes (this test and its parent) both claiming the same
+  // session, as restart overlap or a fork can produce. Whichever record is
+  // newer must win, regardless of directory enumeration order.
+  const records = [
+    { pid: process.pid, token: 'token-a' },
+    { pid: process.ppid, token: 'token-b' },
+  ];
+  const write = (newerPid) => {
+    for (const { pid, token } of records) {
+      writeFileSync(join(directory, `${pid}.json`), JSON.stringify({ ...liveRecord('/native/sock'), pid, updatedAt: pid === newerPid ? 2000 : 1000 }));
+      writeFileSync(join(directory, `${pid}.dup.key`), JSON.stringify({ ...liveKey(), peerToken: token }));
+    }
+  };
+  write(process.ppid);
+  assert.equal(peerTokenForSession(claudeId, directory), 'token-b');
+  write(process.pid);
+  assert.equal(peerTokenForSession(claudeId, directory), 'token-a');
+});

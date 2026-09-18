@@ -78,6 +78,7 @@ export function selectSession(name, dir = sessionsDir()) {
 export function peerTokenForSession(sessionId, dir = sessionsDir()) {
   const needle = String(sessionId ?? '').toLowerCase();
   let sawDead = false;
+  let best = null;
   if (!existsSync(dir)) {
     throw new Error(`No Claude session record in the registry matches session ${needle}; the session likely exited.`);
   }
@@ -89,7 +90,14 @@ export function peerTokenForSession(sessionId, dir = sessionsDir()) {
     try { entry = JSON.parse(readFileSync(join(dir, file), 'utf8')); } catch { continue; }
     if (String(entry?.sessionId ?? '').toLowerCase() !== needle) continue;
     if (!alive(pid)) { sawDead = true; continue; }
-    const keyFile = readdirSync(dir).find((f) => f.startsWith(`${pid}.`) && f.endsWith('.key'));
+    // F-5: duplicate live records for one sessionId (restart overlap, forks)
+    // resolve deterministically to the most recently updated entry, so the
+    // token never depends on directory enumeration order.
+    const updatedAt = Number(entry.updatedAt ?? 0);
+    if (!best || updatedAt > best.updatedAt) best = { pid, updatedAt };
+  }
+  if (best) {
+    const keyFile = readdirSync(dir).find((f) => f.startsWith(`${best.pid}.`) && f.endsWith('.key'));
     if (!keyFile) throw new Error(`The registry record for session ${needle} has no peer key file; it cannot be contacted directly.`);
     let keyRecord;
     try {
