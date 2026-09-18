@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { atomicWriteJson, BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store.mjs';
 import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
@@ -15,7 +15,6 @@ import { sendClaudeMessage } from './delivery/transport.mjs';
 // retire is the explicit lifecycle boundary, and status lists every pair.
 
 const execute = promisify(execFile);
-const directory = fileURLToPath(new URL('.', import.meta.url));
 const usage = 'Use one of: install, register, pair, connect, sessions, send, reply, status, hook.';
 
 const HOOK_EVENTS = [
@@ -85,12 +84,50 @@ async function main() {
     return;
   }
   if (command === 'register') {
+    // Sprint 08 / W3: register is native Node (was Register-ClaudeEndpoint.ps1).
+    // It runs inside the selected Claude session's tool environment; the three
+    // messaging variables are its identity. Windows wraps the token with DPAPI
+    // through one minimal inline powershell call (env-passed, never echoed);
+    // Linux stores no secret at rest - the transport reads the live registry
+    // key by sessionId at send time (D-B). Like the old script, the guard runs
+    // before anything is created on disk.
+    const sessionId = process.env.CLAUDE_CODE_SESSION_ID;
+    const socket = process.env.CLAUDE_CODE_MESSAGING_SOCKET;
+    const token = process.env.CLAUDE_CODE_MESSAGING_TOKEN;
+    if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(sessionId ?? '') || !socket || !token) {
+      throw new Error('Run this command from the selected Claude Code session tool, with cross-session messaging available.');
+    }
+    if (process.platform === 'win32' ? !socket.startsWith('\\\\.\\pipe\\') : !socket.startsWith('/')) {
+      throw new Error('The session messaging endpoint is not a native socket for this platform.');
+    }
     store.initialize();
-    const result = await execute('powershell.exe', [
-      '-NoProfile', '-File', join(directory, 'delivery', 'Register-ClaudeEndpoint.ps1'),
-      '-Directory', join(store.root, 'endpoints'),
-    ], { windowsHide: true, timeout: 15000 });
-    process.stdout.write(`${result.stdout.trim()}\n`);
+    const endpoint = {
+      schema: 1,
+      sessionId,
+      socket,
+      registeredAt: new Date().toISOString(),
+      cwd: process.cwd(),
+    };
+    if (process.platform === 'win32') {
+      let protectedToken;
+      try {
+        protectedToken = (await execute('powershell.exe', [
+          '-NoProfile', '-Command',
+          '$env:CTC_PEER_KEY | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString',
+        ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PEER_KEY: token } })).stdout.trim();
+      } catch (error) {
+        throw new Error('DPAPI protection of the peer key failed; no key material is included in this message.');
+      }
+      if (!protectedToken) throw new Error('DPAPI protection returned an empty token.');
+      endpoint.tokenProtected = protectedToken;
+    }
+    const endpointPath = join(store.root, 'endpoints', `claude-${sessionId}.json`);
+    atomicWriteJson(endpointPath, endpoint);
+    console.log(`REGISTERED_CLAUDE_SESSION=${sessionId}`);
+    console.log(`ENDPOINT_FILE=${endpointPath}`);
+    console.log(process.platform === 'win32'
+      ? 'The token is protected for the current Windows user. No message was sent.'
+      : 'No token is stored at rest on this platform; it is read live at send time. No message was sent.');
     return;
   }
   if (command === 'pair') {
@@ -284,12 +321,18 @@ async function main() {
       store.publish(message);
       // I2: pass the message body and creation timestamp into the readable
       // queue text so the Codex side receives a human-readable prompt instead
-      // of the old single-line [CTC-WAKE ...] marker.
-      const result = await execute('powershell.exe', [
-        '-NoProfile', '-File', join(directory, 'delivery', 'BridgeQueue.ps1'),
-        '-ThreadId', pair.codexId, '-Wake', wakeText(pair.id, message.id, message.body, message.createdAt),
-      ], { windowsHide: true, timeout: 15000 });
-      store.event('wake-submitted', { messageId: message.id, output: result.stdout.trim() });
+      // of the old single-line [CTC-WAKE ...] marker. Sprint 08 / D-G: the
+      // wake goes straight to the codex binary (was BridgeQueue.ps1); stdout
+      // is recorded as process evidence, never as receipt.
+      try {
+        const result = await execute('codex', [
+          'queue', '--thread', pair.codexId, '--message',
+          wakeText(pair.id, message.id, message.body, message.createdAt),
+        ], { windowsHide: true, timeout: 15000 });
+        store.event('wake-submitted', { messageId: message.id, output: result.stdout.trim() });
+      } catch (error) {
+        throw new Error(`Bridge queue submission failed: ${(error.stderr || error.stdout || error.message || '').toString().trim()}`);
+      }
     } else {
       const endpoint = readJson(pair.endpointPath);
       if (endpoint.sessionId !== pair.claudeId) throw new Error('Claude endpoint identity changed.');
