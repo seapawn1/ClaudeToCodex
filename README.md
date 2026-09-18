@@ -1,6 +1,6 @@
 # ClaudeToCodex
 
-运行于本机（Windows）的 Codex ↔ Claude Code 跨会话双向消息桥，以 **Codex CLI 插件**分发。安装并完成必要授权后，对 Codex 说「连接 Claude 会话 <名字>」即可开始互发工作消息、回复与追问；一个 Codex 会话可同时保持多个 Claude 会话，按名称选择目标，无需为换对象拆除另一条连接。
+运行于本机（Windows 与 WSL2/Linux，同一 OS 用户）的 Codex ↔ Claude Code 跨会话双向消息桥，以 **Codex CLI 插件**分发。安装并完成必要授权后，对 Codex 说「连接 Claude 会话 <名字>」即可开始互发工作消息、回复与追问；一个 Codex 会话可同时保持多个 Claude 会话，按名称选择目标，无需为换对象拆除另一条连接。
 
 ## 正式获取（v1.3.0）
 
@@ -22,8 +22,9 @@ codex plugin add claudetocodex@claudetocodex-dev
 
 ## 已验证环境与范围
 
-- Windows 10 Pro 19045；PowerShell 5.1；Node.js v24.14.0。
+- Windows 10 Pro 19045；PowerShell 5.1；Node.js v24.14.0（Windows 侧投递保留 DPAPI 保护）。
 - Codex CLI 0.153.4 与 0.154.0；Claude Code 2.1.263 与 2.1.268。
+- WSL2 Ubuntu-24.04（Sprint 08 候选交付，验收以 Sprint 08 收口证据为准）；Node.js v24.14.0；Codex CLI 0.154.0；Claude Code 2.1.275。Linux 侧投递经 Unix domain socket，token 发送时从会话注册表现读、桥数据根零秘密落盘；数据根位于 `~/.local/share/ClaudeToCodex`（`XDG_DATA_HOME` 覆盖）。原生 Linux（非 WSL2）未验证。
 - 一个 Codex 原始会话对至少两个 Claude 原始会话：配对共存、按名路由、回复归属、每配对待收槽、相近来信、显式退役/重建、单目标与 legacy `pair.json` 兼容。
 - Sprint 05 起，per-Codex 数据根自动选择与 resume 复用；默认 root 属于其他 Codex 时自动让位新 root；Claude→Codex 连续官方投递、pending 清空、跨 root wake 诊断和并发首连索引安全已验证。
 - 短文本 trim 后 1..2000 字符；串行逐事件注入；回执恒 `unverified`；不承诺任意规模、广播、并发吞吐、自动重试或自动恢复。
@@ -56,10 +57,9 @@ codex plugin add claudetocodex@claudetocodex-dev
 
 ## 开发验证入口
 
-```powershell
+```bash
 node --test bridge/test/*.test.mjs
 node --test plugins/claudetocodex/bridge/test/*.test.mjs
-powershell -NoProfile -File bridge\release\Test-Acceptance.ps1
 ```
 
-`Test-Acceptance.ps1` 在缺少真实宿主证据时会按设计报 BLOCKED；完整结论以 Release 说明与 Sprint Review 证据为准。
+两条测试命令在 Windows 与 Linux 均可运行（平台分支用例各自断言，另一平台的分支以显式理由跳过）。真实验收工具 `Test-Acceptance.ps1` 目前仍为 Windows 侧（Linux 移植后置）；它在缺少真实宿主证据时按设计报 BLOCKED，完整结论以 Release 说明与 Sprint Review 证据为准。

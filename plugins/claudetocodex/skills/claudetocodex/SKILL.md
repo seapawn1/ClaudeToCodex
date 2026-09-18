@@ -5,11 +5,13 @@ description: Connect this Codex session to a running Claude Code session and exc
 
 # ClaudeToCodex bridge
 
-Exchange short work messages between this Codex session and one or more running Claude Code sessions (Windows, 1..2000 chars, serial delivery; multiple pairs coexist and are addressed by name). The user just names the Claude session; run the rest yourself.
+Exchange short work messages between this Codex session and one or more running Claude Code sessions (Windows or WSL2/Linux, 1..2000 chars, serial delivery; multiple pairs coexist and are addressed by name). The user just names the Claude session; run the rest yourself.
 
 ## Locate the installed plugin root (self-contained; no prior output needed)
 
 `codex plugin list --json` does NOT expose the install path in Codex 0.153.4. Resolve it from the plugin cache layout:
+
+Windows (PowerShell):
 
 ```powershell
 $ch = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE '.codex' }
@@ -17,12 +19,19 @@ $PLUGIN_ROOT = Get-ChildItem (Join-Path $ch 'plugins\cache\*\claudetocodex\*') -
   Sort-Object Name -Descending | Select-Object -First 1 -ExpandProperty FullName
 ```
 
-Verify with `Test-Path (Join-Path $PLUGIN_ROOT 'bridge\cli.mjs')` before use; if empty, the plugin is not installed (ask the user to run the two install commands from INSTALL.md).
+Linux/WSL2 (bash):
+
+```bash
+ch="${CODEX_HOME:-$HOME/.codex}"
+PLUGIN_ROOT=$(ls -d "$ch"/plugins/cache/*/claudetocodex/*/ | sort -r | head -1)
+```
+
+Verify with `test -f "$PLUGIN_ROOT/bridge/cli.mjs"` (Windows: `Test-Path (Join-Path $PLUGIN_ROOT 'bridge\cli.mjs')`) before use; if empty, the plugin is not installed (ask the user to run the two install commands from INSTALL.md).
 
 ## Connect (once per target; repeat for additional Claude sessions)
 
-1. `node "$PLUGIN_ROOT\bridge\cli.mjs" sessions` — list running Claude sessions (name/status/alive).
-2. `node "$PLUGIN_ROOT\bridge\cli.mjs" connect --name <unique part of the Claude session name>`
+1. `node "$PLUGIN_ROOT/bridge/cli.mjs" sessions` — list running Claude sessions (name/status/alive).
+2. `node "$PLUGIN_ROOT/bridge/cli.mjs" connect --name <unique part of the Claude session name>`
    - Ambiguous session names fail with a candidate list of running sessions (sessionId/pid); retry with a longer, unique part of the name.
    - Must run inside the selected Codex session (uses `CODEX_THREAD_ID`).
    - No register, no ID copying, no `CTC_BRIDGE_DIR`; the Claude side needs nothing installed.
@@ -33,13 +42,13 @@ Note: `connect` ambiguity lists RUNNING SESSIONS (sessionId/pid). Full pairIds a
 
 ## Send and reply
 
-- Send with one target connected: `node "$PLUGIN_ROOT\bridge\cli.mjs" send --body "..."` (no `--name` needed).
+- Send with one target connected: `node "$PLUGIN_ROOT/bridge/cli.mjs" send --body "..."` (no `--name` needed).
 - Send with several targets: add `--name <unique part of the target's session name>`; replies always go to the message being answered, regardless of the last send.
 - A message from Claude arrives in this conversation as a readable queued prompt (source header line, full body, trailing `[CTC-WAKE ...]` marker line). The hook-injected context carries an embedded reply entry — a ready-to-run command with the data directory and CLI path. Run it with `--body` or `--body-file` to reply or follow up; a queued message waiting for the next model call is normal state, not a fault.
-- Inspect state: `node "$PLUGIN_ROOT\bridge\cli.mjs" status` lists every pair (name, identity, project, pending).
-- Retire a target you are certain is no longer in use: `node "$PLUGIN_ROOT\bridge\cli.mjs" retire --pairId <full pairId from status or an ambiguity error>`; evidence is archived, never deleted.
+- Inspect state: `node "$PLUGIN_ROOT/bridge/cli.mjs" status` lists every pair (name, identity, project, pending).
+- Retire a target you are certain is no longer in use: `node "$PLUGIN_ROOT/bridge/cli.mjs" retire --pairId <full pairId from status or an ambiguity error>`; evidence is archived, never deleted.
 - Delivery evidence rule: judge receipt by a unique marker plus the receiving original session's events; `submitted:true` only means attempted delivery.
 
 ## Boundaries
 
-Windows-only; short text; serial delivery (one letter per hook event; injection order follows wake order); receipts stay `unverified`; no automatic retry. If a Claude session restarts, its old endpoint dies: `connect` again against the new session (explicit re-pair; a same-name stale pair makes `--name` ambiguous — retire it by pairId, which the error lists in full). Bridge data roots are selected per Codex session automatically (index under `%LOCALAPPDATA%\ClaudeToCodex\bridge-roots\`, one file per session; resume reuses the same root; a default root owned by another Codex means this session gets its own `bridge-threads\<threadId>` root) — no paths or IDs to hand-write. `CTC_BRIDGE_DIR` remains an explicit test/isolation override only. A wake that references a message living in another root, or an unclaimed pending letter, surfaces a diagnosis in-session or in `status` (possible causes marked unknown, never a receipt claim).
+Windows and WSL2/Linux (same OS user as the Claude sessions); short text; serial delivery (one letter per hook event; injection order follows wake order); receipts stay `unverified`; no automatic retry. If a Claude session restarts, its old endpoint dies: `connect` again against the new session (explicit re-pair; a same-name stale pair makes `--name` ambiguous — retire it by pairId, which the error lists in full). Bridge data roots are selected per Codex session automatically (index under the platform data base: `%LOCALAPPDATA%\ClaudeToCodex\bridge-roots\` on Windows, `~/.local/share/ClaudeToCodex/bridge-roots/` on Linux/WSL2; one file per session; resume reuses the same root; a default root owned by another Codex means this session gets its own `bridge-threads/<threadId>` root) — no paths or IDs to hand-write. Peer tokens are never stored at rest on Linux (read live from the session registry at send time); on Windows they are DPAPI-protected per user. `CTC_BRIDGE_DIR` remains an explicit test/isolation override only. A wake that references a message living in another root, or an unclaimed pending letter, surfaces a diagnosis in-session or in `status` (possible causes marked unknown, never a receipt claim).
