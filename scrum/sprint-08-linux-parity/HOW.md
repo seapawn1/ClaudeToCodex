@@ -1,8 +1,8 @@
-# Sprint 08 HOW：Linux 版本功能对等交付（Developer 主导稿 v2）
+# Sprint 08 HOW：Linux 版本功能对等交付（Developer 主导稿 v2.1）
 
-- 日期：2026-09-18。v1 经三视角对抗自审（SM 验收／工程／边界，处置记录见文末附录）修订。
+- 日期：2026-09-18。v1 经三视角对抗自审（SM 验收／工程／边界，处置记录见文末附录）修订；v2 经 SM 审阅（[SM-HOW-REVIEW.md](SM-HOW-REVIEW.md)，有条件通过）后按 PO 决策修订为 v2.1。
 - 依据：SprintBacklog v02（12 项 AC＋证据矩阵）、E1/E2 预研结论（`experiments/`）、环境事实核查、代码全量扫描。
-- 状态：Developer 提案，待 SM 审阅、PO 检视。含两项 PO 确认点（D-B、D-E）与一项时长取舍。
+- 状态：SM 有条件通过，条件 R-1（容量口径）已修正，D-B/D-E/时长已经 PO 决策（2026-09-18）。待 PO 关闭 Planning 后开工。
 
 ## 0. 预研结论摘要（HOW 的证据基础）
 
@@ -39,10 +39,10 @@ flowchart TD
 | # | 决策点 | 选定方案 | 备选与取舍 | 变更影响→回归 |
 |---|---|---|---|---|
 | D-A | Codex→Claude 投递 | 新增 `delivery/transport.mjs`：Node `net.connect` 客户端；auth 行＋消息帧逻辑自 `Send-ClaudePipe.ps1` 等价移植；Linux 连 UDS、Windows 连命名管道。**Windows token 解包＝最小内联 `powershell -Command`（token 经 env 传入、stdout 捕获即弃、记录与错误路径一律不回显）**。等价性定义为 W1 单测清单逐项通过：①auth→500ms→帧时序与 LF 换行；②`wire/*.send.json` 双写契约（先 `not-completed` 后回写，崩溃留尝试证据）；③`completed` 只在 write 回调＋end/close 后写；④自建连接超时（5000ms）与总预算；⑤错误分类（ENOENT/ECONNREFUSED/EPIPE/超时各自如实文案；错误 token 不可区分于 unverified、不重试） | 备选：双脚本（.ps1＋.sh）——拒绝：协议双实现漂移 | **Windows 投递路径变更**（.ps1 退役、解包改内联 powershell）→ 回归含 Windows 真实往返＋错误路径（W10）；**W1 退出判据含 Windows 命名管道客户端探针**（interop 在 Windows 侧跑 fixture 服务端＋transport 客户端连写），使回滚决断点有真实证据 |
-| D-B | token 处理（**PO 确认点**） | **Linux：token 零落盘**——endpoint 只存 sessionId/socket/cwd/name；发送时按 sessionId 反查注册表（**绝不按 pid/socket 误投**）现读 `.key` 的 `peerToken`，经环境变量传给传输层；auth 行照发。**Windows：DPAPI endpoint 原样**（wrap/unwrap 内联 powershell，保留三处调用清单：connect wrap、register wrap、send unwrap） | (a) endpoint 0600 明文：桥数据根泄露=token 泄露；(b-1) Linux 免 auth：最少接触但策略变化即断；(c) Windows 也改现读：可全退役 DPAPI，但改变 Windows 既有安全姿态与回归面——列为 PO 备选。推荐方案保证=桥数据根无秘密落盘、会话存活期内可投递、死亡/竞态如实报错 | Linux 全新路径；Windows 机制不变（调用形态微调）。W2 竞态 fixture 四类：stale 记录、.key 半写/缺失、PID 复用（sessionId 不符）、发送中会话死亡——一律诚实失败提示 reconnect，不自动重试 |
+| D-B | token 处理 | **【PO 已确认 2026-09-18：采用推荐方案】Linux：token 零落盘**——endpoint 只存 sessionId/socket/cwd/name；发送时按 sessionId 反查注册表（**绝不按 pid/socket 误投**）现读 `.key` 的 `peerToken`，经环境变量传给传输层；auth 行照发。**Windows：DPAPI endpoint 原样**（wrap/unwrap 内联 powershell，保留三处调用清单：connect wrap、register wrap、send unwrap） | (a) endpoint 0600 明文：桥数据根泄露=token 泄露；(b-1) Linux 免 auth：最少接触但策略变化即断；(c) Windows 也改现读：可全退役 DPAPI，但改变 Windows 既有安全姿态与回归面——列为 PO 备选。推荐方案保证=桥数据根无秘密落盘、会话存活期内可投递、死亡/竞态如实报错 | Linux 全新路径；Windows 机制不变（调用形态微调）。**W2 竞态 fixture 四类（stale 记录、.key 半写/缺失、PID 复用 sessionId 不符、发送中会话死亡）为退出判据**（SM 审阅条件）；一律诚实失败提示 reconnect，不自动重试 |
 | D-C | Linux 数据根 | `~/.local/share/ClaudeToCodex`（尊重 `XDG_DATA_HOME`）；Windows `LOCALAPPDATA` 不变。**改动点三处**：`store.mjs:17-21`、`roots.mjs:24-27`、`roots.mjs:29-32`——收敛为共享根助手＋"三处一致"漂移测试 | 备选 `~/.claudetocodex`：不合惯例 | 仅新增分支；Windows 不变 |
 | D-D | 回复指引语法 | `renderPeer` 平台分支：Linux 用 POSIX env 前缀；**路径含单引号的转义规则明确定义**（`'\''` 转义）＋含空格/引号路径测试；Windows 维持 `$env:` | E2 活证据：`$env:` 指引 Linux 不可执行（S03"可执行回复入口"AC） | Windows 文本不变 |
-| D-E | PowerShell 退役与包内容（**PO 确认点**） | `delivery/` 三脚本退役（逻辑入 Node：transport.mjs＋queue 直调＋register Node 化；**Windows DPAPI 三处内联调用保留**）。`release/`：**Build/Verify 以 Node 重写**——zip 策略：`git archive` 产内容＋Node 最小 deflate zip writer（约百余行，UTF-8 flag/时间戳细节单测）；Verify 解析中央目录只读校验。**Test-Acceptance 移植（W7b）可后置**（预授权降级项，见 §4）。插件树移除 .ps1，包内容变化计入 manifest（PBI-18-4）。**失败回退决断点**：若 zip writer 或构建校验不过（触发：W7a 退出前未通过结构对照），回退保留 .ps1 一个版本并明示包内容差异，属 PO 可见决策 | 备选：release 留 Windows-only——拒绝：死重＋SM 无法在验收环境复跑 | 构建产物内容变化；Windows 构建流程改走 Node。§3 补 register/pair 回归行 |
+| D-E | PowerShell 退役与包内容 | **【PO 已确认 2026-09-18：Node Build/Verify＋移除包内 delivery .ps1；W7b 本轮后置】** `delivery/` 三脚本退役（逻辑入 Node：transport.mjs＋queue 直调＋register Node 化；**Windows DPAPI 三处内联调用保留**）。`release/`：**Build/Verify 以 Node 重写**——zip 策略：`git archive` 产内容＋Node 最小 deflate zip writer（约百余行，UTF-8 flag/时间戳细节单测）；Verify 解析中央目录只读校验。插件树移除 .ps1，包内容变化计入 manifest（PBI-18-4）。**W7a 失败＝pause-and-decide 决策点**（SM 审阅条件）：zip writer 或结构校验不过时 Developer 停下、携证据呈报 PO 决策，回退预案（保留 .ps1 一个版本＋明示包内容差异）仅在 PO 批准后执行，不得自动回退。**W7b（Test-Acceptance 移植）本轮后置**：后置期间以 W5 自动化＋W7a 构建/结构校验＋W8/W9 SMOKE 证据逐项映射 AC，SM 独立复核不降级 | 备选：release 留 Windows-only——拒绝：死重＋SM 无法在验收环境复跑 | 构建产物内容变化；Windows 构建流程改走 Node。§3 补 register/pair 回归行 |
 | D-F | 会话选择校验 | `sessions.mjs:62` 平台分支：win32 校验 `\\.\pipe\` 前缀；**Linux** 校验绝对 UDS 路径（macOS 不做任何支持声明，同分支仅为绝对路径的防御性放行） | — | 无 Windows 影响 |
 | D-G | queue 唤醒 | `cli.mjs` 直接 `execFile('codex',['queue',...])`，删 `BridgeQueue.ps1`；保留超时与 `wake-submitted` 事件 stdout 记录语义（现 cli.mjs:281-285 行为）；queue 失败走 send-error 事件留证 | E2 证明 Linux 原生投递 | Windows 唤醒路径等价替换→W10 冒烟 |
 | D-H | 测试移植 | ①`connect.test.mjs` 无守卫 powershell 移植；②`pipe.test.mjs` 平台分支＋**两平台客户端都走 transport.mjs**；③Windows 路径 fixture 平台中性化；④**⑤移植 store.test:617/639 两项 CLI 集成测试到 Linux**（UDS fixture 服务端＋PATH codex 假 shim）；⑥W5 退出判据：**双平台零残留 skip**（skip 计数不随迁移残留） | — | Windows 测试语义不变 |
@@ -73,7 +73,7 @@ flowchart TD
 | W5 | 测试移植（D-H①–⑥） | 1d | W1–W4；退出判据：双平台零残留 skip |
 | W6 | 文档六件：README/INSTALL/RELEASE-NOTES/USAGE/SMOKE＋**SKILL.md**（POSIX 定位块、双平台边界、sessionId 歧义提醒）＋**plugin.json description**；SMOKE Linux 程序（隔离 home 模板、全量环境清洗清单、C-m 提交、首 turn 前置、证据路径、**crossSessionInbound 授权步骤说明**） | 1d | W4 |
 | W7a | release Build＋Verify Node 化（zip writer＋中央目录校验）＋真实构建＋新旧 manifest 结构对照 | 1d | W5；失败回退决断点（D-E） |
-| W7b | Test-Acceptance 移植（291 行：fixture/泄漏扫描/双树 parity/编排） | 1d | W7a；**预授权可后置**（降级顺序首位，后置期间以 SMOKE 手工程序＋W5 测试替代，SM 复核） |
+| W7b | Test-Acceptance 移植（291 行：fixture/泄漏扫描/双树 parity/编排） | 1d | W7a；**本轮后置（PO 已批准 2026-09-18）**：后置期间以 W5 自动化＋W7a 构建/结构校验＋W8/W9 SMOKE 证据逐项映射 AC，SM 独立复核不降级 |
 | WC | 冻结 commit→构建候选→安装进 Linux 隔离 home（Operator，回显目标 home、核验 installedPath） | 0.5d | W7a |
 | W8 | 现场 R1：**安装候选上**全量矩阵第一轮（T 系＋REG＋MT/R/S03 系完整跑；含产品 send/reply 全路径与 `CODEX_THREAD_ID` 工具环境实证、16-1 输入变体、16-4 对抗样本、17-4 legacy 样本【有来源说明】） | 1d | WC；PO 动作：R1 隔离 home `/hooks` 信任＋Claude 接收策略 |
 | W9 | 现场 R2：**同一冻结 commit** 全量矩阵第二轮（独立 runId/全新会话与 marker；抽样＋PO 体验轮适用证据须逐格列映射，缺省全跑） | 1d | W8；PO 动作：R2 home 信任 |
@@ -82,7 +82,7 @@ flowchart TD
 | W11 | 最终候选核验：生效 hooks/skill/回复入口来源、REG 复核（install→信任→首通）＋PO 体验轮（真实需求澄清、两目标交错追问、crossSessionInbound 授权体验） | 1d | W9＋W10；PO 动作：候选信任＋体验轮（若 WC 后代码有变：重建＋差异场景重跑，明示） |
 | W12 | Review/Retro 材料、发布准备（版本与公开发布由 PO 决策） | 0.5d | W11；可溢出至 Review 事件内 |
 
-**容量声明**：合计 12d（不含 W7b）／13d（含）。**建议 Sprint 时长 2.5 周（≈13 工作日容量，含 1d 机动）**。若 PO 压缩至 2 周：W7b 后置（−1d）＋W12 并入 Review（−0.5d）后仍缺 ~0.5–1d，唯一进一步可协商项为 W10 压缩为"传输冒烟＋测试套"（省 0.5d，**削弱 18-4 Windows 回归覆盖，须 PO 明示接受**）；W8/W9 两轮口径不可裁。触顶按"先回报再协商"纪律。
+**容量声明（R-1 修正，2026-09-18）**：本轮计划 **12d（W7b 后置，PO 已批准）**；**Sprint 时长 2.5 周（≈12.5 工作日容量），保留约 0.5–1d 缓冲**，W12 可溢出至 Review 事件内。不压缩 W10（SM 建议不改 Windows 回归覆盖）。若未来纳入 W7b（+1d），须改为 3 周时长。W8/W9 两轮口径不可裁；触顶按"先回报再协商"纪律。
 
 ## 5. 验证安排
 
@@ -101,11 +101,10 @@ flowchart TD
 | Stop-block 注入完整链变体、同轮双 hook noop 未单独实证 | 低 | W8/W9 场景（S03 系） |
 | **Windows 侧隔离 home/模型/信任未落实（D1 残留）** | 中 | W10-pre Operator 项＋SM 复核；不机械套用 Linux 配方 |
 | **crossSessionInbound PO 授权体验未排期实证** | 中 | W11 PO 动作集＋W6 文档；E1 仅 scratch 会话内联验证 |
-| token 方案待 PO 确认（D-B，含"Windows 也改现读"备选 c） | 决策 | 本文档呈报 |
-| 发布工具 zip 策略待 PO 确认（D-E）＋构建失败回退 | 决策 | 决断点已定义（W7a 退出） |
+| token 方案（D-B） | **已决** | PO 确认 2026-09-18 采用推荐方案 |
+| 发布工具 zip 策略（D-E）＋构建失败处置 | **已决** | PO 确认 Node＋移除 .ps1；W7a 失败＝pause-and-decide（呈报 PO，不自动回退） |
 | Claude 版本漂移（Linux 2.1.275 已验；Windows 2.1.273 未验） | 低 | W10 实测＋如实记录 |
 | WSL2 PATH 互操作污染 | 低 | 已装 Linux node 且优先；SMOKE 前置检查 |
-| 容量 12–13d vs 时长 | 取舍 | §4 容量声明；PO 定夺 |
 
 ## 7. 与 12 项 AC 的逐项对应
 
