@@ -119,43 +119,49 @@ async function main() {
     // The binding is append-only: one root per Codex session, never rebound.
     const resolution = resolveRoot({ threadId: codexId });
     store = new BridgeStore(resolution.root);
-    // Synthesize the endpoint from the session registry: same-user DPAPI wrapping of
-    // the registry peer key, so the Claude side never registers anything manually.
-    // Registry key files are JSON ({peerToken, procStartFt, pidDomain}); only the
-    // peerToken authenticates to the host pipe. The token travels via process
-    // environment, never the command line, and error paths never echo it.
-    const keyFile = readdirSync(registry).find((f) => f.startsWith(`${session.pid}.`) && f.endsWith('.key'));
-    let keyRecord;
-    try {
-      keyRecord = JSON.parse(readFileSync(join(registry, keyFile), 'utf8'));
-    } catch {
-      throw new Error(`Peer key file for pid ${session.pid} is not the expected registry JSON record.`);
+    // Synthesize the endpoint from the session registry (S04-11), so the Claude
+    // side never registers anything manually. Platform branch (S08 / D-B):
+    // Windows wraps the registry peer key with same-user DPAPI and stores the
+    // protected blob; Linux stores no secret at all - the transport reads the
+    // live registry key by sessionId reverse-lookup at send time. Registry key
+    // files are JSON ({peerToken, ...}); only the peerToken authenticates to the
+    // host pipe. The token travels via process environment, never the command
+    // line, and error paths never echo it.
+    const endpointRecord = {
+      schema: 1,
+      sessionId: session.sessionId,
+      socket: session.socket,
+      registeredAt: new Date().toISOString(),
+      cwd: session.cwd ?? null,
+      origin: 'connect-synthesis',
+    };
+    if (process.platform === 'win32') {
+      const keyFile = readdirSync(registry).find((f) => f.startsWith(`${session.pid}.`) && f.endsWith('.key'));
+      let keyRecord;
+      try {
+        keyRecord = JSON.parse(readFileSync(join(registry, keyFile), 'utf8'));
+      } catch {
+        throw new Error(`Peer key file for pid ${session.pid} is not the expected registry JSON record.`);
+      }
+      const token = typeof keyRecord?.peerToken === 'string' ? keyRecord.peerToken.trim() : '';
+      if (!token) throw new Error(`Peer key record for pid ${session.pid} has no peerToken field.`);
+      let protectedToken;
+      try {
+        protectedToken = (await execute('powershell.exe', [
+          '-NoProfile', '-Command',
+          '$env:CTC_PEER_KEY | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString',
+        ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PEER_KEY: token } })).stdout.trim();
+      } catch (error) {
+        throw new Error('DPAPI protection of the peer key failed; no key material is included in this message.');
+      }
+      if (!protectedToken) throw new Error('DPAPI protection returned an empty token.');
+      endpointRecord.tokenProtected = protectedToken;
     }
-    const token = typeof keyRecord?.peerToken === 'string' ? keyRecord.peerToken.trim() : '';
-    if (!token) throw new Error(`Peer key record for pid ${session.pid} has no peerToken field.`);
-    let protectedToken;
-    try {
-      protectedToken = (await execute('powershell.exe', [
-        '-NoProfile', '-Command',
-        '$env:CTC_PEER_KEY | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString',
-      ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PEER_KEY: token } })).stdout.trim();
-    } catch (error) {
-      throw new Error('DPAPI protection of the peer key failed; no key material is included in this message.');
-    }
-    if (!protectedToken) throw new Error('DPAPI protection returned an empty token.');
     store.initialize();
     const endpointPath = join(store.root, 'endpoints', `claude-${session.sessionId}.json`);
     // Atomic temp+rename publish: a concurrent reader always sees the complete
     // previous or complete new endpoint record, never a truncated file.
-    atomicWriteJson(endpointPath, {
-      schema: 1,
-      sessionId: session.sessionId,
-      socket: session.socket,
-      tokenProtected: protectedToken,
-      registeredAt: new Date().toISOString(),
-      cwd: session.cwd ?? null,
-      origin: 'connect-synthesis',
-    });
+    atomicWriteJson(endpointPath, endpointRecord);
     // Upsert into the multi-pair registry: same Claude session reuses its pair
     // (endpoint refresh allowed); a different one becomes an additional target.
     // Existing pairs are never touched, so connecting B never disturbs A.

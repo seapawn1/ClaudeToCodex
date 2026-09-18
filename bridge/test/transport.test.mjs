@@ -296,7 +296,10 @@ test('endpoint and argument validation reject bad input before any record is wri
     tokenLoader: async () => fixtureToken,
   };
 
-  for (const override of [{ schema: 2 }, { sessionId: 'not-a-uuid' }, { socket: '' }, { tokenProtected: '' }]) {
+  // tokenProtected is required only on Windows (D-B: Linux stores no secret).
+  const overrides = [{ schema: 2 }, { sessionId: 'not-a-uuid' }, { socket: '' }];
+  if (process.platform === 'win32') overrides.push({ tokenProtected: '' });
+  for (const override of overrides) {
     const endpointPath = join(directory, 'endpoints', 'bad.json');
     writeFileSync(endpointPath, JSON.stringify({
       schema: 1, sessionId: claudeId, socket: '/valid/path', tokenProtected: 'x', ...override,

@@ -4,6 +4,7 @@ import { connect } from 'node:net';
 import { dirname } from 'node:path';
 import { promisify } from 'node:util';
 import { atomicWriteJson, readJson } from '../store.mjs';
+import { peerTokenForSession } from '../sessions.mjs';
 
 // Sprint 08 / D-A: one Node transport for both platforms - Linux connects to the
 // session's Unix domain socket, Windows to its named pipe (net.connect accepts
@@ -27,10 +28,14 @@ function uuid(value, label) {
 
 // Same validation the PowerShell client enforced, platform-branched: the
 // endpoint's socket must be a named pipe on Windows and an absolute path (UDS)
-// elsewhere.
+// elsewhere. Windows records carry the DPAPI-protected token; Linux records
+// carry no secret at all (D-B) - the key is read live at send time.
 function validateEndpoint(endpoint) {
   if (endpoint?.schema !== 1 || !UUID.test(endpoint?.sessionId ?? '') ||
-    typeof endpoint.socket !== 'string' || !endpoint.tokenProtected) {
+    typeof endpoint.socket !== 'string') {
+    throw new Error('Invalid Claude endpoint registration.');
+  }
+  if (process.platform === 'win32' && !endpoint.tokenProtected) {
     throw new Error('Invalid Claude endpoint registration.');
   }
   const namedPipe = endpoint.socket.startsWith('\\\\.\\pipe\\');
@@ -59,10 +64,10 @@ async function unwrapTokenWindows(endpoint) {
 
 // Token acquisition is platform-branched (D-B): Windows unwraps the DPAPI blob
 // stored in the endpoint record; Linux keeps zero secret at rest in the bridge
-// root and reads the live registry peer key by sessionId at send time (W2).
+// root and reads the live registry peer key by sessionId at send time.
 export async function resolveEndpointToken(endpoint) {
   if (process.platform === 'win32') return unwrapTokenWindows(endpoint);
-  throw new Error('Peer token resolution on this platform is delivered by the W2 slice (live .key read by sessionId).');
+  return peerTokenForSession(endpoint.sessionId);
 }
 
 const delay = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
