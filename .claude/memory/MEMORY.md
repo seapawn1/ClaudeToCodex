@@ -2,6 +2,7 @@
 
 - [Sprint discovery working agreement](sprint-discovery-working-agreement.md) — user-story evidence and standing triggers for Empathize, Ideate and prototype testing
 - [Sprint Planning participation](sprint-planning-participation.md) — PO-led Goal/PBI phase, explicit handoff to SM refinement, Developer review and ownership of HOW
+- [Sprint Review/Retro closure](sprint-review-retro-closure.md) — three-phase closure, docs distillation, memory/product-health updates, one closure commit and tags, merge/release, worktree cleanup, dual-platform plugin update
 - [Sprint acceptance responsibility](sprint-acceptance-responsibility.md) — independently verify final-candidate AC evidence; keep technical acceptance and PO experience distinct
 - [Codex↔Claude test pair harness](codex-claude-test-pair-harness.md) — verified launch, isolation, pairing, topology, and original-frame evidence procedure
 - [Background Claude session startup](background-claude-session-startup.md) — PO intent for Codex-managed peer setup; use the modern harness procedure
