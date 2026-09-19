@@ -116,6 +116,9 @@
 - 支持范围：Windows 10+ 与 WSL2 Ubuntu 24.04，同一 OS 用户内运行两侧会话。
 - 不支持：原生 Linux（非 WSL2）、macOS、Windows 与 Linux 跨侧通信、跨机器通信。
 - PO 决定公开推送 v1.4.0 tag，并更新 Windows 与 WSL2 日常安装。
+- 正式发布物由 closure commit `9b4ce91` 构建：`claude-to-codex-plugin-1.4.0.zip`，SHA256 `e3ac09a37c9e40c813f4efe841aea3f0b75d5f3f370794ac93c0ab11c31df403`；Node Verify、Python ZIP 外部校验、双时区重建和秘密扫描通过。
+- GitHub Release：<https://github.com/seapawn1/ClaudeToCodex/releases/tag/v1.4.0>
+- Windows 与 WSL2 日常安装均已从远端 `v1.4.0` tag 更新；两侧安装缓存与发布 manifest 逐文件哈希一致。
 
 ## 2. Sprint Retrospective
 
@@ -175,4 +178,4 @@
 | Candidate ZIP | `claude-to-codex-plugin-sprint08-candidate.zip` |
 | Candidate SHA256 | `aaa5edf7cc8c303bb37a4aa022cb66b39968d42fb59fc6f10b3c586e555524d6` |
 
-一次性 Sprint 过程材料在收口前记录于 `138bcb4`，可用 Git 历史检索。Developer 分支历史由合并提交保留；实现 worktree 与临时分支在发布验证和远端推送后清理。本文件是活跃仓库中的唯一 Sprint 08 总结。
+一次性 Sprint 过程材料在收口前记录于 `138bcb4`，可用 Git 历史检索；Developer 尾部清理记录为 `a192d6c`。发布验证和远端推送后，Sprint worktree、`sprint-08` / `sprint-08-merged` / Developer worktree 分支、Windows `s08-win` 冻结 worktree 与 bundle 均清理。Developer 终轮还清理了 W8/W9/W10 测试 home、WSL 现场数据根、tmux 会话和 Windows Temp W10 home；日常 Windows 业务数据根、两侧日常 `.codex` / `.claude`、正式 v1.4.0 发布物与 SM 复核产物被有意保留。跨历史 Sprint 的 Windows `%TEMP%` 旧协调文件不属于本轮，留待 PO 另行决定。本文件是活跃仓库中的唯一 Sprint 08 总结。
