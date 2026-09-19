@@ -1,0 +1,15 @@
+{
+  "home": "C:\\Users\\DELL\\AppData\\Local\\Temp\\ctc-w10-home",
+  "marketplace": {
+    "code": 0,
+    "out": "Added marketplace `claudetocodex-dev` from \\\\?\\D:\\ctc-s08-win.\nInstalled marketplace root: D:\\ctc-s08-win\nWARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\Temp\\\\\" (codex_home: AbsolutePathBuf(\"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\Temp\\\\ctc-w10-home\"))\n"
+  },
+  "install": {
+    "code": 0,
+    "out": "Added plugin `claudetocodex` from marketplace `claudetocodex-dev`.\nInstalled plugin root: C:\\Users\\DELL\\AppData\\Local\\Temp\\ctc-w10-home\\plugins\\cache\\claudetocodex-dev\\claudetocodex\\1.3.0\nWARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\Temp\\\\\" (codex_home: AbsolutePathBuf(\"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\Temp\\\\ctc-w10-home\"))\n"
+  },
+  "list": {
+    "code": 0,
+    "out": "Marketplace `personal`\nC:\\Users\\DELL\\.agents\\plugins\\marketplace.json\n\nPLUGIN                    STATUS         VERSION  SOURCE\nhistory-library@personal  not installed           C:\\Users\\DELL\\plugins\\history-library\n\nMarketplace `claudetocodex-dev`\nD:\\ctc-s08-win\\.agents\\plugins\\marketplace.json\n\nPLUGIN                           STATUS              VERSION  SOURCE\nclaudetocodex@claudetocodex-dev  installed, enabled  1.3.0    D:\\ctc-s08-win\\plugins\\claudetocodex\nWARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\Temp\\\\\" (codex_home: AbsolutePathBuf(\"C:\\\\Users\\\\DELL\\\\AppData\\\\Local\\\\Temp\\\\ctc-w10-home\"))\n"
+  }
+}
