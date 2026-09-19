@@ -1,7 +1,7 @@
 ---
 name: s08-bridge-cli-env-prefix
 description: "Sprint 08 mixed topology — bare bridge CLI send fails wake with \"no rollout found\"; must prefix CTC_BRIDGE_DIR + CODEX_HOME"
-metadata: 
+metadata:
   node_type: memory
   type: project
   originSessionId: a7954f30-8956-4eb6-a04e-94a9082cb7d5

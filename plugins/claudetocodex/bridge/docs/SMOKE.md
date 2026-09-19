@@ -6,7 +6,7 @@
 
 | # | 前置项 | 确认方式 |
 |---|---|---|
-| 1 | 平台为 Windows（已验证 Windows 10 Pro 10.0.19045；codex `0.153.4`/`0.154.0`、claude `2.1.263`/`2.1.268`）或 WSL2 Linux（Sprint 08 候选：Ubuntu-24.04；codex `0.154.0`、claude `2.1.275`；见 USAGE §5 基线）；Node ≥18.3（Linux 侧 PATH 中靠前，避免混入 Windows 残留） | `node --version`、`codex --version`、`claude --version` |
+| 1 | 平台为 Windows（已验证 Windows 10 Pro 10.0.19045；codex `0.153.4`/`0.154.0`、claude `2.1.263`/`2.1.268`）或 WSL2 Linux（v1.4.0：Ubuntu-24.04；codex `0.154.0`、claude `2.1.275`；见 USAGE §5 基线）；Node ≥18.3（Linux 侧 PATH 中靠前，避免混入 Windows 残留） | `node --version`、`codex --version`、`claude --version` |
 | 2 | 已运行 `node bridge/cli.mjs install`，生成的 `.codex/hooks.json` 三条注册指向当前安装位置 | 查看安装输出或 hooks 文件 |
 | 3 | Codex 原始会话中 `/hooks` 已审阅并**信任**三条 bridge hook 定义 | 信任界面确认；定义变更会使 trust hash 失效、须重新信任 |
 | 4 | 安装后 Codex 原始会话经历过**完全退出并 `codex resume <threadId>` 重载**（运行中的会话不热加载 hook） | resume 后的会话为当前原始会话 |

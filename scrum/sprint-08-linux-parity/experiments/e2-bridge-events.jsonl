@@ -1,6 +1,0 @@
-{"at":"2026-09-18T06:17:06.467Z","type":"paired","pairId":"372818ee-9ddf-477a-9553-10402cb08eae","codexId":"01a0b324-9934-7b41-9fef-3eed1fd32453","claudeId":"52208643-be32-4219-bfc3-32dc25ef29db","claudeName":"e2peer"}
-{"at":"2026-09-18T06:17:06.468Z","type":"created","messageId":"cc479e6d-9fad-4446-b518-a318c992e851","from":"claude","to":"codex","pairId":"372818ee-9ddf-477a-9553-10402cb08eae"}
-{"at":"2026-09-18T06:17:06.469Z","type":"published","messageId":"cc479e6d-9fad-4446-b518-a318c992e851","pairId":"372818ee-9ddf-477a-9553-10402cb08eae"}
-{"at":"2026-09-18T06:17:06.469Z","type":"e2-fixture-created","pairId":"372818ee-9ddf-477a-9553-10402cb08eae","messageId":"cc479e6d-9fad-4446-b518-a318c992e851","note":"synthetic claude identity, fixture layer"}
-{"at":"2026-09-18T06:17:59.474Z","type":"context-prepared","messageId":"cc479e6d-9fad-4446-b518-a318c992e851","pairId":"372818ee-9ddf-477a-9553-10402cb08eae","hook":"UserPromptSubmit","turnId":"01a0b32a-1e3a-72a2-bbb0-b5876fbaebab","toolUseId":null,"modelReceipt":"unverified","claim":"/tmp/ctc-e2/bridge-root/claims/1391f1aa-8967-47a3-b76b-581e3838b529"}
-{"at":"2026-09-18T06:18:40.373Z","type":"wake-suppressed","messageId":"cc479e6d-9fad-4446-b518-a318c992e851","turnId":"01a0b32a-c720-7651-bc2c-711ebebd4628","receiptTurnId":"01a0b32a-1e3a-72a2-bbb0-b5876fbaebab"}

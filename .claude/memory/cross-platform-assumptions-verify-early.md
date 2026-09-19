@@ -2,7 +2,9 @@
 name: cross-platform-assumptions-verify-early
 description: 平台分支的进程启动/路径假设必须在实现时双平台实测，不能推迟到回归阶段
 metadata:
-  type: feedback
+  node_type: memory
+  type: project
+  modified: 2026-09-19
 ---
 
 Sprint 08 W3 将 `codex queue` 从 PowerShell 改为 Node `execFile('codex')` 时，我在实现处留了"Windows 侧 npm 可能装 codex.exe，W10 冒烟再验证"的假设；SM 复核（F-1）用只读探针证伪：本机 Windows npm 只有 `.ps1/.cmd` shim，`execFile` 三种方式全部失败（ENOENT/EFTYPE/EINVAL），Windows 全量测试 2 项真实失败。

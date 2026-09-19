@@ -89,7 +89,7 @@ node bridge/cli.mjs status
 
 ## 5. 已验证范围与未验证边界
 
-已验证范围（本 Increment 的结论边界）：同一 OS 用户；一个 Codex 原始会话与**至少两个** Claude 原始会话共存（名称路由、回复归属、重叠来信三态、单目标隔离与退役边界、单目标免 `--name` 兼容、1.0.0 旧 `pair.json` 继续使用）；**per-Codex 数据根自动选择与 resume 复用**（默认根被 incumbent 占用时自动让位 `bridge-threads/<threadId>` 新根、索引只增不改绑、存量默认根同身份零迁移沿用）；**跨根 wake 诊断与未领取 pending 的诚实提示**（提示不构成收信证明，hook 未信任/未重载仅标未知/可能）；短文本（trim 后 ≤2000 字符）；串行逐事件注入；记录的工具版本——Windows：**Windows 10 Pro 10.0.19045、PowerShell 5.1、codex-cli 0.153.4/0.154.0、claude 2.1.263/2.1.268、Node v24.14.0**；Linux（Sprint 08 候选，验收以 Sprint 08 收口证据为准）：**WSL2 Ubuntu-24.04、codex-cli 0.154.0、claude 2.1.275、Node v24.14.0**（任一 CLI 升级后行为未验证，应先重跑 SMOKE 再依赖）。
+已验证范围（本 Increment 的结论边界）：同一 OS 用户；一个 Codex 原始会话与**至少两个** Claude 原始会话共存（名称路由、回复归属、重叠来信三态、单目标隔离与退役边界、单目标免 `--name` 兼容、1.0.0 旧 `pair.json` 继续使用）；**per-Codex 数据根自动选择与 resume 复用**（默认根被 incumbent 占用时自动让位 `bridge-threads/<threadId>` 新根、索引只增不改绑、存量默认根同身份零迁移沿用）；**跨根 wake 诊断与未领取 pending 的诚实提示**（提示不构成收信证明，hook 未信任/未重载仅标未知/可能）；短文本（trim 后 ≤2000 字符）；串行逐事件注入；记录的工具版本——Windows：**Windows 10 Pro 10.0.19045、PowerShell 5.1、codex-cli 0.153.4/0.154.0、claude 2.1.263/2.1.268、Node v24.14.0**；Linux（v1.4.0 正式发布）：**WSL2 Ubuntu-24.04、codex-cli 0.154.0、claude 2.1.275、Node v24.14.0**（任一 CLI 升级后行为未验证，应先重跑 SMOKE 再依赖）。
 
 以下能力**未验证，本产品不提供也不得被暗示已完成**：
 

@@ -1,29 +1,39 @@
-# ClaudeToCodex 未定版候选：WSL2/Linux 平台对等（Sprint 08）
+# ClaudeToCodex 1.4.0 版本说明（正式发布）
 
-> 状态：**候选，未发布**。版本号与发布由 PO 决定；本节描述 Sprint 08 候选内容，验收以 Sprint 08 Review 证据为准。
+> 状态：正式发布版本。该版本通过两轮 WSL2 现场矩阵、原生 Windows 回归、DPAPI 全链路、同源安装校验与 Windows 真实原始会话双向冒烟；PO 确认端到端体验通过。安装入口固定 `v1.4.0` tag。Sprint 过程收口另有 `sprint-08-linux-parity-review-retro` tag。
 
-## 主题
+## 版本
 
-在 WSL2/Linux（同一 OS 用户）交付与 Windows v1.3.0 完整用户能力对等的双向消息桥；Windows 行为保持不变（回归验证）。
+- **版本**：1.4.0（Codex CLI 插件）。
+- **主题**：Windows 与 WSL2/Linux 双平台支持（PBI-16 / 17 / 18）。
+- **运行时候选**：`c0f8d6e`，SHA256 `aaa5edf7cc8c303bb37a4aa022cb66b39968d42fb59fc6f10b3c586e555524d6`；正式发布提交仅追加版本与收口材料，不改变已验收运行时行为。
 
-## 主要变化（候选）
+## 新增能力
 
-- **统一 Node 传输层**（`bridge/delivery/transport.mjs`）：Linux 连 Unix domain socket、Windows 连命名管道，同一实现；投递契约不变（auth 行＋500ms 间隔＋LF 帧、`wire/*.send.json` 双写、completed 仅在写回调＋关闭后、自建连接超时与总预算、如实错误分类且不自动重试）。
-- **平台化 token 策略**：Windows 保留同用户 DPAPI（最小内联 powershell 调用，token 经环境传递、不回显）；Linux 桥数据根**零秘密落盘**，发送时按 sessionId 从会话注册表现读 peer key。
-- **PowerShell 脚本退役**：`codex queue` 直接调用、`register` 原生 Node 化；包内不再含 `delivery/*.ps1`（包内容变化，manifest 对照见构建材料）。
-- **数据根平台化**：Linux 为 `~/.local/share/ClaudeToCodex`（`XDG_DATA_HOME` 覆盖）；选择/复用/索引语义与 Windows 一致。
-- **可执行回复指引平台化**：Linux 注入 POSIX `VAR='...'` 前缀（含引号转义），Windows 保留 `$env:` 形态。
-- **测试套件双平台**：110 项测试在 Linux 验收环境全绿（0 fail / 0 skip）；Windows 分支断言保留。
+- 新增 WSL2/Linux（Ubuntu 24.04，同一 OS 用户）支持：Unix domain socket 投递、Linux 会话注册表 token 现读、桥数据根零秘密落盘、`~/.local/share` 数据根基址与 POSIX 可执行回复入口。
+- 统一 Node 传输层同服 Windows named pipe 与 Linux UDS；Windows 继续保留同用户 DPAPI、`%LOCALAPPDATA%` 数据根与 PowerShell 回复入口。
+- Windows queue 启动保留 npm shim 解析语义；POSIX 直接调用 `codex queue`。
+- `register` Node 化，包内 delivery PowerShell 脚本退役；Node Build/Verify 生成按源 commit UTC 时间戳的跨时区字节可复现 ZIP。
+- README / INSTALL / USAGE / SMOKE / skill / plugin metadata 同步双平台化。
 
-## 已验证环境（候选基线）
+## 已验证环境
 
-- Linux：WSL2 Ubuntu-24.04、Node.js v24.14.0、Codex CLI 0.154.0、Claude Code 2.1.275。
-- Windows：回归于本机 Windows 侧进行（版本见下方 1.3.0 条目）；同源候选安装。
+- WSL2 Ubuntu 24.04、Node.js v24.14.0、Codex CLI 0.154.0、Claude Code 2.1.275。
+- Windows 10 Pro 19045、Node.js v24.14.0、Codex CLI 0.154.0、Claude Code 2.1.273/2.1.275（Windows 侧 W10 记录为 2.1.275）。
 
-## 边界与限制（候选口径）
+## 验证摘要
 
-- 原生 Linux（非 WSL2）、macOS 未验证；Windows 与 Linux 之间**跨侧**通信不在产品范围（同一 OS 用户内工作）。
-- 其余能力边界与 1.3.0 一致：短文本、串行注入、回执恒 `unverified`、不自动重试/恢复。
+- Linux 源码树与插件树均 **115/115 pass，0 fail / 0 skip**；安装候选 **113 pass / 0 fail / 2 explicit skip**。
+- 原生 Windows 套件 **100 pass / 0 fail / 15 explicit skip**；DPAPI register→protected blob→unwrap→named-pipe auth/frame 全链路通过。
+- W8/W9 两轮独立 WSL2 现场矩阵均完成；W10 Windows 真实原始会话完成 Codex→Claude 与 Claude→Codex 双向链路，覆盖 pipe 投递、queue wake、UserPromptSubmit/Stop hook 注入与重复唤醒抑制。
+- 候选 ZIP `VERIFY=OK checked=28 extra=0`；`TZ=UTC` 与 `TZ=Asia/Shanghai` 同源重建 SHA256 一致。
+- 完整 Review / Retro / 证据索引见 `docs/scrum-sprint/sprint-08-linux-parity-review-retro.md`。
+
+## 边界与限制
+
+- 原生 Linux（非 WSL2）、macOS、Windows 与 Linux 跨侧通信和跨机器通信不支持。
+- Windows 与 Linux 会话必须运行在同一 OS 用户下；短文本 trim 后 1..2000 字符；串行注入；回执恒为 `unverified`。
+- 不承诺广播、自动重试、自动恢复、自动启动 / 终止进程、任意数量会话或未来 CLI 兼容性。
 
 ---
 

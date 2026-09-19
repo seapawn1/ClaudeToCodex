@@ -4,16 +4,14 @@
 
 ## 获取
 
-**当前公开正式版本是 v1.3.0，仅支持 Windows**：
+**当前公开正式版本是 v1.4.0，支持 Windows 与 WSL2/Linux（同一 OS 用户）**：
 
 ```powershell
-codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.3.0
+codex plugin marketplace add https://github.com/seapawn1/ClaudeToCodex --ref v1.4.0
 codex plugin add claudetocodex@claudetocodex-dev
 ```
 
-**WSL2/Linux 支持属于 Sprint 08 未发布候选**：上方 `--ref v1.3.0` 不含 Linux 能力，Linux 用户暂无公开安装入口；公开安装命令将随正式发布（版本与发布时点由 PO 决定）更新。内部验收使用冻结来源的隔离安装（见 [INSTALL.md](INSTALL.md) 的候选安装说明）。
-
-> v1.3.0 是 Sprint 03 正式发布版本，已通过隔离安装候选、SM 真实宿主验证和 PO 手动端到端验收。Sprint 过程收口另有 `sprint-03-readable-arrival-review-retro` tag。
+> v1.4.0 通过两轮 WSL2 现场矩阵、原生 Windows 自动化回归、DPAPI 全链路、Windows 同源安装与 Windows 真实原始会话双向冒烟验证。v1.3.0 仍可作为 Windows-only 历史版本获取。
 
 ## 使用四步
 
@@ -27,8 +25,8 @@ codex plugin add claudetocodex@claudetocodex-dev
 ## 已验证环境与范围
 
 - Windows 10 Pro 19045；PowerShell 5.1；Node.js v24.14.0（Windows 侧投递保留 DPAPI 保护）。
-- Codex CLI 0.153.4 与 0.154.0；Claude Code 2.1.263 与 2.1.268。
-- WSL2 Ubuntu-24.04（Sprint 08 候选交付，验收以 Sprint 08 收口证据为准）；Node.js v24.14.0；Codex CLI 0.154.0；Claude Code 2.1.275。Linux 侧投递经 Unix domain socket，token 发送时从会话注册表现读、桥数据根零秘密落盘；数据根位于 `~/.local/share/ClaudeToCodex`（`XDG_DATA_HOME` 覆盖）。原生 Linux（非 WSL2）未验证。
+- Codex CLI 0.153.4 与 0.154.0；Claude Code 2.1.263 / 2.1.268（Windows W10 补证使用 2.1.275）。
+- WSL2 Ubuntu-24.04（v1.4.0 正式交付）；Node.js v24.14.0；Codex CLI 0.154.0；Claude Code 2.1.275。Linux 侧投递经 Unix domain socket，token 发送时从会话注册表现读、桥数据根零秘密落盘；数据根位于 `~/.local/share/ClaudeToCodex`（`XDG_DATA_HOME` 覆盖）。原生 Linux（非 WSL2）未验证。
 - 一个 Codex 原始会话对至少两个 Claude 原始会话：配对共存、按名路由、回复归属、每配对待收槽、相近来信、显式退役/重建、单目标与 legacy `pair.json` 兼容。
 - Sprint 05 起，per-Codex 数据根自动选择与 resume 复用；默认 root 属于其他 Codex 时自动让位新 root；Claude→Codex 连续官方投递、pending 清空、跨 root wake 诊断和并发首连索引安全已验证。
 - 短文本 trim 后 1..2000 字符；串行逐事件注入；回执恒 `unverified`；不承诺任意规模、广播、并发吞吐、自动重试或自动恢复。
@@ -37,11 +35,11 @@ codex plugin add claudetocodex@claudetocodex-dev
 ## 文档
 
 - [INSTALL.md](INSTALL.md)：安装、升级注意与使用。
-- [RELEASE-NOTES.md](RELEASE-NOTES.md)：1.3.0 Sprint 03 验证与历史版本。
+- [RELEASE-NOTES.md](RELEASE-NOTES.md)：1.4.0 双平台验证与历史版本。
 - [bridge/docs/USAGE.md](bridge/docs/USAGE.md)：完整使用与排查。
 - [bridge/docs/SMOKE.md](bridge/docs/SMOKE.md)：端到端冒烟与证据规则。
+- [Sprint 08 Review](docs/scrum-sprint/sprint-08-linux-parity-review-retro.md)：Linux 版本功能对等交付验收、回顾与追溯。
 - [Sprint 03 Review](docs/scrum-sprint/sprint-03-readable-arrival-review-retro.md)：可读到达与自动继续 Increment 验收、回顾与追溯。
-
 - [Sprint 05 Review](docs/scrum-sprint/sprint-05-bridge-root-consistency-review-retro.md)：自动数据根与连续投递 Increment 验收、回顾与追溯。
 - [Sprint 04 Review](docs/scrum-sprint/sprint-04-multi-claude-sessions-review-retro.md)：多配对 Increment 验收、价值检视与回顾。
 - [Sprint 02 Review](docs/scrum-sprint/sprint-02-install-package-release-review.md)：1.0.0 插件发布回顾。
@@ -49,7 +47,9 @@ codex plugin add claudetocodex@claudetocodex-dev
 
 ## 版本与 Sprint 标签
 
-- **`v1.3.0`**：可读到达与自动继续正式版本，发布物由 v1.3.0 收口提交构建并经 manifest / SHA256 追溯。
+- **`v1.4.0`**：Windows 与 WSL2/Linux 双平台正式版本，发布物由 v1.4.0 收口提交构建并经 manifest / SHA256 追溯。
+- **`sprint-08-linux-parity-review-retro`**：Sprint 08 Review/Retro 收口 tag。
+- **`v1.3.0`**：可读到达与自动继续 Windows-only 正式版本。
 
 - **`sprint-03-readable-arrival-review-retro`**：Sprint 03 Review/Retro 收口 tag，与 v1.3.0 指向同一提交。
 

@@ -31,7 +31,7 @@ On 2026-09-19, the PO specified the standing closure workflow for a mature Sprin
 
 ## Closure, release, and cleanup
 
-1. Put the completed Review/Retro distillation, document/memory updates, backlog adaptation, and process-material deletion in one closure commit. Create an annotated Sprint-closure tag (and, when releasing, the new version tag) pointing to that commit. For the current sequence, the next product version defaults to the next increment above v1.3.0 (v1.4.0) unless the PO explicitly chooses otherwise.
+1. Put the completed Review/Retro distillation, document/memory updates, backlog adaptation, and process-material deletion in one closure commit. Create an annotated Sprint-closure tag (and, when releasing, the new version tag) pointing to that commit. The PO chooses each version explicitly; Sprint 08 used v1.4.0 for a platform-capability expansion.
 2. Merge the closure commit from the Sprint integration branch into `main`, push `main` and the tags to the remote project, and publish/verify the new release candidate/package before cleanup.
 3. Only after remote push/release verification, remove the Sprint worktree, its Developer branch, and other confirmed-useless branches. Never delete evidence history that is only represented in Git.
 4. Update the installed plugin in both supported daily environments (Windows and WSL2/Linux), using explicit target homes/paths and verifying installed source/version. Record package hash, installed paths, trust/update actions, and actor attribution.

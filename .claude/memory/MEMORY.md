@@ -13,3 +13,5 @@
 - [Sprint 05 retrospective](sprint-05-retrospective.md) — empirical root reproduction, host-state guards, atomic per-session indexes, context-vs-visibility evidence
 - [Sprint 03 retrospective](sprint-03-retrospective.md) — PO empathy correction, adversarial marker boundaries, operational freeze, and layered acceptance evidence
 - [Cross-platform assumptions verify early](cross-platform-assumptions-verify-early.md) — probe launcher/path assumptions on both platforms at implementation time; unverified = explicit proof gap
+- [Sprint 08 bridge CLI env prefix](s08-bridge-cli-env-prefix.md) — bare send fails wake with "no rollout found"; prefix CTC_BRIDGE_DIR + CODEX_HOME, copy the embedded reply-entry command
+- [Sprint 08 retrospective](sprint-08-retrospective.md) — cross-platform proof gates, zero-copy isolation homes, reproducible release ZIPs, and real-session closure evidence

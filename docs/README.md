@@ -4,6 +4,7 @@ This directory keeps durable project knowledge. Process-heavy records are distil
 
 ## Current documents
 
+- [scrum-sprint/sprint-08-linux-parity-review-retro.md](scrum-sprint/sprint-08-linux-parity-review-retro.md): Sprint 08 Increment/value review, 12-AC and DoD evidence, W8/W9/W10/W11 summaries, release decision, retrospective, and Git-history retrieval points. This is the sole retained Sprint 08 summary.
 - [scrum-sprint/sprint-02-install-package-release-review.md](scrum-sprint/sprint-02-install-package-release-review.md): Sprint 02 product/value review, PO acceptance, backlog adaptation, retrospective actions, and 1.0.0 release provenance. This is the sole retained Sprint 02 summary.
 - [scrum-sprint/sprint-01-bridge-review-retro.md](scrum-sprint/sprint-01-bridge-review-retro.md): Sprint 01 Increment review, value inspection, backlog adaptation, and retrospective.
 - [DeepResearchSynthesis.md](DeepResearchSynthesis.md): cross-tool messaging research conclusions, evidence boundaries, rejected risks, and Scrum handoff.

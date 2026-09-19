@@ -1,6 +1,6 @@
 # Project Context
 
-ClaudeToCodex's current release (v1.3.0) is a Windows-only Codex CLI plugin. One running Codex original session can exchange short work messages, replies, and follow-ups with one or more named running Claude Code original sessions without the Product Owner relaying text. The normal user path is install, complete required host trust, choose Claude session(s) by name, then converse.
+ClaudeToCodex's current release (v1.4.0) is a dual-platform Codex CLI plugin for Windows and WSL2/Linux (same OS user). One running Codex original session can exchange short work messages, replies, and follow-ups with one or more named running Claude Code original sessions without the Product Owner relaying text. The normal user path is install, complete required host trust, choose Claude session(s) by name, then converse.
 
 Primary documents are `README.md`, `INSTALL.md`, `RELEASE-NOTES.md`, `bridge/docs/USAGE.md`, `bridge/docs/SMOKE.md`, `scrum/ProductBacklog.md`, and the distilled Sprint reviews under `docs/scrum-sprint/`.
 
@@ -8,11 +8,12 @@ Sprint 05 delivered and accepted the per-Codex root Increment: automatic root se
 
 Sprint 03 delivered and accepted PBI-09 readable arrival and automatic continuation: readable source/body/trailing-marker queue text, injection-layer reply entry without duplicate body injection, idle automatic continuation, busy queuing, same-turn dual-hook noop, cross-turn duplicate suppression, legacy single-line compatibility, and cross-pair marker hijack protection. Its sole active summary is `docs/scrum-sprint/sprint-03-readable-arrival-review-retro.md`; release version is 1.3.0. Sprint 06 (PBI-10+13) and Sprint 07 (PBI-12) remain pending Planning seeds, not current commitments.
 
-Sprint 08 Linux parity is in Planning as of 2026-09-18: full Windows v1.3.0 capability parity in one WSL2/Linux user environment, preserving Windows behavior; native Linux remains unverified. Developer review passed; refinement baseline v02 is in `scrum/sprint-08-linux-parity/SprintBacklog.md`, with review dispositions and environment evidence in `PlanningSync.md`. E1/E2 are PO-approved but not run; revised total estimate is 1.25–1.75 workdays excluding setup. The historical Windows environment is on this WSL2 machine's Windows host, not SSH `workstation`; isolated test model access must be resolved before HOW finalization. Node v24.14.0 setup is reviewed but not installed. Developer-led worktree/HOW awaits the PO's handoff; implementation is not committed. The PO relays messages while the Linux bridge is unavailable.
+Sprint 08 delivered and accepted the Linux-parity Increment: full Windows v1.3.0 capability parity in WSL2, Windows behavior preservation, unified Node transport, Linux zero-secret token live-read, platform-native data roots/reply entries, and reproducible Node release tooling. v1.4.0 passed two independent WSL2 field matrices, native Windows regression, DPAPI/named-pipe checks, same-source installs, and a real Windows bidirectional session round. Native Linux (non-WSL2), macOS, and cross Windows/Linux-side communication remain unsupported. The sole active summary is `docs/scrum-sprint/sprint-08-linux-parity-review-retro.md`. Sprint 06 (PBI-10+13) and Sprint 07 (PBI-12) remain pending Planning seeds.
 
 ## Durable working rules
 
 - Follow `memory/sprint-discovery-working-agreement.md` for user-story evidence and when to use Empathize, Ideate and prototype tests. This standing rule is maintained in project memory.
+- Follow `memory/cross-platform-assumptions-verify-early.md` and `memory/sprint-08-retrospective.md` for platform-specific launcher/path proof, zero-copy isolated homes, reproducible package metadata, and real-session evidence gates.
 - Scrum boundaries: the PO orders value and makes acceptance/release decisions; Developers own implementation and the Sprint Backlog plan; the SM independently verifies acceptance evidence and removes impediments.
 - Acceptance evidence: check every AC and applicable DoD against the final installed candidate. Developer reports and test counts are inputs, not acceptance substitutes.
 - Delivery evidence: `submitted:true`, pipe writes, message files, and a lone `context-prepared` are process evidence. Receipt requires the receiving original session's full inbound frame plus automatic message/pair/conversation/reply linkage.

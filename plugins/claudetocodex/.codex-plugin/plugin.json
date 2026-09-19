@@ -1,6 +1,6 @@
 {
     "name":  "claudetocodex",
-    "version":  "1.3.0",
+    "version":  "1.4.0",
     "description":  "ClaudeToCodex - cross-session bridge between Codex and Claude Code original sessions (Windows and WSL2/Linux, one Codex with one or more Claude pairs by name, short text).",
     "author":  {
                    "name":  "seapawn1"
