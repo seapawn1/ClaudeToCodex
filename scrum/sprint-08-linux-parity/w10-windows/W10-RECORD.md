@@ -19,7 +19,21 @@
 
 ## 缺口（如实呈报，不降级）
 
-**Windows 真实 Codex 会话内的现场往返**（hooks 实触发＋queue 唤醒＋注入的 GUI 会话轮）未执行——Windows TUI 无法从 WSL 无头驱动。已有替代组合：上表全部＋v1.3.0 在 Windows 已验收的会话路径（Sprint 08 对该路径的改动仅 queue 启动方式，且其 win32 分支已经套件实证）。**是否需要 PO 在 Windows 侧补一次真实会话冒烟（约 10 分钟：开 codex 会话→信任 hooks→与一个 Claude 会话互发一条），由 PO/SM 裁定。**
+**Windows 真实 Codex 会话内的现场往返**（hooks 实触发＋queue 唤醒＋注入的 GUI 会话轮）**未执行**——Windows TUI 无法从 WSL 无头驱动，且 PO 在收到两个选项后选择直接进入 W11（2026-09-19，隐含接受替代证据，未要求补冒烟）。已完成的替代证据组合：上表全部（原生套件 100/0＋DPAPI 端到端＋同源安装 27/27＋W1 管道探针＋queue win32 套件分支）＋ v1.3.0 在 Windows 已验收的会话路径（Sprint 08 对该路径的改动仅 queue 启动方式）。
+
+## 最终结案（SM 问询回复，2026-09-19）
+
+**结论：PARTIAL**——自动化与同源安装证据闭合；真实会话冒烟未执行，以替代证据组合＋PO 进入 W11 的决定结案。
+
+| SM 问询项 | 回答 |
+|---|---|
+| 真实冒烟（Codex↔Claude 真发送/回复入口/queue wake/hooks 注入/原始记录） | **未执行**——无 Windows 侧 sessionId/marker/消息链可提供 |
+| Windows installedPath / CODEX_HOME | `C:\Users\DELL\AppData\Local\Temp\ctc-w10-home`（隔离，日常 `.codex` 未动） |
+| candidate sourceCommit | `c0f8d6e84bd53711a89956578a4ef22de8a7e440`（D 盘源 `D:\ctc-s08-win` @ s08-win，插件树一致） |
+| candidate ZIP SHA256 | `aaa5edf7cc8c303bb37a4aa022cb66b39968d42fb59fc6f10b3c586e555524d6` |
+| PO /hooks 信任执行者与时间 | **unknown**（Windows 侧无会话交互；W10 无信任动作） |
+| 错误/偏差/恢复 | 无运行错误；环境偏差＝隔离 home 位于 Temp（易失）；D 盘主 checkout 未提交改动全程未动 |
+| c0f8d6e 之后 runtime/plugin tree 变更 | **零**（`git diff c0f8d6e..HEAD -- bridge/ plugins/` 为空）；后续 10 个提交均为 scrum/ 下过程材料（清单见 PRE-REVIEW） |
 
 ## 附注
 
