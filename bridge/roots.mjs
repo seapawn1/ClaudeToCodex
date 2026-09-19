@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync, linkSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { readJson } from './store.mjs';
+import { dataBaseDir, readJson } from './store.mjs';
 
 // Sprint 05 / PBI-15: per-Codex-session bridge roots. The 1.0.0 product had a
 // single default root resolved purely from the environment, so a Codex host
@@ -20,18 +19,13 @@ import { readJson } from './store.mjs';
 const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
 // Mirrors store.defaultRoot()'s location rule but honors an explicit env so
-// resolution is testable without mutating process.env.
-const defaultRootOf = (env) => {
-  const base = env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local');
-  return join(base, 'ClaudeToCodex', 'bridge');
-};
+// resolution is testable without mutating process.env. Sprint 08 / D-C: both
+// derive from the one shared dataBaseDir rule (platform-native base dir).
+const defaultRootOf = (env) => join(dataBaseDir(env), 'bridge');
 
-export const rootsParent = (env = process.env) => {
-  const base = env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local');
-  return join(base, 'ClaudeToCodex');
-};
+export const rootsParent = (env = process.env) => dataBaseDir(env);
 
-// The index is one small JSON file per Codex session under bridge-roots\ - the
+// The index is one small JSON file per Codex session under bridge-roots/ - the
 // same exclusive-create-per-identity pattern as the pairs registry. Distinct
 // sessions bind distinct files, so two concurrent first connects can never
 // lose each other's binding; a single read-modify-write index file had exactly
@@ -55,7 +49,7 @@ export function readIndex(dir = indexDir()) {
   return { schema: 1, threads };
 }
 
-// Records which root a Codex session uses, as bridge-roots\<threadId>.json.
+// Records which root a Codex session uses, as bridge-roots/<threadId>.json.
 // Idempotent for the same root; a different root for an already-bound session
 // is refused outright because rebinding would strand the old root's pairs,
 // pending letters and evidence. Publication is atomic AND exclusive: the entry

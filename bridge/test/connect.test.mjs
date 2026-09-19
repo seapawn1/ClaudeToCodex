@@ -23,14 +23,20 @@ test.after(() => {
   rmSync(registry, { recursive: true, force: true });
 });
 
-function writeSession(pid, name, sessionId, { key = true, socket = '\\\\.\\pipe\\LOCAL\\ctc-test-pipe', peerToken = null } = {}) {
+// Platform-native endpoint fixture: a named pipe on Windows, an absolute UDS
+// path elsewhere (D-F). connect only validates the shape; it never dials.
+const nativeSocket = (name = 'ctc-test') => (
+  process.platform === 'win32' ? `\\\\.\\pipe\\LOCAL\\${name}` : join(registry, `${name}.sock`)
+);
+
+function writeSession(pid, name, sessionId, { key = true, socket = null, peerToken = null } = {}) {
   // Drop stale key files for this pid so a keyless rewrite stays keyless.
   for (const f of readdirSync(registry)) {
     if (f.startsWith(`${pid}.`) && f.endsWith('.key')) rmSync(join(registry, f), { force: true });
   }
   writeFileSync(join(registry, `${pid}.json`), JSON.stringify({
-    pid, sessionId, name, messagingSocketPath: socket,
-    status: 'idle', cwd: 'C:\\nowhere', startedAt: Date.now(), updatedAt: Date.now(),
+    pid, sessionId, name, messagingSocketPath: socket ?? nativeSocket(),
+    status: 'idle', cwd: '/nowhere', startedAt: Date.now(), updatedAt: Date.now(),
   }));
   // Real registry key files are JSON records ({peerToken, procStartFt, pidDomain}).
   if (key === true) {
@@ -103,26 +109,63 @@ test('connect pairs a uniquely named live session and synthesizes the endpoint',
   assert.equal(out.pair.claudeId, '11111111-2222-4333-8444-555555555555');
   const endpoint = JSON.parse(readFileSync(out.pair.endpointPath, 'utf8'));
   assert.equal(endpoint.schema, 1);
-  assert.equal(endpoint.socket, '\\\\.\\pipe\\LOCAL\\ctc-test-pipe');
-  assert.ok(endpoint.tokenProtected.length > 50, 'DPAPI-protected token expected');
-  // F01 regression: the protected credential must be exactly the peerToken, not the whole key file.
-  const { stdout: plain } = await execute('powershell.exe', [
-    '-NoProfile', '-Command',
-    '$s = ConvertTo-SecureString -String $env:CTC_PROTECTED; [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))',
-  ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PROTECTED: endpoint.tokenProtected } });
-  const decrypted = plain.trim();
-  assert.equal(decrypted, 'token-alpha-dev-room', 'protected credential must equal the peerToken field only');
-  assert.notEqual(decrypted.length, JSON.stringify({ peerToken: 'token-alpha-dev-room', procStartFt: 134333582258617163, pidDomain: 'win32:test' }).length);
+  assert.equal(endpoint.socket, nativeSocket());
+  if (process.platform === 'win32') {
+    assert.ok(endpoint.tokenProtected.length > 50, 'DPAPI-protected token expected');
+    // F01 regression: the protected credential must be exactly the peerToken, not the whole key file.
+    const { stdout: plain } = await execute('powershell.exe', [
+      '-NoProfile', '-Command',
+      '$s = ConvertTo-SecureString -String $env:CTC_PROTECTED; [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))',
+    ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PROTECTED: endpoint.tokenProtected } });
+    const decrypted = plain.trim();
+    assert.equal(decrypted, 'token-alpha-dev-room', 'protected credential must equal the peerToken field only');
+    assert.notEqual(decrypted.length, JSON.stringify({ peerToken: 'token-alpha-dev-room', procStartFt: 134333582258617163, pidDomain: 'test' }).length);
+  } else {
+    // D-B: POSIX stores no secret at rest - no token, no key file content.
+    assert.equal(endpoint.tokenProtected, undefined);
+    const endpointText = readFileSync(out.pair.endpointPath, 'utf8');
+    assert.equal(endpointText.includes('token-alpha-dev-room'), false);
+    assert.equal(endpointText.includes('peerToken'), false);
+  }
   assert.match(readFileSync(join(root, 'events.jsonl'), 'utf8'), /"type":"connect"/);
 });
 
-test('connect rejects a key record that lacks the peerToken field', async () => {
+test('a key record that lacks the peerToken field is rejected on the platform\'s token path', async () => {
   writeSession(process.pid, 'No token room', '77777777-8888-4999-aaaa-bbbbbbbbbbbb', {
-    key: JSON.stringify({ procStartFt: 1, pidDomain: 'win32:test' }),
+    key: JSON.stringify({ procStartFt: 1, pidDomain: 'test' }),
   });
-  const r = await runConnect('No token');
-  assert.notEqual(r.code, 0);
-  assert.match(r.stderr, /has no peerToken field/);
+  if (process.platform === 'win32') {
+    // Windows reads and wraps the key at connect time.
+    const r = await runConnect('No token');
+    assert.notEqual(r.code, 0);
+    assert.match(r.stderr, /has no peerToken field/);
+  } else {
+    // POSIX defers to the send-time live read (D-B): connect succeeds with no
+    // secret stored, and the first send fails at token resolution.
+    const r = await runConnect('No token');
+    assert.equal(r.code, 0, r.stderr ?? r.stdout);
+    let send;
+    try {
+      const { stdout } = await execute('node', [cli, 'send', '--name', 'No token room', '--body', 'probe'], {
+        env: codexEnv(root, { CTC_SESSIONS_DIR: registry }), windowsHide: true, timeout: 30000,
+      });
+      send = { code: 0, stdout };
+    } catch (error) {
+      send = { code: error.code ?? 1, stderr: String(error.stderr ?? error.message) };
+    }
+    assert.notEqual(send.code, 0);
+    assert.match(send.stderr, /has no peerToken field/);
+    assert.match(readFileSync(join(root, 'events.jsonl'), 'utf8'), /"type":"send-error"/);
+    // On this platform connect succeeded, so drop the probe pair (and its
+    // endpoint) to leave the pair registry exactly as the Windows branch does.
+    for (const file of readdirSync(join(root, 'pairs'))) {
+      const pair = JSON.parse(readFileSync(join(root, 'pairs', file), 'utf8'));
+      if (pair.claudeId === '77777777-8888-4999-aaaa-bbbbbbbbbbbb') {
+        rmSync(join(root, 'pairs', file), { force: true });
+        rmSync(join(root, 'endpoints', `claude-${pair.claudeId}.json`), { force: true });
+      }
+    }
+  }
   // Restore the record other tests rely on.
   writeSession(process.pid, 'Alpha dev room', '11111111-2222-4333-8444-555555555555', { peerToken: 'token-alpha-dev-room' });
 });
@@ -163,26 +206,33 @@ test('peer reply entry carries the data directory and installed CLI path', async
     to: { tool: 'claude', sessionId: '11111111-2222-4333-8444-555555555555' },
     body: 'peer body', createdAt: new Date(0).toISOString(),
   };
-  const text = renderPeer(message, 'C:\\isolated\\bridge-data');
-  assert.match(text, /\$env:CTC_BRIDGE_DIR='C:\\isolated\\bridge-data';/);
+  const text = renderPeer(message, process.platform === 'win32' ? 'C:\\isolated\\bridge-data' : '/isolated/bridge-data');
+  // D-D: the prefix must be executable in the receiving session's shell dialect.
+  if (process.platform === 'win32') assert.match(text, /\$env:CTC_BRIDGE_DIR='C:\\isolated\\bridge-data';/);
+  else assert.match(text, /CTC_BRIDGE_DIR='\/isolated\/bridge-data' /);
   assert.match(text, new RegExp(`reply --to ${message.id}`));
   // Pin the CLI path to the module under test's own location — this is what makes the
   // entry relocate with the installation instead of depending on any dev-workspace path.
   assert.ok(text.includes(commandString()), 'reply entry must embed commandString() of the running CLI');
 });
 
-test('connect rejects a session whose registry socket is not a native pipe', async () => {
+test('connect rejects a session whose registry socket is not platform-native', async () => {
   writeSession(process.pid, 'Odd socket room', '55555555-6666-4777-8888-999999999999', { socket: 'tcp://not-a-pipe' });
   const r = await runConnect('Odd socket');
   assert.notEqual(r.code, 0);
-  assert.match(r.stderr, /no native Windows named pipe/);
+  // D-F: each platform names its own native shape in the refusal.
+  assert.match(r.stderr, process.platform === 'win32' ? /no native Windows named pipe/ : /no Unix domain socket endpoint/);
 });
 
 test('send to a dead endpoint fails loudly and never reports submitted', async () => {
-  // A well-shaped pipe name that nothing listens on: connect pairs, the send must fail.
+  // A well-shaped native endpoint that nothing listens on: connect pairs, the
+  // send must fail (dead pipe on Windows, absent socket file on POSIX).
   const isolated = mkdtempSync(join(tmpdir(), 'ctc-deadpipe-'));
   try {
-    writeSession(process.pid, 'Silent pipe room', '66666666-7777-4888-9999-aaaaaaaaaaaa', { socket: '\\\\.\\pipe\\LOCAL\\ctc-no-listener-here', peerToken: 'CTC-PEER-SECRET-6666' });
+    writeSession(process.pid, 'Silent pipe room', '66666666-7777-4888-9999-aaaaaaaaaaaa', {
+      socket: process.platform === 'win32' ? '\\\\.\\pipe\\LOCAL\\ctc-no-listener-here' : join(isolated, 'no-listener.sock'),
+      peerToken: 'CTC-PEER-SECRET-6666',
+    });
     let connect;
     try {
       const { stdout } = await execute('node', [cli, 'connect', '--name', 'Silent pipe', '--sessions-dir', registry], {
@@ -197,7 +247,7 @@ test('send to a dead endpoint fails loudly and never reports submitted', async (
     let send;
     try {
       const { stdout } = await execute('node', [cli, 'send', '--body', 'CTC-DEAD-PIPE-PROBE'], {
-        env: codexEnv(isolated),
+        env: codexEnv(isolated, { CTC_SESSIONS_DIR: registry }),
         windowsHide: true, timeout: 60000,
       });
       send = { code: 0, stdout };

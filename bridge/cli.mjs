@@ -1,12 +1,13 @@
 import { execFile } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { atomicWriteJson, BridgeStore, handleHook, readJson, renderPeer, wakeText } from './store.mjs';
 import { listSessions, selectSession, sessionsDir } from './sessions.mjs';
 import { bindThreadRoot, locateMessage, otherRootsServing, resolveRoot } from './roots.mjs';
 import { cliPath, commandString, repoRoot } from './entry.mjs';
+import { sendClaudeMessage } from './delivery/transport.mjs';
 
 // Sprint 04 / PBI-11: connect upserts into a multi-pair registry, codex sends
 // take an explicit --name target (the single-target 1.0.0 shape without --name
@@ -14,7 +15,6 @@ import { cliPath, commandString, repoRoot } from './entry.mjs';
 // retire is the explicit lifecycle boundary, and status lists every pair.
 
 const execute = promisify(execFile);
-const directory = fileURLToPath(new URL('.', import.meta.url));
 const usage = 'Use one of: install, register, pair, connect, sessions, send, reply, status, hook.';
 
 const HOOK_EVENTS = [
@@ -84,12 +84,50 @@ async function main() {
     return;
   }
   if (command === 'register') {
+    // Sprint 08 / W3: register is native Node (was Register-ClaudeEndpoint.ps1).
+    // It runs inside the selected Claude session's tool environment; the three
+    // messaging variables are its identity. Windows wraps the token with DPAPI
+    // through one minimal inline powershell call (env-passed, never echoed);
+    // Linux stores no secret at rest - the transport reads the live registry
+    // key by sessionId at send time (D-B). Like the old script, the guard runs
+    // before anything is created on disk.
+    const sessionId = process.env.CLAUDE_CODE_SESSION_ID;
+    const socket = process.env.CLAUDE_CODE_MESSAGING_SOCKET;
+    const token = process.env.CLAUDE_CODE_MESSAGING_TOKEN;
+    if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(sessionId ?? '') || !socket || !token) {
+      throw new Error('Run this command from the selected Claude Code session tool, with cross-session messaging available.');
+    }
+    if (process.platform === 'win32' ? !socket.startsWith('\\\\.\\pipe\\') : !socket.startsWith('/')) {
+      throw new Error('The session messaging endpoint is not a native socket for this platform.');
+    }
     store.initialize();
-    const result = await execute('powershell.exe', [
-      '-NoProfile', '-File', join(directory, 'delivery', 'Register-ClaudeEndpoint.ps1'),
-      '-Directory', join(store.root, 'endpoints'),
-    ], { windowsHide: true, timeout: 15000 });
-    process.stdout.write(`${result.stdout.trim()}\n`);
+    const endpoint = {
+      schema: 1,
+      sessionId,
+      socket,
+      registeredAt: new Date().toISOString(),
+      cwd: process.cwd(),
+    };
+    if (process.platform === 'win32') {
+      let protectedToken;
+      try {
+        protectedToken = (await execute('powershell.exe', [
+          '-NoProfile', '-Command',
+          '$env:CTC_PEER_KEY | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString',
+        ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PEER_KEY: token } })).stdout.trim();
+      } catch (error) {
+        throw new Error('DPAPI protection of the peer key failed; no key material is included in this message.');
+      }
+      if (!protectedToken) throw new Error('DPAPI protection returned an empty token.');
+      endpoint.tokenProtected = protectedToken;
+    }
+    const endpointPath = join(store.root, 'endpoints', `claude-${sessionId}.json`);
+    atomicWriteJson(endpointPath, endpoint);
+    console.log(`REGISTERED_CLAUDE_SESSION=${sessionId}`);
+    console.log(`ENDPOINT_FILE=${endpointPath}`);
+    console.log(process.platform === 'win32'
+      ? 'The token is protected for the current Windows user. No message was sent.'
+      : 'No token is stored at rest on this platform; it is read live at send time. No message was sent.');
     return;
   }
   if (command === 'pair') {
@@ -118,43 +156,49 @@ async function main() {
     // The binding is append-only: one root per Codex session, never rebound.
     const resolution = resolveRoot({ threadId: codexId });
     store = new BridgeStore(resolution.root);
-    // Synthesize the endpoint from the session registry: same-user DPAPI wrapping of
-    // the registry peer key, so the Claude side never registers anything manually.
-    // Registry key files are JSON ({peerToken, procStartFt, pidDomain}); only the
-    // peerToken authenticates to the host pipe. The token travels via process
-    // environment, never the command line, and error paths never echo it.
-    const keyFile = readdirSync(registry).find((f) => f.startsWith(`${session.pid}.`) && f.endsWith('.key'));
-    let keyRecord;
-    try {
-      keyRecord = JSON.parse(readFileSync(join(registry, keyFile), 'utf8'));
-    } catch {
-      throw new Error(`Peer key file for pid ${session.pid} is not the expected registry JSON record.`);
+    // Synthesize the endpoint from the session registry (S04-11), so the Claude
+    // side never registers anything manually. Platform branch (S08 / D-B):
+    // Windows wraps the registry peer key with same-user DPAPI and stores the
+    // protected blob; Linux stores no secret at all - the transport reads the
+    // live registry key by sessionId reverse-lookup at send time. Registry key
+    // files are JSON ({peerToken, ...}); only the peerToken authenticates to the
+    // host pipe. The token travels via process environment, never the command
+    // line, and error paths never echo it.
+    const endpointRecord = {
+      schema: 1,
+      sessionId: session.sessionId,
+      socket: session.socket,
+      registeredAt: new Date().toISOString(),
+      cwd: session.cwd ?? null,
+      origin: 'connect-synthesis',
+    };
+    if (process.platform === 'win32') {
+      const keyFile = readdirSync(registry).find((f) => f.startsWith(`${session.pid}.`) && f.endsWith('.key'));
+      let keyRecord;
+      try {
+        keyRecord = JSON.parse(readFileSync(join(registry, keyFile), 'utf8'));
+      } catch {
+        throw new Error(`Peer key file for pid ${session.pid} is not the expected registry JSON record.`);
+      }
+      const token = typeof keyRecord?.peerToken === 'string' ? keyRecord.peerToken.trim() : '';
+      if (!token) throw new Error(`Peer key record for pid ${session.pid} has no peerToken field.`);
+      let protectedToken;
+      try {
+        protectedToken = (await execute('powershell.exe', [
+          '-NoProfile', '-Command',
+          '$env:CTC_PEER_KEY | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString',
+        ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PEER_KEY: token } })).stdout.trim();
+      } catch (error) {
+        throw new Error('DPAPI protection of the peer key failed; no key material is included in this message.');
+      }
+      if (!protectedToken) throw new Error('DPAPI protection returned an empty token.');
+      endpointRecord.tokenProtected = protectedToken;
     }
-    const token = typeof keyRecord?.peerToken === 'string' ? keyRecord.peerToken.trim() : '';
-    if (!token) throw new Error(`Peer key record for pid ${session.pid} has no peerToken field.`);
-    let protectedToken;
-    try {
-      protectedToken = (await execute('powershell.exe', [
-        '-NoProfile', '-Command',
-        '$env:CTC_PEER_KEY | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString',
-      ], { windowsHide: true, timeout: 15000, env: { ...process.env, CTC_PEER_KEY: token } })).stdout.trim();
-    } catch (error) {
-      throw new Error('DPAPI protection of the peer key failed; no key material is included in this message.');
-    }
-    if (!protectedToken) throw new Error('DPAPI protection returned an empty token.');
     store.initialize();
     const endpointPath = join(store.root, 'endpoints', `claude-${session.sessionId}.json`);
     // Atomic temp+rename publish: a concurrent reader always sees the complete
     // previous or complete new endpoint record, never a truncated file.
-    atomicWriteJson(endpointPath, {
-      schema: 1,
-      sessionId: session.sessionId,
-      socket: session.socket,
-      tokenProtected: protectedToken,
-      registeredAt: new Date().toISOString(),
-      cwd: session.cwd ?? null,
-      origin: 'connect-synthesis',
-    });
+    atomicWriteJson(endpointPath, endpointRecord);
     // Upsert into the multi-pair registry: same Claude session reuses its pair
     // (endpoint refresh allowed); a different one becomes an additional target.
     // Existing pairs are never touched, so connecting B never disturbs A.
@@ -277,12 +321,29 @@ async function main() {
       store.publish(message);
       // I2: pass the message body and creation timestamp into the readable
       // queue text so the Codex side receives a human-readable prompt instead
-      // of the old single-line [CTC-WAKE ...] marker.
-      const result = await execute('powershell.exe', [
-        '-NoProfile', '-File', join(directory, 'delivery', 'BridgeQueue.ps1'),
-        '-ThreadId', pair.codexId, '-Wake', wakeText(pair.id, message.id, message.body, message.createdAt),
-      ], { windowsHide: true, timeout: 15000 });
-      store.event('wake-submitted', { messageId: message.id, output: result.stdout.trim() });
+      // of the old single-line [CTC-WAKE ...] marker. Sprint 08 / D-G + SM
+      // F-1: per-platform launch. POSIX execs the codex binary directly;
+      // Windows npm installs only .ps1/.cmd shims (execFile gets ENOENT/
+      // EINVAL/EFTYPE on them), so the wake goes through one minimal inline
+      // powershell call - `& codex` resolves the shim exactly as the retired
+      // BridgeQueue.ps1 did. Thread id and wake text travel via process
+      // environment (multi-line safe, never on the command line); stdout
+      // stays process evidence, never a receipt.
+      try {
+        const wake = wakeText(pair.id, message.id, message.body, message.createdAt);
+        const result = process.platform === 'win32'
+          ? await execute('powershell.exe', [
+            '-NoProfile', '-Command',
+            '& codex queue --thread $env:CTC_QUEUE_THREAD --message $env:CTC_QUEUE_WAKE',
+          ], {
+            windowsHide: true, timeout: 15000,
+            env: { ...process.env, CTC_QUEUE_THREAD: pair.codexId, CTC_QUEUE_WAKE: wake },
+          })
+          : await execute('codex', ['queue', '--thread', pair.codexId, '--message', wake], { windowsHide: true, timeout: 15000 });
+        store.event('wake-submitted', { messageId: message.id, output: result.stdout.trim() });
+      } catch (error) {
+        throw new Error(`Bridge queue submission failed: ${(error.stderr || error.stdout || error.message || '').toString().trim()}`);
+      }
     } else {
       const endpoint = readJson(pair.endpointPath);
       if (endpoint.sessionId !== pair.claudeId) throw new Error('Claude endpoint identity changed.');
@@ -290,12 +351,16 @@ async function main() {
       // codexHome passes through when this send runs inside an isolated-home
       // Codex session, so the peer's reply wake reaches the right session.
       writeFileSync(wirePath, renderPeer(message, store.root, process.env.CODEX_HOME ?? null), { flag: 'wx' });
-      await execute('powershell.exe', [
-        '-NoProfile', '-File', join(directory, 'delivery', 'Send-ClaudePipe.ps1'),
-        '-EndpointPath', pair.endpointPath, '-ReplyThreadId', pair.codexId,
-        '-MessageFile', wirePath, '-MessageId', message.id,
-        '-RecordPath', join(store.root, 'wire', `${message.id}.send.json`),
-      ], { windowsHide: true, timeout: 15000 });
+      // Sprint 08 / D-A: the unified Node transport replaces the PowerShell
+      // client - same endpoint validation, auth+frame wire behavior, and
+      // wire/<id>.send.json double-write contract.
+      await sendClaudeMessage({
+        endpointPath: pair.endpointPath,
+        replyThreadId: pair.codexId,
+        messageFile: wirePath,
+        messageId: message.id,
+        recordPath: join(store.root, 'wire', `${message.id}.send.json`),
+      });
       store.event('pipe-written', { messageId: message.id });
     }
   } catch (error) {

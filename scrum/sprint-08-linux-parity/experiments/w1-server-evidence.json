@@ -1,0 +1,28 @@
+{
+  "fullPath": "\\\\.\\pipe\\ctc-w1-probe-01",
+  "platform": "win32",
+  "node": "v24.14.0",
+  "lines": [
+    {
+      "type": "auth",
+      "token": "w1-probe-fixture-token-not-a-secret"
+    },
+    {
+      "msgV": 1,
+      "msg_id": "065a168d-f3c0-4578-938b-e96579bd83a0",
+      "type": "user",
+      "message": {
+        "role": "user",
+        "content": "W1 Windows pipe probe: auth + frame roundtrip. 你好."
+      },
+      "priority": "next",
+      "session_id": "33333333-3333-4333-8333-333333333333"
+    }
+  ],
+  "arrivals": [
+    1789716867957,
+    1789716868458
+  ],
+  "raw": "{\"type\":\"auth\",\"token\":\"w1-probe-fixture-token-not-a-secret\"}\n{\"msgV\":1,\"msg_id\":\"065a168d-f3c0-4578-938b-e96579bd83a0\",\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":\"W1 Windows pipe probe: auth + frame roundtrip. 你好.\"},\"priority\":\"next\",\"session_id\":\"33333333-3333-4333-8333-333333333333\"}\n",
+  "gapMs": 501
+}

@@ -6,14 +6,21 @@
 
 | # | 前置项 | 确认方式 |
 |---|---|---|
-| 1 | Windows（已验证 Windows 10 Pro 10.0.19045）；Node ≥18.3；codex `0.153.4`/`0.154.0`、claude `2.1.263`/`2.1.268`（见 USAGE §5 基线） | `node --version`、`codex --version`、`claude --version` |
+| 1 | 平台为 Windows（已验证 Windows 10 Pro 10.0.19045；codex `0.153.4`/`0.154.0`、claude `2.1.263`/`2.1.268`）或 WSL2 Linux（Sprint 08 候选：Ubuntu-24.04；codex `0.154.0`、claude `2.1.275`；见 USAGE §5 基线）；Node ≥18.3（Linux 侧 PATH 中靠前，避免混入 Windows 残留） | `node --version`、`codex --version`、`claude --version` |
 | 2 | 已运行 `node bridge/cli.mjs install`，生成的 `.codex/hooks.json` 三条注册指向当前安装位置 | 查看安装输出或 hooks 文件 |
 | 3 | Codex 原始会话中 `/hooks` 已审阅并**信任**三条 bridge hook 定义 | 信任界面确认；定义变更会使 trust hash 失效、须重新信任 |
 | 4 | 安装后 Codex 原始会话经历过**完全退出并 `codex resume <threadId>` 重载**（运行中的会话不热加载 hook） | resume 后的会话为当前原始会话 |
 | 5 | Claude 侧接收策略已知：`crossSessionInbound` 为 `accept`（当前机器配置）时消息直接进入；为默认暂存策略时每条入站消息需 PO 手工批准并**记录批准时间** | `~/.claude/settings.json` 或首条消息行为 |
 | 6 | 发送前确认身份环境变量：Claude 会话内不得残留 `CODEX_THREAD_ID`；Codex 会话内有 `CODEX_THREAD_ID`。两者同设会被桥拒绝 | 会话内打印环境变量确认 |
-| 7 | 数据目录：默认流程**无需设置任何环境变量**——connect/send/reply/status 与 hook 按 Codex 会话自动选择并复用数据根；显式隔离轮仍可用 `CTC_BRIDGE_DIR`（两个原始会话都从设置了该变量的终端启动，hook 子进程才能继承同一根；该模式下索引不读不写） | `node bridge/cli.mjs status` 的 `root.path` 与预期一致 |
-| 8 | 测试会话启动环境（PO 约束，2026-09-13）：新建/恢复**测试用 Codex 会话**时命令末尾必须追加 `--profile glm`（否则无可用模型）；**测试用 Claude 会话**必须在项目身份正确的目录启动（`D:\ClaudeToCodex` 或 `D:\ClaudeToCodex\.claude\worktrees\<sprint worktree>`），不得在临时目录或无关项目启动 | 启动命令与启动目录核对入证据记录 |
+| 7 | 数据目录：默认流程**无需设置任何环境变量**——connect/send/reply/status 与 hook 按 Codex 会话自动选择并复用数据根（Windows 基址 `%LOCALAPPDATA%\ClaudeToCodex`，Linux 基址 `~/.local/share/ClaudeToCodex`）；显式隔离轮仍可用 `CTC_BRIDGE_DIR`（两个原始会话都从设置了该变量的终端启动，hook 子进程才能继承同一根；该模式下索引不读不写） | `node bridge/cli.mjs status` 的 `root.path` 与预期一致 |
+| 8 | 测试会话启动环境：Windows 侧沿用 2026-09-13 PO 约束（测试用 Codex 会话追加 `--profile glm`；测试用 Claude 会话在 `D:\ClaudeToCodex` 或其 sprint worktree 内启动）；Linux 侧以当轮记录为准（模型经隔离 home 或 profile 配置；Claude 会话在项目目录内启动），启动命令与目录核对入证据记录 | 启动命令与启动目录核对入证据记录 |
+
+### 1b. Linux/WSL2 现场程序要点（Sprint 08 起，源自 E1/E2 实证）
+
+1. **环境清洗清单**：从 Claude 宿主或任何继承环境启动测试用 Codex 会话时，须清除（或以干净 shell 启动）：`CLAUDE_CODE_SESSION_ID`、`CODEX_THREAD_ID`、`CLAUDE_CODE_MESSAGING_TOKEN`、`CLAUDE_CODE_MESSAGING_SOCKET`、`CLAUDE_PID`、`CLAUDE_JOB_DIR`、`CLAUDECODE` 及其他 `CLAUDE_*` 会话变量——否则身份判定被污染、活 token 可能落入观测日志（E2 程序缺陷教训）。
+2. **首 turn 前置**：目标 Codex thread 必须已有一条**完整首 turn**（rollout 已建立）后 `codex queue` 才能投递；首轮尚未完成时 queue 报 `no rollout found` 属预期。
+3. **工具驱动的 TUI 提交键**：tmux 等工具驱动 Codex TUI 时，`Enter` 是换行、**`C-m` 才提交**；PO 人工终端操作不受影响，但自动化/远程驱动场景须记录该键位。
+4. **证据路径**：Codex 侧 `$CODEX_HOME/sessions/YYYY/MM/DD/rollout-*.jsonl`（隔离轮为隔离 home）；Claude 侧 `~/.claude/projects/<项目目录>/<sessionId>.jsonl`；WSL2 路径区分 `~` 与 `/mnt/<盘>`，两侧不通用。
 
 ## 2. 运行标识与标记约定
 
@@ -23,7 +30,7 @@
 
 ## 3. 证据规则（判定口径，原文遵循设计冲刺 TestPlan）
 
-**通过**的唯一直接判据：接收方**原始会话**的会话事件记录（Codex 侧 `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`；Claude 侧 `~/.claude/projects/<项目目录>/<sessionId>.jsonl`）按时间序出现该格的唯一标记与消息正文。
+**通过**的唯一直接判据：接收方**原始会话**的会话事件记录（Codex 侧 `$CODEX_HOME/sessions/YYYY/MM/DD/rollout-*.jsonl`；Claude 侧 `~/.claude/projects/<项目目录>/<sessionId>.jsonl`）按时间序出现该格的唯一标记与消息正文。
 
 以下各项**单独不构成通过证据**：发送方 CLI 输出（`submitted:true`）、queue/pipe 写入成功、本地 JSON 记录（events.jsonl、`*.send.json`）、接收方模型的自述（"我收到了"）。
 
@@ -69,7 +76,7 @@
 | R5 | 连续官方投递（PBI-14 回归） | 现场 | ≥2 pair 各自连续 ≥2 条 Claude→Codex 回复：每条完整正文经 hook 入原始会话（第 3 节判据），pending 随领取清空，下一条不被首条阻塞 | _待填_ |
 | R6 | 冲突与边界 | 现场 | 默认根属他时不改绑不合并；`retire`/重叠保护/重复 wake 行为与说明一致 | _待填_ |
 
-S05 系数据根为自动选择（不设环境变量即真实路径）；`status` 的 `root` 字段记录当前服务根与来源。S05 系测试会话一律遵守前置 8（Codex `--profile glm`、Claude 在项目目录启动）。
+S05 系数据根为自动选择（不设环境变量即真实路径）；`status` 的 `root` 字段记录当前服务根与来源。S05 系测试会话遵守 §1 前置 8 的**平台化**启动约束（Windows/Linux 各按其记录口径；Linux 隔离 home 不强制 `--profile glm`，Windows 侧是否使用该 profile 以 W10 环境记录为准）。
 
 ## 4d. 可读到达与自动继续附加格（S03 系，Sprint 03 起；判据同第 3 节）
 

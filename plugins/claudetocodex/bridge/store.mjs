@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { commandString } from './entry.mjs';
 
 // Sprint 04 / PBI-11: the 1.0.0 single-pair store extended to a multi-pair
@@ -14,11 +14,21 @@ const UUID = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
 // Stable per-user data root. CTC_BRIDGE_DIR overrides it for tests and isolated
 // smoke runs; there is intentionally no %TEMP% fallback and no pointer file.
-export const defaultRoot = () => {
-  if (process.env.CTC_BRIDGE_DIR) return process.env.CTC_BRIDGE_DIR;
-  const base = process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local');
-  return join(base, 'ClaudeToCodex', 'bridge');
+// Sprint 08 / D-C: one shared location rule for every consumer - Windows keeps
+// %LOCALAPPDATA%\ClaudeToCodex, POSIX platforms use the XDG data home
+// ($XDG_DATA_HOME, default ~/.local/share). roots.mjs derives its parent and
+// default root from here so the three former copies cannot drift.
+export const dataBaseDir = (env = process.env) => {
+  if (process.platform === 'win32') {
+    return join(env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'ClaudeToCodex');
+  }
+  // XDG spec: unset, empty, OR relative values all mean the ~/.local/share
+  // default (relative paths in XDG_DATA_HOME are invalid, not honored).
+  const xdg = env.XDG_DATA_HOME;
+  return join(xdg && isAbsolute(xdg) ? xdg : join(homedir(), '.local', 'share'), 'ClaudeToCodex');
 };
+
+export const defaultRoot = () => process.env.CTC_BRIDGE_DIR ?? join(dataBaseDir(), 'bridge');
 
 export const readJson = (path) => JSON.parse(readFileSync(path, 'utf8').replace(/^﻿/, ''));
 
@@ -523,6 +533,17 @@ export class BridgeStore {
   }
 }
 
+// Sprint 08 / D-D: the reply entry's environment prefix must be executable in
+// the receiving session's own shell dialect. Windows keeps the $env: assignment
+// form; POSIX platforms get plain VAR=... command prefixes. Both quote the
+// value single-quoted with their dialect's escape rule, so paths containing
+// quotes stay executable.
+const shellEnvPrefix = (name, value) => (
+  process.platform === 'win32'
+    ? `$env:${name}='${value.replaceAll("'", "''")}'; `
+    : `${name}='${value.replaceAll("'", `'\\''`)}' `
+);
+
 export function renderPeer(message, dataRoot, codexHome = null, bodyVisibleInPrompt = false) {
   // The receiving Claude session has no bridge environment configured, so the
   // reply entry must carry both the data location and the installed CLI path.
@@ -533,7 +554,7 @@ export function renderPeer(message, dataRoot, codexHome = null, bodyVisibleInPro
   // I2: when bodyVisibleInPrompt is true the readable queue text already
   // carries the message body, so renderPeer skips the full body and only
   // injects the reply entry (kept at the injection layer per AC-1).
-  const env = `${dataRoot ? `$env:CTC_BRIDGE_DIR='${dataRoot}'; ` : ''}${codexHome ? `$env:CODEX_HOME='${codexHome}'; ` : ''}`;
+  const env = `${dataRoot ? shellEnvPrefix('CTC_BRIDGE_DIR', dataRoot) : ''}${codexHome ? shellEnvPrefix('CODEX_HOME', codexHome) : ''}`;
   if (bodyVisibleInPrompt) {
     return `To respond in this conversation, use: ${env}${commandString()} reply --to ${message.id} --body-file "<UTF-8 reply text file>"\nFor short text, --body is also available. Reply when the conversation calls for it; do not send automatic acknowledgements.`;
   }
